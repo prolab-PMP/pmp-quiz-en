@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - Admin{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem">
+  <h1 style="font-size:1.5rem"><i class="fas fa-shield-alt" style="color:var(--primary)"></i> Admin Dashboard</h1>
+  <span class="badge badge-blue" style="font-size:.85rem;padding:.4rem .9rem">Admin Mode</span>
+</div>
+
+<!-- Summary stats -->
+<div class="stat-grid" style="margin-bottom:1.5rem">
+  <div class="stat-card">
+    <div class="stat-value">{{ total_users }}</div>
+    <div class="stat-label">Total Users</div>
+  </div>
+  <div class="stat-card success">
+    <div class="stat-value">{{ paid_users }}</div>
+    <div class="stat-label">Paid Users</div>
+  </div>
+  <div class="stat-card warning">
+    <div class="stat-value">{{ free_users }}</div>
+    <div class="stat-label">Free Users</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-value">{{ pending_reports }}</div>
+    <div class="stat-label">Pending Reports</div>
+  </div>
+</div>
+
+<!-- Referral stats -->
+{% if referral_counts %}
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-bottom:1rem"><i class="fas fa-users"></i> Referral Stats</h2>
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>Referrer ID</th><th>Referrals</th></tr></thead>
+      <tbody>
+        {% for r in referral_counts %}
+        <tr>
+          <td><i class="fas fa-user" style="color:var(--primary);margin-right:.4rem"></i>{{ r['referrer'] }}</td>
+          <td><span class="badge badge-blue">{{ r['cnt'] }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- User list -->
+<div class="card">
+  <h2 style="margin-bottom:1rem"><i class="fas fa-list"></i> User List</h2>
+
+  <!-- Search -->
+  <div style="margin-bottom:1rem">
+    <input type="text" id="searchInput" placeholder="Search by email or referrer..."
+           style="width:100%;max-width:340px;padding:.6rem .8rem;border:2px solid var(--border);border-radius:8px;font-size:.9rem"
+           oninput="filterTable()">
+  </div>
+
+  <div style="overflow-x:auto">
+    <table id="userTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Email (ID)</th>
+          <th>Referrer</th>
+          <th>Plan</th>
+          <th>Expires</th>
+          <th>Sessions</th>
+          <th>Accuracy</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr data-search="{{ u['username'] }} {{ u['referrer'] or '' }}">
+          <td style="color:var(--muted);font-size:.82rem">{{ u['id'] }}</td>
+          <td>
+            {% if u['is_admin'] %}<i class="fas fa-crown" style="color:#f59e0b" title="Admin"></i> {% endif %}
+            <span style="font-size:.88rem">{{ u['username'] }}</span>
+          </td>
+          <td>
+            {% if u['referrer'] %}
+              <span class="badge badge-purple">{{ u['referrer'] }}</span>
+            {% else %}
+              <span style="color:var(--muted);font-size:.82rem">-</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u['plan'] == 'free' %}
+              <span class="badge badge-gray">Free</span>
+            {% else %}
+              <span class="badge badge-green">Paid</span>
+            {% endif %}
+          </td>
+          <td style="font-size:.82rem">
+            {% if u['plan_expires_at'] %}
+              {% if u['plan_expires_at'][:10] < today %}
+                <span style="color:var(--danger)">{{ u['plan_expires_at'][:10] }} (expired)</span>
+              {% else %}
+                <span style="color:var(--success)">{{ u['plan_expires_at'][:10] }}</span>
+              {% endif %}
+            {% else %}
+              <span style="color:var(--muted)">-</span>
+            {% endif %}
+          </td>
+          <td style="text-align:center">{{ u['session_count'] or 0 }}</td>
+          <td style="text-align:center">
+            {% if u['accuracy'] %}
+              <span style="color:{% if u['accuracy'] >= 70 %}var(--success){% elif u['accuracy'] >= 50 %}var(--warning){% else %}var(--danger){% endif %}">
+                {{ u['accuracy'] }}%
+              </span>
+            {% else %}<span style="color:var(--muted)">-</span>{% endif %}
+          </td>
+          <td style="font-size:.78rem;color:var(--muted)">{{ u['created_at'][:10] if u['created_at'] else '-' }}</td>
+          <td>
+            <button onclick="toggleEdit({{ u['id'] }})"
+                    style="background:var(--primary);color:#fff;border:none;border-radius:6px;padding:.3rem .7rem;font-size:.78rem;cursor:pointer">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+          </td>
+        </tr>
+        <!-- Edit form (hidden) -->
+        <tr id="edit-{{ u['id'] }}" style="display:none;background:#f8fafc">
+          <td colspan="9">
+            <form method="POST" action="{{ url_for('admin_update_plan') }}"
+                  style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;padding:.5rem 0">
+              <input type="hidden" name="user_id" value="{{ u['id'] }}">
+              <label style="font-size:.85rem;font-weight:600">Plan:</label>
+              <select name="plan" style="padding:.4rem .6rem;border:2px solid var(--border);border-radius:6px;font-size:.85rem">
+                <option value="free" {% if u['plan']=='free' %}selected{% endif %}>Free</option>
+                <option value="paid" {% if u['plan']=='paid' %}selected{% endif %}>Paid</option>
+              </select>
+              <label style="font-size:.85rem;font-weight:600">Expires:</label>
+              <input type="date" name="plan_expires_at"
+                     value="{{ u['plan_expires_at'][:10] if u['plan_expires_at'] else '' }}"
+                     style="padding:.4rem .6rem;border:2px solid var(--border);border-radius:6px;font-size:.85rem">
+              <button type="submit" class="btn btn-success" style="padding:.35rem .9rem;font-size:.85rem">
+                <i class="fas fa-save"></i> Save
+              </button>
+              <button type="button" onclick="toggleEdit({{ u['id'] }})"
+                      class="btn btn-outline" style="padding:.35rem .9rem;font-size:.85rem">Cancel</button>
+              {% if not u['is_admin'] %}
+              <form method="POST" action="{{ url_for('admin_delete_user') }}"
+                    onsubmit="return confirm('Are you sure? All user data will be deleted.')"
+                    style="display:inline">
+                <input type="hidden" name="user_id" value="{{ u['id'] }}">
+                <button type="submit" class="btn btn-danger" style="padding:.35rem .9rem;font-size:.85rem">
+                  <i class="fas fa-trash"></i> Delete
+                </button>
+              </form>
+              {% endif %}
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Reports -->
+<div class="card" id="reports">
+  <h2 style="margin-bottom:1rem">
+    <i class="fas fa-flag" style="color:var(--danger)"></i> Question Reports
+    {% if pending_reports > 0 %}
+    <span class="badge badge-red" style="margin-left:.5rem">{{ pending_reports }} pending</span>
+    {% endif %}
+  </h2>
+  {% if not reports %}
+  <p style="color:var(--muted);text-align:center;padding:1.5rem">No reports submitted.</p>
+  {% else %}
+  <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Question</th>
+          <th>Reporter</th>
+          <th>Type</th>
+          <th>Details</th>
+          <th>Question Summary</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reports %}
+        <tr style="{% if r.status == 'resolved' %}opacity:.55{% elif r.status == 'dismissed' %}opacity:.4{% endif %}">
+          <td><span class="badge badge-gray">Q#{{ r.question_no }}</span></td>
+          <td style="font-size:.82rem">{{ r.username }}</td>
+          <td><span class="badge badge-red">{{ r.reason }}</span></td>
+          <td style="font-size:.82rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ r.detail }}">
+            {{ r.detail or '-' }}
+          </td>
+          <td style="font-size:.8rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)" title="{{ r.question }}">
+            {{ r.question[:60] }}...
+          </td>
+          <td style="font-size:.78rem;color:var(--muted)">{{ r.created_at[:10] if r.created_at else '' }}</td>
+          <td>
+            {% if r.status == 'pending' %}
+              <span class="badge badge-yellow">Pending</span>
+            {% elif r.status == 'resolved' %}
+              <span class="badge badge-green">Resolved</span>
+            {% else %}
+              <span class="badge badge-gray">Dismissed</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if r.status == 'pending' %}
+            <div style="display:flex;gap:.4rem">
+              <form method="POST" action="{{ url_for('admin_report_resolve') }}" style="display:inline">
+                <input type="hidden" name="report_id" value="{{ r.id }}">
+                <button type="submit" style="background:var(--success);color:#fff;border:none;border-radius:6px;padding:.28rem .6rem;font-size:.78rem;cursor:pointer">
+                  <i class="fas fa-check"></i>
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('admin_report_dismiss') }}" style="display:inline">
+                <input type="hidden" name="report_id" value="{{ r.id }}">
+                <button type="submit" style="background:var(--muted);color:#fff;border:none;border-radius:6px;padding:.28rem .6rem;font-size:.78rem;cursor:pointer">
+                  <i class="fas fa-times"></i>
+                </button>
+              </form>
+            </div>
+            {% else %}<span style="color:var(--muted);font-size:.8rem">-</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function toggleEdit(id) {
+  const row = document.getElementById('edit-' + id);
+  row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+}
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#userTable tbody tr[data-search]').forEach(row => {
+    const val = row.getAttribute('data-search').toLowerCase();
+    const editRow = document.getElementById('edit-' + row.querySelector('td').textContent.trim());
+    const show = val.includes(q);
+    row.style.display = show ? '' : 'none';
+    if (editRow) editRow.style.display = 'none';
+  });
+}
+</script>
+{% endblock %}

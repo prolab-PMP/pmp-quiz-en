@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Quiz Result{% endblock %}
+{% block content %}
+<div style="max-width:900px;margin:0 auto">
+  <div class="card" style="text-align:center;padding:2rem">
+    <h1 style="font-size:3rem;margin-bottom:.5rem;color:{% if accuracy >= 70 %}var(--success){% elif accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %}">
+      {{ accuracy }}%
+    </h1>
+    <p style="font-size:1.1rem;color:var(--muted)">{{ correct }} / {{ total }} correct</p>
+    <div class="progress-bar" style="max-width:400px;margin:1rem auto;height:12px">
+      <div class="fill" style="width:{{ accuracy }}%;background:{% if accuracy >= 70 %}var(--success){% elif accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %}"></div>
+    </div>
+    <p style="font-size:.9rem;color:var(--muted)">
+      {% if accuracy >= 80 %}Excellent! You're well prepared!
+      {% elif accuracy >= 60 %}Good job! Keep studying the weak areas.
+      {% else %}Keep practicing! Focus on your wrong answers.{% endif %}
+    </p>
+  </div>
+
+  <div class="card">
+    <h2><i class="fas fa-list"></i> Answer Details</h2>
+    <table>
+      <thead><tr><th>#</th><th>Question</th><th>Your Answer</th><th>Correct</th><th>Result</th><th>Domain</th><th>Area</th></tr></thead>
+      <tbody>
+      {% for a in answers %}
+      <tr>
+        <td>{{ a.question_no }}</td>
+        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.question[:80] }}</td>
+        <td><span class="badge {% if a.is_correct %}badge-green{% else %}badge-red{% endif %}">{{ a.user_answer }}</span></td>
+        <td><span class="badge badge-blue">{{ a.correct_answer }}</span></td>
+        <td>{% if a.is_correct %}<i class="fas fa-check-circle" style="color:var(--success)"></i>{% else %}<i class="fas fa-times-circle" style="color:var(--danger)"></i>{% endif %}</td>
+        <td><span class="badge badge-purple">{{ a.domain }}</span></td>
+        <td><span class="badge badge-gray">{{ a.knowledge_area }}</span></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem">
+    <a href="{{ url_for('quiz_start') }}" class="btn btn-primary btn-lg"><i class="fas fa-redo"></i> New Quiz</a>
+    <a href="{{ url_for('wrong_answers') }}" class="btn btn-danger btn-lg"><i class="fas fa-times-circle"></i> Review Wrong</a>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-lg"><i class="fas fa-home"></i> Dashboard</a>
+  </div>
+</div>
+{% endblock %}

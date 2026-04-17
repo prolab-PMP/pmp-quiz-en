@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Bookmarks{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem">
+  <h1 style="font-size:1.4rem"><i class="fas fa-bookmark" style="color:#f59e0b"></i> Bookmarked Questions</h1>
+  <span class="badge badge-yellow" style="font-size:.88rem;padding:.4rem .9rem">{{ bookmarks|length }}</span>
+</div>
+
+{% if not bookmarks %}
+<div class="card" style="text-align:center;padding:3rem">
+  <i class="fas fa-bookmark" style="font-size:4rem;color:var(--border);margin-bottom:1rem"></i>
+  <h2 style="color:var(--muted)">No bookmarked questions</h2>
+  <p style="color:var(--muted);margin:.75rem 0 1.5rem">Click the <i class="fas fa-bookmark"></i> button during a quiz to save questions</p>
+  <a href="{{ url_for('quiz_start') }}" class="btn btn-primary"><i class="fas fa-play"></i> Start Quiz</a>
+</div>
+{% else %}
+{% for b in bookmarks %}
+<div class="card" style="margin-bottom:1rem">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <span class="badge badge-gray">Q#{{ b.question_no }}</span>
+      {% if b.domain %}<span class="badge badge-purple">{{ b.domain }}</span>{% endif %}
+      {% if b.knowledge_area %}<span class="badge badge-blue">{{ b.knowledge_area }}</span>{% endif %}
+      {% if b.methodology %}<span class="badge badge-green">{{ b.methodology }}</span>{% endif %}
+    </div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <span style="font-size:.78rem;color:var(--muted)">{{ b.created_at[:10] }}</span>
+      <button class="btn-bookmark active" id="bm-{{ b.question_no }}"
+              onclick="removeBookmark({{ b.question_no }}, this)">
+        <i class="fas fa-bookmark"></i> Saved
+      </button>
+    </div>
+  </div>
+
+  <p style="line-height:1.7;margin-bottom:1rem">{{ b.question }}</p>
+
+  <!-- Options -->
+  <div style="display:grid;gap:.4rem;margin-bottom:1rem">
+    {% for key, label in [('opt_a','A'),('opt_b','B'),('opt_c','C'),('opt_d','D'),('opt_e','E')] %}
+    {% if b[key] %}
+    <div style="display:flex;align-items:flex-start;gap:.6rem;padding:.6rem .75rem;border-radius:8px;border:1.5px solid {% if label == b.answer %}var(--success){% else %}var(--border){% endif %};background:{% if label == b.answer %}#f0fdf4{% else %}transparent{% endif %}">
+      <span style="width:28px;height:28px;border-radius:50%;background:{% if label == b.answer %}var(--success){% else %}var(--border){% endif %};color:{% if label == b.answer %}#fff{% else %}var(--text){% endif %};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;flex-shrink:0">{{ label }}</span>
+      <span style="padding-top:.2rem;font-size:.9rem;line-height:1.5">{{ b[key] }}{% if label == b.answer %} <i class="fas fa-check" style="color:var(--success)"></i>{% endif %}</span>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Explanation (collapsible) -->
+  {% if b.explanation %}
+  <details>
+    <summary style="cursor:pointer;color:var(--primary);font-size:.88rem;font-weight:600;padding:.35rem 0">
+      <i class="fas fa-lightbulb" style="color:var(--warning)"></i> Show Explanation
+    </summary>
+    <div class="explanation-box" style="margin-top:.5rem">{{ b.explanation }}</div>
+  </details>
+  {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+<script>
+async function removeBookmark(qNo, btn){
+  if(!confirm('Remove bookmark?')) return;
+  const res = await fetch('/api/bookmark/toggle', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({question_no: qNo})
+  });
+  const data = await res.json();
+  if(!data.bookmarked){
+    const card = btn.closest('.card');
+    card.style.transition='opacity .3s';
+    card.style.opacity='0';
+    setTimeout(()=>{card.remove();},300);
+  }
+}
+</script>
+{% endblock %}

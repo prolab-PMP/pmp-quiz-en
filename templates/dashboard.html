@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - Dashboard{% endblock %}
+{% block content %}
+
+<!-- Free user purchase banner -->
+{% if session.get('plan','free') == 'free' %}
+<div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;border-radius:12px;padding:1rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
+  <div>
+    <p style="font-weight:700;font-size:1rem;margin-bottom:.2rem"><i class="fas fa-crown" style="color:#fbbf24"></i> You're on the Free plan (50 questions limit)</p>
+    <p style="font-size:.85rem;opacity:.85">Unlock all 2,174 questions &middot; Exam mode &middot; Unlimited access!</p>
+  </div>
+  <a href="{{ PURCHASE_URL }}"
+     target="_blank" rel="noopener"
+     style="display:inline-flex;align-items:center;gap:.5rem;background:#f59e0b;color:#fff;font-weight:700;font-size:.9rem;padding:.6rem 1.4rem;border-radius:8px;text-decoration:none;white-space:nowrap"
+     onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+    <i class="fas fa-shopping-cart"></i> Buy Premium
+  </a>
+</div>
+{% endif %}
+
+<!-- Weak area alert -->
+{% if weak_alert %}
+<div class="weak-banner" style="margin-bottom:1.25rem">
+  <div>
+    <p style="font-weight:700;font-size:1rem;margin-bottom:.3rem">
+      <i class="fas fa-exclamation-triangle" style="color:#fbbf24"></i>
+      Weak Area Found: <strong>{{ weak_alert.domain }}</strong>
+    </p>
+    <p style="font-size:.87rem;opacity:.9">Accuracy <strong>{{ weak_alert.accuracy }}%</strong> — Focused study recommended!</p>
+  </div>
+  <a href="{{ url_for('stats') }}" class="btn"
+     style="white-space:nowrap;background:rgba(255,255,255,.2);color:#fff;border:2px solid rgba(255,255,255,.5)">
+    <i class="fas fa-chart-bar"></i> View Stats
+  </a>
+</div>
+{% endif %}
+
+<h1 style="font-size:1.5rem;margin-bottom:1.25rem">Welcome, {{ session.username.split('@')[0] }}!</h1>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="stat-value">{{ total_q }}</div><div class="stat-label">Total Questions</div></div>
+  <div class="stat-card success"><div class="stat-value">{{ accuracy }}%</div><div class="stat-label">Overall Accuracy</div></div>
+  <div class="stat-card warning"><div class="stat-value">{{ sessions_done }}</div><div class="stat-label">Sessions Completed</div></div>
+  <div class="stat-card"><div class="stat-value">{{ total_answered }}</div><div class="stat-label">Questions Answered</div></div>
+  <div class="stat-card success"><div class="stat-value">{{ total_correct }}</div><div class="stat-label">Correct Answers</div></div>
+  <div class="stat-card danger"><div class="stat-value">{{ wrong_count }}</div><div class="stat-label">Unresolved Wrong</div></div>
+</div>
+
+<div class="two-col">
+  <div class="card" style="text-align:center;padding:2rem">
+    <i class="fas fa-play-circle" style="font-size:3rem;color:var(--primary);margin-bottom:1rem"></i>
+    <h2>Start Quiz</h2>
+    <p style="color:var(--muted);margin-bottom:1.25rem">Choose a mode and start practicing</p>
+    <a href="{{ url_for('quiz_start') }}" class="btn btn-primary btn-lg"><i class="fas fa-rocket"></i> Start</a>
+  </div>
+  <div class="card" style="text-align:center;padding:2rem">
+    <i class="fas fa-redo" style="font-size:3rem;color:var(--danger);margin-bottom:1rem"></i>
+    <h2>Review Wrong Answers</h2>
+    <p style="color:var(--muted);margin-bottom:1.25rem">{{ wrong_count }} unresolved wrong answers</p>
+    <a href="{{ url_for('wrong_answers') }}" class="btn btn-danger btn-lg"><i class="fas fa-list"></i> Review</a>
+  </div>
+</div>
+
+<!-- Bookmarks & Exam mode -->
+<div class="two-col">
+  <div class="card" style="text-align:center;padding:1.5rem">
+    <i class="fas fa-bookmark" style="font-size:2.5rem;color:#f59e0b;margin-bottom:.75rem"></i>
+    <h2>Bookmarks</h2>
+    <p style="color:var(--muted);margin-bottom:1rem">{{ bookmark_count }} saved questions</p>
+    <a href="{{ url_for('bookmark_list') }}" class="btn btn-outline"><i class="fas fa-book-open"></i> View</a>
+  </div>
+  <div class="card" style="text-align:center;padding:1.5rem">
+    <i class="fas fa-clock" style="font-size:2.5rem;color:var(--primary);margin-bottom:.75rem"></i>
+    <h2>Exam Simulation</h2>
+    <p style="color:var(--muted);margin-bottom:1rem">180 questions &middot; 4-hour timer</p>
+    {% if session.get('plan','free') == 'free' %}
+    <a href="{{ PURCHASE_URL }}" target="_blank"
+       class="btn btn-outline" style="border-color:#f59e0b;color:#b45309">
+      <i class="fas fa-crown"></i> Premium Only
+    </a>
+    {% else %}
+    <a href="{{ url_for('quiz_start') }}" class="btn btn-primary"><i class="fas fa-play"></i> Start</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2><i class="fas fa-chart-line"></i> Accuracy Trend</h2>
+  <div class="chart-container"><canvas id="trendChart"></canvas></div>
+</div>
+
+<script>
+fetch('/api/trend').then(r=>r.json()).then(data=>{
+  if(!data.length) return;
+  new Chart(document.getElementById('trendChart'),{
+    type:'line',
+    data:{labels:data.map((d,i)=>'#'+(i+1)),
+      datasets:[{label:'Accuracy %',data:data.map(d=>d.accuracy),
+        borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.1)',fill:true,
+        tension:.3,pointRadius:4,pointBackgroundColor:'#2563eb'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}},x:{title:{display:true,text:'Session'}}},
+      plugins:{legend:{display:false}}}
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}My Statistics{% endblock %}
+{% block content %}
+<h1 style="font-size:1.4rem;margin-bottom:1.25rem"><i class="fas fa-chart-line"></i> My Study Statistics</h1>
+
+<!-- Weak area alert banner -->
+{% if weak_domains or weak_areas %}
+<div class="weak-banner">
+  <div>
+    <p style="font-weight:700;font-size:1rem;margin-bottom:.4rem">
+      <i class="fas fa-exclamation-triangle" style="color:#fbbf24"></i> Weak areas detected!
+    </p>
+    <div style="font-size:.88rem;opacity:.9">
+      {% for d in weak_domains[:3] %}
+      <span style="display:inline-block;margin-right:.75rem;margin-bottom:.25rem">
+        Domain <strong>{{ d.domain }}</strong> &mdash; {{ d.accuracy }}% ({{ d.total }} questions)
+      </span>
+      {% endfor %}
+      {% for a in weak_areas[:3] %}
+      <span style="display:inline-block;margin-right:.75rem;margin-bottom:.25rem">
+        Area <strong>{{ a.knowledge_area }}</strong> &mdash; {{ a.accuracy }}% ({{ a.total }} questions)
+      </span>
+      {% endfor %}
+    </div>
+  </div>
+  {% if weak_domains %}
+  <a href="{{ url_for('quiz_start') }}" class="btn btn-primary"
+     style="white-space:nowrap;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.5)">
+    <i class="fas fa-crosshairs"></i> Focused Study
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Accuracy Trend</h2>
+  <div class="chart-container"><canvas id="trendChart"></canvas></div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <h2><i class="fas fa-layer-group"></i> By Domain</h2>
+    <div class="chart-container" style="height:250px"><canvas id="domainChart"></canvas></div>
+    <table style="margin-top:1rem">
+      <thead><tr><th>Domain</th><th>Total</th><th>Correct</th><th>Accuracy</th></tr></thead>
+      <tbody>
+      {% for d in domain_stats %}
+      <tr>
+        <td><span class="badge badge-purple">{{ d.domain }}</span></td>
+        <td>{{ d.total }}</td><td>{{ d.correct }}</td>
+        <td>
+          <strong style="color:{% if d.accuracy >= 70 %}var(--success){% elif d.accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %}">
+            {{ d.accuracy }}%
+          </strong>
+          {% if d.accuracy < 65 and d.total >= 5 %}<span style="color:var(--danger);font-size:.75rem"> &#9888;</span>{% endif %}
+        </td>
+      </tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2><i class="fas fa-code-branch"></i> By Methodology</h2>
+    <div class="chart-container" style="height:250px"><canvas id="methodChart"></canvas></div>
+    <table style="margin-top:1rem">
+      <thead><tr><th>Methodology</th><th>Total</th><th>Correct</th><th>Accuracy</th></tr></thead>
+      <tbody>
+      {% for m in method_stats %}
+      <tr>
+        <td><span class="badge badge-blue">{{ m.methodology }}</span></td>
+        <td>{{ m.total }}</td><td>{{ m.correct }}</td>
+        <td>
+          <strong style="color:{% if m.accuracy >= 70 %}var(--success){% elif m.accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %}">
+            {{ m.accuracy }}%
+          </strong>
+        </td>
+      </tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2><i class="fas fa-book"></i> Knowledge Area Accuracy</h2>
+  <div class="chart-container"><canvas id="areaChart"></canvas></div>
+  {% if weak_areas %}
+  <div style="margin-top:.75rem;padding:.75rem 1rem;background:#fef2f2;border-radius:8px;font-size:.85rem">
+    <strong style="color:var(--danger)"><i class="fas fa-exclamation-circle"></i> Needs improvement:</strong>
+    {% for a in weak_areas %}<span style="margin:0 .5rem;color:var(--danger)">{{ a.knowledge_area }} ({{ a.accuracy }}%)</span>{% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2><i class="fas fa-history"></i> Session History</h2>
+  <table>
+    <thead><tr><th>#</th><th>Mode</th><th>Score</th><th>Accuracy</th><th>Date</th></tr></thead>
+    <tbody>
+    {% for s in sessions %}
+    <tr>
+      <td>{{ s.id }}</td>
+      <td><span class="badge badge-gray">{{ s.mode }}</span></td>
+      <td>{{ s.score }}/{{ s.total }}</td>
+      <td>
+        <strong style="color:{% if s.accuracy >= 70 %}var(--success){% elif s.accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %}">
+          {{ s.accuracy }}%
+        </strong>
+      </td>
+      <td style="font-size:.85rem;color:var(--muted)">{{ s.completed_at[:16] if s.completed_at else '' }}</td>
+    </tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+const colors=['#2563eb','#dc2626','#f59e0b','#16a34a','#7c3aed','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16'];
+
+fetch('/api/trend').then(r=>r.json()).then(data=>{
+  if(!data.length) return;
+  new Chart(document.getElementById('trendChart'),{
+    type:'line',
+    data:{labels:data.map((d,i)=>'#'+(i+1)),
+      datasets:[{label:'Accuracy %',data:data.map(d=>d.accuracy),
+        borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.1)',fill:true,tension:.3,pointRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}},
+      plugins:{legend:{display:false}}}
+  });
+});
+
+const domainStats={{ domain_stats|list|tojson }};
+new Chart(document.getElementById('domainChart'),{
+  type:'radar',
+  data:{labels:domainStats.map(d=>d.domain),
+    datasets:[{label:'Accuracy',data:domainStats.map(d=>d.accuracy),
+      borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.2)',pointBackgroundColor:'#2563eb'}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    scales:{r:{min:0,max:100,ticks:{stepSize:20}}},plugins:{legend:{display:false}}}
+});
+
+const methodStats={{ method_stats|list|tojson }};
+new Chart(document.getElementById('methodChart'),{
+  type:'polarArea',
+  data:{labels:methodStats.map(d=>d.methodology),
+    datasets:[{data:methodStats.map(d=>d.accuracy),
+      backgroundColor:colors.slice(0,methodStats.length).map(c=>c+'99')}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    scales:{r:{min:0,max:100}},plugins:{legend:{position:'right',labels:{font:{size:11}}}}}
+});
+
+const areaStats={{ area_stats|list|tojson }};
+new Chart(document.getElementById('areaChart'),{
+  type:'bar',
+  data:{labels:areaStats.map(d=>d.knowledge_area),
+    datasets:[{label:'Accuracy %',data:areaStats.map(d=>d.accuracy),
+      backgroundColor:areaStats.map(d=>d.accuracy>=70?'#16a34a99':d.accuracy>=50?'#f59e0b99':'#dc262699'),
+      borderColor:areaStats.map(d=>d.accuracy>=70?'#16a34a':d.accuracy>=50?'#f59e0b':'#dc2626'),borderWidth:1}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}},plugins:{legend:{display:false}}}
+});
+</script>
+{% endblock %}

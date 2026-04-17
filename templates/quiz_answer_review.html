@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Answer Review{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:0 auto">
+  <div class="card">
+    <!-- Timer (exam mode) -->
+    {% if remaining_sec is not none %}
+    <div style="text-align:right;margin-bottom:.75rem">
+      <span class="exam-timer" id="timerDisplay">
+        <i class="fas fa-clock"></i>
+        <span id="timerText">--:--:--</span>
+      </span>
+    </div>
+    {% endif %}
+
+    <!-- Correct/Wrong indicator -->
+    <div style="text-align:center;margin-bottom:1rem">
+      {% if is_correct %}
+      <div style="font-size:3rem">&#9989;</div>
+      <h2 style="color:var(--success)">Correct!</h2>
+      {% else %}
+      <div style="font-size:3rem">&#10060;</div>
+      <h2 style="color:var(--danger)">Incorrect</h2>
+      {% endif %}
+    </div>
+
+    <!-- Question number + action buttons -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
+      <p style="font-size:.8rem;color:var(--muted)">Question #{{ question.no }}</p>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn-bookmark {% if is_bookmarked %}active{% endif %}"
+                id="bookmarkBtn"
+                onclick="toggleBookmark({{ question.no }}, this)">
+          <i class="{% if is_bookmarked %}fas{% else %}far{% endif %} fa-bookmark"></i>
+          {% if is_bookmarked %}Saved{% else %}Bookmark{% endif %}
+        </button>
+        <button class="btn-report" onclick="openReportModal({{ question.no }})">
+          <i class="fas fa-flag"></i> Report
+        </button>
+      </div>
+    </div>
+
+    <p style="font-size:1.02rem;line-height:1.7;margin-bottom:1.25rem">{{ question.question }}</p>
+
+    {% for letter, text in options %}
+    <div class="option-card
+      {% if letter == question.answer %}correct{% endif %}
+      {% if letter == user_answer and not is_correct %}wrong{% endif %}"
+      style="cursor:default">
+      <span class="option-letter">{{ letter }}</span>
+      <span class="option-text">
+        {{ text }}
+        {% if letter == question.answer %}<i class="fas fa-check" style="color:var(--success);margin-left:.5rem"></i>{% endif %}
+        {% if letter == user_answer and not is_correct %}<i class="fas fa-times" style="color:var(--danger);margin-left:.5rem"></i>{% endif %}
+      </span>
+    </div>
+    {% endfor %}
+
+    {% if explanation %}
+    <div class="explanation-box">
+      <strong><i class="fas fa-lightbulb" style="color:var(--warning)"></i> Explanation</strong><br><br>
+      {{ explanation }}
+    </div>
+    {% endif %}
+
+    <div style="margin-top:1.5rem;text-align:center">
+      <a href="{{ url_for('quiz_question') }}" class="btn btn-primary btn-lg">
+        <i class="fas fa-arrow-right"></i> Next Question ({{ current }}/{{ total }})
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if remaining_sec is not none %}
+<script>
+let remaining = {{ remaining_sec }};
+const timerDisplay = document.getElementById('timerDisplay');
+const timerText = document.getElementById('timerText');
+function formatTime(sec){
+  const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function tick(){
+  if(remaining<=0){timerText.textContent='00:00:00';timerDisplay.classList.add('warn');return;}
+  timerText.textContent=formatTime(remaining);
+  if(remaining<=600) timerDisplay.classList.add('warn');
+  remaining--;
+  setTimeout(tick,1000);
+}
+tick();
+</script>
+{% endif %}
+{% endblock %}

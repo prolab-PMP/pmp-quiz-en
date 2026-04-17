@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Wrong Answers{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+  <h1 style="font-size:1.4rem"><i class="fas fa-times-circle" style="color:var(--danger)"></i> Wrong Answers ({{ wrongs|length }})</h1>
+  {% if wrongs %}
+  <form method="POST" action="{{ url_for('quiz_start') }}" style="display:inline">
+    <input type="hidden" name="mode" value="wrong">
+    <input type="hidden" name="count" value="{{ wrongs|length }}">
+    <button type="submit" class="btn btn-danger"><i class="fas fa-redo"></i> Retry All Wrong ({{ wrongs|length }})</button>
+  </form>
+  {% endif %}
+</div>
+
+{% if not wrongs %}
+<div class="card" style="text-align:center;padding:3rem">
+  <i class="fas fa-trophy" style="font-size:4rem;color:var(--success);margin-bottom:1rem"></i>
+  <h2 style="color:var(--success)">No wrong answers!</h2>
+  <p style="color:var(--muted)">All resolved. Great job!</p>
+</div>
+{% else %}
+
+{% if domain_counts %}
+<div class="two-col" style="margin-bottom:1rem">
+  <div class="card">
+    <h2><i class="fas fa-chart-pie"></i> Wrong by Domain</h2>
+    <div class="chart-container" style="height:220px"><canvas id="domainChart"></canvas></div>
+  </div>
+  <div class="card">
+    <h2><i class="fas fa-chart-bar"></i> Wrong by Knowledge Area</h2>
+    <div class="chart-container" style="height:220px"><canvas id="areaChart"></canvas></div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <table>
+    <thead><tr><th>Q#</th><th>Question</th><th>Answer</th><th>Domain</th><th>Area</th><th>Wrong Count</th><th>Last Wrong</th></tr></thead>
+    <tbody>
+    {% for w in wrongs %}
+    <tr>
+      <td>{{ w.question_no }}</td>
+      <td style="max-width:350px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ w.question[:80] }}</td>
+      <td><span class="badge badge-blue">{{ w.answer }}</span></td>
+      <td><span class="badge badge-purple">{{ w.domain }}</span></td>
+      <td><span class="badge badge-gray">{{ w.knowledge_area }}</span></td>
+      <td><span class="badge badge-red">{{ w.wrong_count }}x</span></td>
+      <td style="font-size:.8rem;color:var(--muted)">{{ w.last_wrong_at[:16] if w.last_wrong_at else '' }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+const domainData = {{ domain_counts|tojson }};
+const areaData = {{ area_counts|tojson }};
+const colors = ['#2563eb','#dc2626','#f59e0b','#16a34a','#7c3aed','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16'];
+new Chart(document.getElementById('domainChart'),{
+  type:'doughnut',
+  data:{labels:Object.keys(domainData),datasets:[{data:Object.values(domainData),backgroundColor:colors}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11}}}}}
+});
+new Chart(document.getElementById('areaChart'),{
+  type:'bar',
+  data:{labels:Object.keys(areaData),datasets:[{data:Object.values(areaData),backgroundColor:colors}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},
+    scales:{x:{beginAtZero:true,ticks:{stepSize:1}}}}
+});
+</script>
+{% endif %}
+{% endblock %}

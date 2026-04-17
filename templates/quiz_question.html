@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Q{{ current }}/{{ total }}{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:0 auto">
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;flex-wrap:wrap;gap:.5rem">
+    <span class="badge badge-blue">Q{{ current }} / {{ total }}</span>
+    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+      {% if remaining_sec is not none %}
+      <span class="exam-timer" id="timerDisplay">
+        <i class="fas fa-clock"></i>
+        <span id="timerText">--:--:--</span>
+      </span>
+      {% endif %}
+      <span class="badge badge-purple">{{ question.domain }}</span>
+      <span class="badge badge-green">{{ question.knowledge_area }}</span>
+      <span class="badge badge-gray">{{ question.methodology }}</span>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="fill" style="width:{{ progress }}%"></div></div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
+      <p style="font-size:.8rem;color:var(--muted)">Question #{{ question.no }}</p>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn-bookmark {% if is_bookmarked %}active{% endif %}"
+                id="bookmarkBtn"
+                onclick="toggleBookmark({{ question.no }}, this)">
+          <i class="{% if is_bookmarked %}fas{% else %}far{% endif %} fa-bookmark"></i>
+          {% if is_bookmarked %}Saved{% else %}Bookmark{% endif %}
+        </button>
+        <button class="btn-report" onclick="openReportModal({{ question.no }})">
+          <i class="fas fa-flag"></i> Report
+        </button>
+      </div>
+    </div>
+
+    <!-- Question text (English only) -->
+    <p style="font-size:1.05rem;line-height:1.7;margin-bottom:1.5rem">{{ question.question }}</p>
+
+    <form method="POST" action="{{ url_for('quiz_answer') }}" id="quizForm">
+      {% for letter, text in options %}
+      <label class="option-card" onclick="selectOption(this, '{{ letter }}')">
+        <span class="option-letter">{{ letter }}</span>
+        <span class="option-text">{{ text }}</span>
+      </label>
+      {% endfor %}
+      <input type="hidden" name="answer" id="answerInput" value="">
+      <input type="hidden" name="show_result" id="showResultInput" value="0">
+      <input type="hidden" name="timeout" id="timeoutInput" value="0">
+
+      <div style="display:flex;gap:.75rem;margin-top:1.25rem">
+        <button type="submit" class="btn btn-primary btn-lg" style="flex:1;justify-content:center" id="submitBtn" disabled
+                onclick="document.getElementById('showResultInput').value='0'">
+          <i class="fas fa-arrow-right"></i> Next
+        </button>
+        <button type="submit" class="btn btn-outline btn-lg" style="flex:1;justify-content:center" id="reviewBtn" disabled
+                onclick="document.getElementById('showResultInput').value='1'">
+          <i class="fas fa-eye"></i> Grade & Explain
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function selectOption(el, letter) {
+  document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('answerInput').value = letter;
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('reviewBtn').disabled = false;
+}
+
+{% if remaining_sec is not none %}
+// ── Exam Timer ──
+let remaining = {{ remaining_sec }};
+const timerDisplay = document.getElementById('timerDisplay');
+const timerText = document.getElementById('timerText');
+
+function formatTime(sec){
+  const h = Math.floor(sec/3600);
+  const m = Math.floor((sec%3600)/60);
+  const s = sec % 60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function tick(){
+  if(remaining <= 0){
+    timerText.textContent = '00:00:00';
+    timerDisplay.classList.add('warn');
+    document.getElementById('timeoutInput').value = '1';
+    document.getElementById('showResultInput').value = '0';
+    document.getElementById('answerInput').value = document.getElementById('answerInput').value || '';
+    document.getElementById('quizForm').submit();
+    return;
+  }
+  timerText.textContent = formatTime(remaining);
+  if(remaining <= 600) timerDisplay.classList.add('warn');
+  remaining--;
+  setTimeout(tick, 1000);
+}
+tick();
+{% endif %}
+</script>
+{% endblock %}

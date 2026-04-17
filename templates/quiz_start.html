@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - Quiz Settings{% endblock %}
+{% block content %}
+<div style="max-width:620px;margin:1rem auto">
+  {% if is_free %}
+  <div style="background:#fef9c3;border:1.5px solid #fbbf24;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.85rem;color:#92400e">
+    <i class="fas fa-info-circle"></i> Free plan: Up to {{ free_limit }} questions available.
+    <a href="{{ PURCHASE_URL }}" target="_blank" style="color:#b45309;font-weight:700">&rarr; Buy Premium</a>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2 style="margin-bottom:1.25rem"><i class="fas fa-cog"></i> Quiz Settings</h2>
+    <form method="POST" id="quizForm">
+
+      <!-- Quiz Mode -->
+      <div class="form-group">
+        <label style="font-size:.95rem">Quiz Mode</label>
+        <div style="display:flex;gap:.6rem;margin-top:.4rem;flex-wrap:wrap">
+          <label class="mode-pill selected" data-mode="random">
+            <input type="radio" name="mode" value="random" checked style="display:none">
+            <i class="fas fa-random"></i> Random
+          </label>
+          <label class="mode-pill" data-mode="sequential">
+            <input type="radio" name="mode" value="sequential" style="display:none">
+            <i class="fas fa-list-ol"></i> Sequential
+          </label>
+          <label class="mode-pill {% if wrong_count == 0 %}disabled{% endif %}" data-mode="wrong">
+            <input type="radio" name="mode" value="wrong" {% if wrong_count == 0 %}disabled{% endif %} style="display:none">
+            <i class="fas fa-redo"></i> Wrong Only
+            <span style="background:rgba(0,0,0,.15);border-radius:10px;padding:.05rem .4rem;font-size:.75rem;margin-left:.2rem">{{ wrong_count }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- PMBOK Edition -->
+      <div class="form-group" id="pmbokGroup">
+        <label style="font-size:.95rem;display:flex;align-items:center;gap:.5rem">
+          PMBOK Edition
+          <span style="font-size:.78rem;color:var(--muted);font-weight:400">&mdash; Filter by specific edition</span>
+        </label>
+        <div style="display:flex;gap:.6rem;margin-top:.4rem;flex-wrap:wrap">
+          <label class="pmbok-pill selected" data-ed="">
+            <input type="radio" name="pmbok_edition" value="" checked style="display:none">
+            All
+          </label>
+          <label class="pmbok-pill" data-ed="7">
+            <input type="radio" name="pmbok_edition" value="7" style="display:none">
+            PMBOK 7th
+            {% if pmbok7_count %}<span style="font-size:.75rem;opacity:.75"> ({{ pmbok7_count }})</span>{% endif %}
+          </label>
+          <label class="pmbok-pill" data-ed="8">
+            <input type="radio" name="pmbok_edition" value="8" style="display:none">
+            PMBOK 8th
+            {% if pmbok8_count %}<span style="font-size:.75rem;opacity:.75"> ({{ pmbok8_count }})</span>{% endif %}
+          </label>
+        </div>
+      </div>
+
+      <!-- Question Count -->
+      <div class="form-group" id="countGroup">
+        <label style="font-size:.95rem">Number of Questions</label>
+        <select name="count" style="margin-top:.4rem">
+          <option value="5">5 questions</option>
+          <option value="10" selected>10 questions</option>
+          <option value="20">20 questions</option>
+          <option value="30">30 questions</option>
+          <option value="50">50 questions</option>
+          {% if not is_free %}
+          <option value="100">100 questions</option>
+          <option value="180">180 questions (exam length)</option>
+          <option value="9999">All questions</option>
+          {% endif %}
+        </select>
+      </div>
+
+      <!-- Advanced Filters -->
+      <details style="margin-bottom:1rem">
+        <summary style="cursor:pointer;color:var(--primary);font-size:.9rem;font-weight:600;padding:.4rem 0;user-select:none">
+          <i class="fas fa-filter"></i> Advanced Filters (Domain &middot; Methodology &middot; Knowledge Area)
+        </summary>
+        <div style="padding:.75rem 0 .25rem;display:grid;gap:.75rem">
+          <div class="form-group" style="margin:0">
+            <label style="font-size:.88rem">Domain</label>
+            <select name="domain" style="margin-top:.3rem">
+              <option value="">All Domains</option>
+              {% for d in domains %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label style="font-size:.88rem">Methodology</label>
+            <select name="methodology" style="margin-top:.3rem">
+              <option value="">All</option>
+              {% for m in methods %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label style="font-size:.88rem">Knowledge Area</label>
+            <select name="knowledge_area" style="margin-top:.3rem">
+              <option value="">All</option>
+              {% for a in areas %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+      </details>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center">
+        <i class="fas fa-play"></i> Start Quiz
+      </button>
+    </form>
+  </div>
+</div>
+
+<style>
+.mode-pill,.pmbok-pill{
+  display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.1rem;
+  border:2px solid var(--border);border-radius:20px;cursor:pointer;
+  font-size:.88rem;font-weight:600;color:var(--muted);transition:all .18s;
+  white-space:nowrap;user-select:none
+}
+.mode-pill:hover:not(.disabled),.pmbok-pill:hover{border-color:var(--primary);color:var(--primary)}
+.mode-pill.selected,.pmbok-pill.selected{border-color:var(--primary);color:var(--primary);background:#eff6ff}
+.mode-pill.disabled{opacity:.4;cursor:not-allowed}
+body.dark .mode-pill.selected,body.dark .pmbok-pill.selected{background:#1e3a5f}
+#pmbokGroup.highlight{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:10px;padding:.75rem;margin:-0.25rem;border:1.5px dashed var(--success)}
+</style>
+<script>
+document.querySelectorAll('.mode-pill:not(.disabled)').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('selected'));
+    pill.classList.add('selected');
+    const mode = pill.dataset.mode;
+    const pmbokGroup = document.getElementById('pmbokGroup');
+    pmbokGroup.classList.toggle('highlight', mode === 'wrong');
+  });
+});
+document.querySelectorAll('.pmbok-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.pmbok-pill').forEach(p => p.classList.remove('selected'));
+    pill.classList.add('selected');
+  });
+});
+</script>
+{% endblock %}
