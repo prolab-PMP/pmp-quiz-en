@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}Question {{ q.no }}번 Edit{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+    <a href="{{ back }}" style="color:var(--text);text-decoration:none;font-size:1.3rem;">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <h2 style="margin:0;">Question {{ q.no }}번 Edit</h2>
+</div>
+
+<form method="POST">
+    <input type="hidden" name="next" value="{{ back }}">
+
+    <!-- 탭 네비 -->
+    <div style="display:flex;gap:4px;margin-bottom:0;flex-wrap:wrap;">
+        <button type="button" class="tab-btn active" onclick="showTab('en')">영문</button>
+        <button type="button" class="tab-btn" onclick="showTab('kr')">한국어 번역</button>
+        <button type="button" class="tab-btn" onclick="showTab('cat')">min류</button>
+    </div>
+
+    <!-- 영문 탭 -->
+    <div id="tab-en" class="tab-panel card" style="border-radius:0 8px 8px 8px;">
+
+        <div class="form-group">
+            <label class="form-label">Correct <span style="color:var(--danger);">*</span>
+                <small style="color:var(--text-muted);font-weight:400;">A / B / C / D / E  or  복수Correct: A,C</small>
+            </label>
+            <input type="text" name="answer" value="{{ q.answer }}" required
+                   class="form-control" style="max-width:200px;font-weight:700;text-transform:uppercase;"
+                   placeholder="예: A  or  A,C">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Question <span style="color:var(--danger);">*</span></label>
+            <textarea name="question" rows="4" required class="form-control">{{ q.question or '' }}</textarea>
+        </div>
+
+        {% for letter, field in [('A','opt_a'),('B','opt_b'),('C','opt_c'),('D','opt_d'),('E','opt_e')] %}
+        <div class="form-group">
+            <label class="form-label">View {{ letter }}</label>
+            <input type="text" name="{{ field }}" value="{{ q|attr(field) or '' }}"
+                   class="form-control" placeholder="없으면 비워두세요">
+        </div>
+        {% endfor %}
+
+        <div class="form-group">
+            <label class="form-label">Explanation</label>
+            <textarea name="explanation" rows="4" class="form-control">{{ q.explanation or '' }}</textarea>
+        </div>
+    </div>
+
+    <!-- 한국어 번역 탭 -->
+    <div id="tab-kr" class="tab-panel card" style="border-radius:0 8px 8px 8px;display:none;">
+
+        <div class="form-group">
+            <label class="form-label">Question (한국어)</label>
+            <textarea name="question_kr" rows="4" class="form-control">{{ q.question_kr or '' }}</textarea>
+        </div>
+
+        {% for letter, field in [('A','opt_a_kr'),('B','opt_b_kr'),('C','opt_c_kr'),('D','opt_d_kr'),('E','opt_e_kr')] %}
+        <div class="form-group">
+            <label class="form-label">View {{ letter }} (한국어)</label>
+            <input type="text" name="{{ field }}" value="{{ q|attr(field) or '' }}" class="form-control">
+        </div>
+        {% endfor %}
+
+        <div class="form-group">
+            <label class="form-label">Explanation (한국어)</label>
+            <textarea name="explanation_kr" rows="4" class="form-control">{{ q.explanation_kr or '' }}</textarea>
+        </div>
+    </div>
+
+    <!-- min류 탭 -->
+    <div id="tab-cat" class="tab-panel card" style="border-radius:0 8px 8px 8px;display:none;">
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+
+            <div class="form-group">
+                <label class="form-label">PMBOK7 Domain</label>
+                <input type="text" name="pmbok7_domain" value="{{ q.pmbok7_domain or '' }}"
+                       class="form-control" list="pmbok7_domain_list">
+                <datalist id="pmbok7_domain_list">
+                    {% for v in categories.pmbok7.domain %}<option value="{{ v }}">{% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">PMBOK7 Principle</label>
+                <input type="text" name="pmbok7_principle" value="{{ q.pmbok7_principle or '' }}"
+                       class="form-control" list="pmbok7_principle_list">
+                <datalist id="pmbok7_principle_list">
+                    {% for v in categories.pmbok7.principle %}<option value="{{ v }}">{% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">2021 ECO Domain</label>
+                <input type="text" name="eco2021_domain" value="{{ q.eco2021_domain or '' }}"
+                       class="form-control" list="eco2021_domain_list">
+                <datalist id="eco2021_domain_list">
+                    {% for v in categories.pmbok7.eco_domain %}<option value="{{ v }}">{% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">2021 ECO Task</label>
+                <input type="text" name="eco2021_task" value="{{ q.eco2021_task or '' }}"
+                       class="form-control" list="eco2021_task_list">
+                <datalist id="eco2021_task_list">
+                    {% for v in categories.pmbok7.eco_task %}<option value="{{ v }}">{% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">PMBOK8 Domain</label>
+                <input type="text" name="pmbok8_domain" value="{{ q.pmbok8_domain or '' }}"
+                       class="form-control" list="pmbok8_domain_list">
+                <datalist id="pmbok8_domain_list">
+                    {% for v in categories.pmbok8.domain %}<option value="{{ v }}">{% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">PMBOK8 Principle</label>
+                <input type="text" name="pmbok8_principle" value="{{ q.pmbok8_principle or '' }}"
+                       class="form-control" list="pmbok8_principle_list">
+                <datalist id="pmbok8_principle_list">
+                    {% for v in categories.pmbok8.principle %}<option value="{{ v }}">{% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">PMBOK8 Process</label>
+                <input type="text" name="pmbok8_process" value="{{ q.pmbok8_process or '' }}"
+                       class="form-control" list="pmbok8_process_list">
+                <datalist id="pmbok8_process_list">
+                    {% for v in categories.pmbok8.process %}<option value="{{ v }}">{% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">PMBOK8 Focus Area</label>
+                <input type="text" name="pmbok8_focus_area" value="{{ q.pmbok8_focus_area or '' }}"
+                       class="form-control" list="pmbok8_focus_area_list">
+                <datalist id="pmbok8_focus_area_list">
+                    {% for v in categories.pmbok8.focus_area %}<option value="{{ v }}">{% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">2026 ECO Domain</label>
+                <input type="text" name="eco2026_domain" value="{{ q.eco2026_domain or '' }}"
+                       class="form-control" list="eco2026_domain_list">
+                <datalist id="eco2026_domain_list">
+                    {% for v in categories.pmbok8.eco_domain %}<option value="{{ v }}">{% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">2026 ECO Task</label>
+                <input type="text" name="eco2026_task" value="{{ q.eco2026_task or '' }}"
+                       class="form-control" list="eco2026_task_list">
+                <datalist id="eco2026_task_list">
+                    {% for v in categories.pmbok8.eco_task %}<option value="{{ v }}">{% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Methodology</label>
+                <input type="text" name="methodology" value="{{ q.methodology or '' }}"
+                       class="form-control" list="methodology_list">
+                <datalist id="methodology_list">
+                    {% for v in categories.methodology %}<option value="{{ v }}">{% endfor %}
+                </datalist>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Save 버튼 -->
+    <div style="display:flex;gap:12px;margin-top:20px;justify-content:flex-end;">
+        <a href="{{ back }}" class="btn btn-outline">Cancel</a>
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-save"></i> Save
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.tab-btn {
+    padding: 8px 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    font-size: 0.9rem;
+    border-bottom: none;
+}
+.tab-btn.active {
+    background: var(--card-bg);
+    color: var(--primary);
+    font-weight: 600;
+    border-color: var(--border);
+}
+.tab-panel {
+    margin-top: 0;
+    border-radius: 0 8px 8px 8px !important;
+}
+</style>
+<script>
+function showTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).style.display = 'block';
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}

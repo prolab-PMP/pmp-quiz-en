@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Free trial - 결과{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom:20px;"><i class="fas fa-clipboard-check"></i> Free trial 결과</h2>
+
+<div class="result-summary {% if accuracy >= 61 %}pass{% else %}fail{% endif %}">
+    <div>
+        <div class="result-score" style="color:{% if accuracy >= 70 %}var(--success){% elif accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %}">
+            {{ "%.1f"|format(accuracy) }}%
+        </div>
+        <div class="result-detail">Accuracy</div>
+    </div>
+    <div>
+        <div class="result-score">{{ correct_count }}<span style="font-size:1.2rem;color:var(--text-muted);">/{{ total }}</span></div>
+        <div class="result-detail">Correct</div>
+    </div>
+</div>
+
+<!-- Mock stats for free users -->
+<div class="card">
+    <div class="card-header"><i class="fas fa-chart-pie"></i> 가상 통계 (Free trial)</div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" style="color:var(--danger)">{{ total - correct_count }}</div>
+            <div class="stat-label">Incorrect Question</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ "%.0f"|format(accuracy) }}%</div>
+            <div class="stat-label">이번 회차 Accuracy</div>
+        </div>
+    </div>
+    <p style="text-align:center;color:var(--text-muted);font-size:0.85rem;">
+        <i class="fas fa-lock"></i> 상세 통계, Incorrect 관리, 2000+ Question는 Log in 후 이용 가능합니다.
+    </p>
+</div>
+
+<!-- Translation Toggle -->
+<div style="margin-bottom:16px;text-align:right;">
+    <button type="button" class="translation-toggle" onclick="toggleAllTranslations(this)">
+        <i class="fas fa-language"></i> Show translation
+    </button>
+</div>
+
+{% for r in results %}
+<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span class="badge {% if r.is_correct %}badge-success{% else %}badge-danger{% endif %}">
+            Q{{ r.question.no }}
+            {% if r.is_correct %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-times"></i>{% endif %}
+        </span>
+        {% if not r.answered %}<span class="badge badge-warning">Unanswered</span>{% endif %}
+    </div>
+
+    <div class="translation-wrapper">
+        <div class="original"><div class="question-text">{{ r.question.question }}</div></div>
+        {% if r.question.question_kr %}
+        <div class="translation result-translation"><div class="question-text" style="border-left-color:#fbbf24;">{{ r.question.question_kr }}</div></div>
+        {% endif %}
+    </div>
+
+    <ul class="option-list">
+        {% set options = [('A', r.question.opt_a, r.question.opt_a_kr), ('B', r.question.opt_b, r.question.opt_b_kr), ('C', r.question.opt_c, r.question.opt_c_kr), ('D', r.question.opt_d, r.question.opt_d_kr), ('E', r.question.opt_e, r.question.opt_e_kr)] %}
+        {% for letter, text, text_kr in options %}
+            {% if text %}
+            {% set is_user = letter in r.user_answer %}
+            {% set is_correct = letter in r.correct_answer %}
+            <li class="option-item {% if is_correct %}correct{% elif is_user %}wrong{% endif %}">
+                <span class="option-letter">{{ letter }}</span>
+                <div class="option-text">
+                    <div class="translation-wrapper">
+                        <div class="original">{{ text }}
+                            {% if is_user and is_correct %}<i class="fas fa-check" style="color:var(--success)"></i>
+                            {% elif is_user %}<i class="fas fa-times" style="color:var(--danger)"></i>
+                            {% elif is_correct %}<i class="fas fa-check" style="color:var(--success)"></i>{% endif %}
+                        </div>
+                        {% if text_kr %}<div class="translation result-translation">{{ text_kr }}</div>{% endif %}
+                    </div>
+                </div>
+            </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+
+    <div class="explanation-box show">
+        <h4><i class="fas fa-lightbulb"></i> Explanation</h4>
+        <div class="translation-wrapper">
+            <div class="original"><p>{{ r.question.explanation or 'No explanation available.' }}</p></div>
+            {% if r.question.explanation_kr %}<div class="translation result-translation"><p>{{ r.question.explanation_kr }}</p></div>{% endif %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div style="text-align:center;margin-top:32px;">
+    <div class="card" style="padding:28px;background:linear-gradient(135deg,#667eea22,#764ba222);">
+        <i class="fas fa-lock" style="font-size:2rem;color:var(--primary);margin-bottom:12px;"></i>
+        <h3 style="margin-bottom:8px;">더 많은 Question를 풀고 싶으신가요?</h3>
+        <p style="color:var(--text-muted);margin-bottom:20px;font-size:0.95rem;">
+            Free trial은 여기까지입니다.<br>
+            유료버전을 구매하면 All <strong>2,219 items</strong> Question를 무제한으로 이용할 수 있습니다.
+        </p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt"></i> Log in / Sign up
+            </a>
+            <a href="mailto:songdoinfo@naver.com?subject=PMP Quiz Premium inquiry"
+               class="btn btn-success btn-lg">
+                <i class="fas fa-envelope"></i> Purchase inquiry
+            </a>
+        </div>
+        <p style="margin-top:16px;font-size:0.8rem;color:var(--text-muted);">
+            Contact: <a href="mailto:songdoinfo@naver.com">songdoinfo@naver.com</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleAllTranslations(btn) {
+    btn.classList.toggle('active');
+    const show = btn.classList.contains('active');
+    btn.innerHTML = show ? '<i class="fas fa-language"></i> Hide translation' : '<i class="fas fa-language"></i> Show translation';
+    document.querySelectorAll('.result-translation').forEach(el => el.classList.toggle('show', show));
+}
+</script>
+{% endblock %}

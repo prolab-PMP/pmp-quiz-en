@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - Bookmarks{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+    <h2 style="font-size:1.4rem;font-weight:700;">
+        <i class="fas fa-bookmark" style="color:#f59e0b;"></i> Bookmarks한 Question
+        <span style="font-size:1rem;color:var(--text-muted);font-weight:400;">({{ bookmarks|length }} items)</span>
+    </h2>
+    {% if bookmarks %}
+    <a href="{{ url_for('quiz_start') }}?mode=bookmark" class="btn btn-primary btn-sm">
+        <i class="fas fa-play"></i> Bookmarks로 풀기
+    </a>
+    {% endif %}
+</div>
+
+{% if not bookmarks %}
+<div class="empty-state">
+    <div class="icon"><i class="far fa-bookmark"></i></div>
+    <p>yet Bookmarks한 Question가 없습니다.</p>
+    <p style="font-size:0.9rem;margin-top:8px;color:var(--text-muted);">Practice 화면에서 <i class="far fa-bookmark"></i> 버튼을 눌러 Bookmarks하세요.</p>
+    <a href="{{ url_for('quiz_start') }}" class="btn btn-primary" style="margin-top:16px;">Question 풀러 가기</a>
+</div>
+{% else %}
+{% for bm in bookmarks %}
+<div class="bookmark-item">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div style="flex:1;min-width:0;">
+            <div class="q-no">Q{{ bm.question.no }}
+                {% if bm.question.pmbok7_domain %}
+                <span class="badge badge-info" style="font-size:0.75rem;margin-left:6px;">PMBOK7: {{ bm.question.pmbok7_domain }}</span>
+                {% endif %}
+                {% if bm.question.pmbok8_domain %}
+                <span class="badge" style="background:#7c3aed;color:#fff;font-size:0.75rem;margin-left:4px;">PMBOK8: {{ bm.question.pmbok8_domain }}</span>
+                {% endif %}
+            </div>
+            <div class="q-text">{{ bm.question.question }}</div>
+            {% if bm.question.question_kr %}
+            <div class="q-text" style="color:var(--text-muted);font-size:0.88rem;margin-top:6px;border-left:3px solid #f59e0b;padding-left:8px;">{{ bm.question.question_kr }}</div>
+            {% endif %}
+            <div style="margin-top:10px;">
+                <span class="answer-badge">Correct: {{ bm.question.answer }}</span>
+            </div>
+        </div>
+        <button class="btn-bookmark active"
+                onclick="removeBookmark({{ bm.question.no }}, this)"
+                style="flex-shrink:0;">
+            <i class="fas fa-bookmark"></i> 해제
+        </button>
+    </div>
+
+    <!-- Explanation 접기/펼치기 -->
+    {% if bm.question.explanation %}
+    <details style="margin-top:12px;">
+        <summary style="cursor:pointer;color:var(--text-muted);font-size:0.88rem;">
+            <i class="fas fa-lightbulb"></i> Explanation View
+        </summary>
+        <div style="margin-top:8px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);font-size:0.9rem;line-height:1.6;">
+            {{ bm.question.explanation }}
+            {% if bm.question.explanation_kr %}
+            <hr style="border-color:var(--border);margin:10px 0;">
+            <div style="color:var(--text-muted);">{{ bm.question.explanation_kr }}</div>
+            {% endif %}
+        </div>
+    </details>
+    {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+<script>
+function removeBookmark(qNo, btn) {
+    fetch('/api/bookmark/toggle', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({question_no: qNo})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.bookmarked) {
+            btn.closest('.bookmark-item').remove();
+            // 카운트 업데이트
+            const header = document.querySelector('h2 span');
+            const current = parseInt(header.textContent) - 1;
+            header.textContent = `(${current} items)`;
+            if (current === 0) location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

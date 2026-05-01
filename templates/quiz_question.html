@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - Question {{ current }}/{{ total }}{% endblock %}
+
+{% block content %}
+<!-- Progress -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <span style="font-weight:600;">Question {{ current }} / {{ total }}</span>
+    <span style="color:var(--text-muted);font-size:0.85rem;">
+        답변: {{ all_answers|length }} / {{ total }}
+    </span>
+</div>
+<div class="progress-bar-wrapper">
+    <div class="progress-bar" style="width:{{ (current / total * 100)|round }}%"></div>
+</div>
+
+<!-- Question Number Navigation -->
+<div class="question-nav" id="questionNav">
+    {% for i in range(q_nos|length) %}
+    <form method="POST" action="{{ url_for('quiz_save_answer') }}" style="display:inline;">
+        <input type="hidden" name="question_no" value="{{ question.no }}">
+        <input type="hidden" name="action" value="goto">
+        <input type="hidden" name="goto_num" value="{{ i + 1 }}">
+        <button type="submit" class="q-btn {% if i == current - 1 %}current{% elif all_answers.get(q_nos[i]|string) %}answered{% endif %}">
+            {{ i + 1 }}
+        </button>
+    </form>
+    {% endfor %}
+</div>
+
+<form method="POST" action="{{ url_for('quiz_save_answer') }}" id="quizForm">
+    <input type="hidden" name="question_no" value="{{ question.no }}">
+
+    <div class="card">
+        <!-- Translation Toggle + Actions -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <span class="badge badge-info">Q{{ question.no }}</span>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                {% if question.question_kr %}
+                <button type="button" class="translation-toggle" onclick="toggleTranslation(this)">
+                    <i class="fas fa-language"></i> Show translation
+                </button>
+                {% endif %}
+                <!-- Bookmarks 버튼 -->
+                <button type="button"
+                        id="bookmarkBtn"
+                        class="btn-bookmark {% if is_bookmarked %}active{% endif %}"
+                        onclick="toggleBookmark({{ question.no }})">
+                    <i class="{% if is_bookmarked %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                    {% if is_bookmarked %}Bookmarks됨{% else %}Bookmarks{% endif %}
+                </button>
+                <!-- Report 버튼 -->
+                <button type="button" class="btn-report" onclick="openReportModal({{ question.no }})">
+                    <i class="fas fa-flag"></i> Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Answer count hint -->
+        {% set ans_count = question.get_answer_count() %}
+        {% if ans_count > 1 %}
+        <div class="answer-count-hint">
+            <i class="fas fa-info-circle"></i> Correct {{ ans_count }} items를 Select하세요
+        </div>
+        {% endif %}
+
+        <!-- Question Text -->
+        <div class="translation-wrapper">
+            <div class="original">
+                <div class="question-text">{{ question.question }}</div>
+            </div>
+            {% if question.question_kr %}
+            <div class="translation" id="q-translation">
+                <div class="question-text" style="border-left-color:#fbbf24;">{{ question.question_kr }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Options -->
+        <ul class="option-list">
+            {% set options = [
+                ('A', question.opt_a, question.opt_a_kr),
+                ('B', question.opt_b, question.opt_b_kr),
+                ('C', question.opt_c, question.opt_c_kr),
+                ('D', question.opt_d, question.opt_d_kr),
+                ('E', question.opt_e, question.opt_e_kr)
+            ] %}
+            {% for letter, text, text_kr in options %}
+                {% if text %}
+                <li class="option-item {% if letter in saved_answer %}selected{% endif %}"
+                    onclick="toggleOption(this, '{{ letter }}')">
+                    <span class="option-letter">{{ letter }}</span>
+                    <div class="option-text">
+                        <div class="translation-wrapper">
+                            <div class="original">{{ text }}</div>
+                            {% if text_kr %}
+                            <div class="translation opt-translation">{{ text_kr }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+
+        <!-- Hidden inputs for selected answers -->
+        <div id="selectedInputs">
+            {% for letter in saved_answer %}
+            <input type="hidden" name="selected" value="{{ letter }}" class="selected-input">
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div style="display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;">
+        <button type="submit" name="action" value="prev" class="btn btn-outline" {% if current <= 1 %}disabled{% endif %}>
+            <i class="fas fa-chevron-left"></i> Previous
+        </button>
+
+        <button type="submit" name="action" value="grade" class="btn btn-success"
+                onclick="return confirm('채점하시겠습니까? 답변하지 않은 Question는 Incorrect 처리됩니다.');">
+            <i class="fas fa-check-double"></i> Submit
+        </button>
+
+        {% if current < total %}
+        <button type="submit" name="action" value="next" class="btn btn-primary">
+            Next <i class="fas fa-chevron-right"></i>
+        </button>
+        {% else %}
+        <button type="submit" name="action" value="grade" class="btn btn-success btn-lg"
+                onclick="return confirm('마지막 Question입니다. 채점하시겠습니까?');">
+            <i class="fas fa-flag-checkered"></i> Submit
+        </button>
+        {% endif %}
+    </div>
+</form>
+<!-- Report 모달 -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal-box">
+    <h3><i class="fas fa-flag"></i> Report a question issue</h3>
+    <input type="hidden" id="reportQNo" value="">
+    <label><input type="radio" name="reportReason" value="typo" checked> 오탈자/표기 Error</label>
+    <label><input type="radio" name="reportReason" value="wrong_answer"> Correct Error</label>
+    <label><input type="radio" name="reportReason" value="translation"> Translation error</label>
+    <label><input type="radio" name="reportReason" value="other"> 기타</label>
+    <textarea id="reportDetail" placeholder="Details (Select)"></textarea>
+    <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeReportModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitReport()">Report하기</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleOption(el, letter) {
+    el.classList.toggle('selected');
+    updateSelectedInputs();
+}
+
+function updateSelectedInputs() {
+    const container = document.getElementById('selectedInputs');
+    container.innerHTML = '';
+    document.querySelectorAll('.option-item.selected').forEach(item => {
+        const letter = item.querySelector('.option-letter').textContent.trim();
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'selected';
+        input.value = letter;
+        input.className = 'selected-input';
+        container.appendChild(input);
+    });
+}
+
+function toggleTranslation(btn) {
+    btn.classList.toggle('active');
+    const isActive = btn.classList.contains('active');
+    btn.innerHTML = isActive
+        ? '<i class="fas fa-language"></i> Hide translation'
+        : '<i class="fas fa-language"></i> Show translation';
+
+    document.querySelectorAll('.translation').forEach(el => {
+        el.classList.toggle('show', isActive);
+    });
+}
+
+// ── Bookmarks 토글 ──
+function toggleBookmark(qNo) {
+    fetch('/api/bookmark/toggle', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({question_no: qNo})
+    })
+    .then(r => r.json())
+    .then(data => {
+        const btn = document.getElementById('bookmarkBtn');
+        if (data.bookmarked) {
+            btn.classList.add('active');
+            btn.innerHTML = '<i class="fas fa-bookmark"></i> Bookmarks됨';
+        } else {
+            btn.classList.remove('active');
+            btn.innerHTML = '<i class="far fa-bookmark"></i> Bookmarks';
+        }
+    });
+}
+
+// ── Report 모달 ──
+function openReportModal(qNo) {
+    document.getElementById('reportQNo').value = qNo;
+    document.getElementById('reportDetail').value = '';
+    document.querySelector('input[name=reportReason][value=typo]').checked = true;
+    document.getElementById('reportModal').classList.add('show');
+}
+function closeReportModal() {
+    document.getElementById('reportModal').classList.remove('show');
+}
+function submitReport() {
+    const qNo   = document.getElementById('reportQNo').value;
+    const reason = document.querySelector('input[name=reportReason]:checked').value;
+    const detail = document.getElementById('reportDetail').value;
+    fetch('/api/report', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({question_no: parseInt(qNo), reason, detail})
+    })
+    .then(r => r.json())
+    .then(data => {
+        closeReportModal();
+        alert(data.ok ? 'Report가 접수됐습니다. 감사합니다!' : (data.msg || 'An error occurred.'));
+    });
+}
+// 모달 바깥 클릭시 Close
+document.getElementById('reportModal').addEventListener('click', function(e) {
+    if (e.target === this) closeReportModal();
+});
+</script>
+{% endblock %}

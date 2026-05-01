@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - Sign up{% endblock %}
+
+{% block extra_head %}<style>/* standalone-login: Log in/가입 화면에서는 nav/footer 숨겨 깔끔하게 */.navbar, footer, .footer, body > footer { display: none !important; }body { background: var(--bg, #f5f7fb); }.login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }.login-card { width: 100%; max-width: 440px; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); padding: 40px 32px; text-align: center; }</style>{% endblock %}
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <i class="fas fa-user-plus" style="font-size:3rem;color:var(--success);margin-bottom:16px;"></i>
+        <h1>Sign up</h1>
+        <p>Email과 Password로 Free 가입하세요.<br><small style="color:var(--text-muted)">학습 기록이 안전하게 Save되고, 모든 기기에서 이어서 풀 수 있습니다.</small></p>
+
+        <form method="POST" action="{{ url_for('signup') }}" id="signupForm">
+            <div class="form-group">
+                <input type="email" name="email" class="form-control"
+                       placeholder="Email address (아이디)" required autofocus
+                       value="{{ email or '' }}"
+                       style="text-align:center;font-size:1.05rem;">
+            </div>
+            <div class="form-group">
+                <input type="password" name="password" class="form-control"
+                       placeholder="Password (4+ chars)" required minlength="4"
+                       style="text-align:center;font-size:1.05rem;">
+            </div>
+            <div class="form-group">
+                <input type="password" name="password2" class="form-control"
+                       placeholder="Password OK" required minlength="4"
+                       style="text-align:center;font-size:1.05rem;">
+            </div>
+            <button type="submit" class="btn btn-success btn-block btn-lg">
+                <i class="fas fa-user-plus"></i> 가입하기
+            </button>
+        </form>
+
+        <p style="margin-top:20px;font-size:0.9rem;color:var(--text-muted);">
+            already 가입하셨나요? <a href="{{ url_for('login') }}" style="color:var(--primary);font-weight:700;">🔐 Log in</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

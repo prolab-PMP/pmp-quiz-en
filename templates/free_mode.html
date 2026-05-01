@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - Free trial{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;margin:40px auto;">
+
+{% if already_used %}
+    <!-- already Free trial Completed -->
+    <div class="card" style="text-align:center;padding:36px 28px;">
+        <i class="fas fa-lock" style="font-size:3rem;color:var(--primary);margin-bottom:16px;"></i>
+        <h2 style="margin-bottom:12px;">Your free trial has ended</h2>
+        <p style="color:var(--text-muted);margin-bottom:28px;line-height:1.7;">
+            Free trial은 1회만 제공됩니다.<br>
+            All 2,219 items Question를 이용하려면 유료버전을 구매하세요.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt"></i> Log in / Sign up
+            </a>
+            <a href="mailto:songdoinfo@naver.com?subject=PMP Quiz Premium inquiry"
+               class="btn btn-success btn-lg">
+                <i class="fas fa-envelope"></i> Purchase inquiry
+            </a>
+        </div>
+        <p style="margin-top:20px;font-size:0.8rem;color:var(--text-muted);">
+            Contact: <a href="mailto:songdoinfo@naver.com">songdoinfo@naver.com</a>
+        </p>
+    </div>
+
+{% else %}
+    <!-- Free trial Start -->
+    <div class="card" style="text-align:center;">
+        <i class="fas fa-gift" style="font-size:3rem;color:var(--warning);margin-bottom:16px;"></i>
+        <h2>Free trial</h2>
+        <p style="color:var(--text-muted);margin-bottom:8px;">
+            Log in 없이 최대 <strong>50Question</strong>까지 Free로 풀어볼 수 있습니다.
+        </p>
+        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:24px;">
+            <i class="fas fa-info-circle"></i> Free trial은 <strong>1회</strong>만 제공됩니다.
+        </p>
+
+        <form method="POST" action="{{ url_for('free_start') }}">
+            <div class="form-group">
+                <label class="form-label">Question 수 Select</label>
+                <select name="count" class="form-control" style="text-align:center;">
+                    <option value="10">10Question</option>
+                    <option value="20">20Question</option>
+                    <option value="30" selected>30Question</option>
+                    <option value="50">50Question (최대)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-warning btn-lg btn-block">
+                <i class="fas fa-play"></i> Free trial Start
+            </button>
+        </form>
+
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">
+                All 2,219 items Question, Incorrect 관리, 상세 통계를 이용하려면 Log in하세요.
+            </p>
+            <a href="{{ url_for('login') }}" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i> Log in / 가입
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+</div>
+{% endblock %}

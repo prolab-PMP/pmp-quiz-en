@@ -1,0 +1,26 @@
+# PMP Quiz (pmpquiz.co.kr)
+
+PMP 자격증 Exam 대비 Practice Questions 웹 애플리케이션입니다.
+PMBOK 7th Edition과 8th Edition 기반의 Question를 제공하며, 모의Exam, Incorrect노트, 성적min석 기능을 포함합니다.
+한국어와 영어를 모두 지원합니다.
+
+## wk요 기능
+
+- PMP Practice Questions (PMBOK 7th Edition/8th Edition)
+- Exam-style 모의Exam (180Question, 4hr)
+- Incorrect 노트 및 Bookmarks
+-  items인별 성적 min석 및 취약 영역 min석
+- Free trial 모드 제공
+
+## 대상 사용자
+
+- PMP 자격증 Exam 준비생
+- 프로젝트 관리 전문가
+- PMI Exam 대비 학습자
+
+## 기술 스택
+
+- Backend: Flask (Python)
+- Frontend: HTML5, CSS3, JavaScript
+- Database: PostgreSQL
+- 배포: Docker, Railway

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - Report management{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+    <h2 style="font-size:1.4rem;font-weight:700;">
+        <i class="fas fa-flag"></i> Report issue 관리
+        {% if pending_count > 0 %}
+        <span class="badge badge-warning" style="font-size:0.85rem;margin-left:8px;">미처리 {{ pending_count }}건</span>
+        {% endif %}
+    </h2>
+    <a href="{{ url_for('admin_panel') }}" class="btn btn-outline btn-sm">← Admin Panel</a>
+</div>
+
+<!-- 상태 Filter 탭 -->
+<div style="display:flex;gap:8px;margin-bottom:20px;">
+    {% for s, label in [('pending','미처리'), ('resolved','처리Completed'), ('dismissed','무시됨')] %}
+    <a href="{{ url_for('admin_reports', status=s) }}"
+       class="btn {% if status_filter == s %}btn-primary{% else %}btn-outline{% endif %} btn-sm">
+        {{ label }}
+    </a>
+    {% endfor %}
+</div>
+
+{% if not reports %}
+<div class="empty-state">
+    <div class="icon"><i class="fas fa-check-circle"></i></div>
+    <p>{{ '미처리' if status_filter == 'pending' else '처리된' }} Report가 없습니다.</p>
+</div>
+{% else %}
+<div style="overflow-x:auto;">
+<table class="table">
+    <thead>
+        <tr>
+            <th>Question번호</th>
+            <th>Report 유형</th>
+            <th>Details</th>
+            <th>Report자</th>
+            <th>Reportday시</th>
+            {% if status_filter == 'pending' %}<th>처리</th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for rpt in reports %}
+    <tr>
+        <td>
+            <strong>Q{{ rpt.question_no }}</strong><br>
+            <small style="color:var(--text-muted);">{{ rpt.question.question[:60] }}...</small>
+        </td>
+        <td>
+            {% set reason_map = {
+                'typo': '오탈자/표기',
+                'wrong_answer': 'Correct Error',
+                'translation': 'Translation error',
+                'other': '기타'
+            } %}
+            <span class="badge badge-warning">{{ reason_map.get(rpt.reason, rpt.reason) }}</span>
+        </td>
+        <td style="max-width:250px;word-break:break-word;">
+            {{ rpt.detail or '-' }}
+        </td>
+        <td><small>{{ rpt.user.email }}</small></td>
+        <td><small>{{ rpt.created_at.strftime('%m/%d %H:%M') }}</small></td>
+        {% if status_filter == 'pending' %}
+        <td>
+            <div class="admin-actions">
+                <form method="POST" action="{{ url_for('admin_report_resolve', report_id=rpt.id) }}" style="display:inline;">
+                    <button class="btn btn-success btn-sm">✓ 처리</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin_report_dismiss', report_id=rpt.id) }}" style="display:inline;">
+                    <button class="btn btn-outline btn-sm">✗ 무시</button>
+                </form>
+            </div>
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

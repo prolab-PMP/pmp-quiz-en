@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - 채점 결과{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom:20px;"><i class="fas fa-clipboard-check"></i> 채점 결과</h2>
+
+<!-- Result Summary -->
+<div class="result-summary {% if accuracy >= 61 %}pass{% else %}fail{% endif %}">
+    <div>
+        <div class="result-score" style="color:{% if accuracy >= 70 %}var(--success){% elif accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %}">
+            {{ "%.1f"|format(accuracy) }}%
+        </div>
+        <div class="result-detail">Accuracy</div>
+    </div>
+    <div>
+        <div class="result-score">{{ correct_count }}<span style="font-size:1.2rem;color:var(--text-muted);">/{{ total }}</span></div>
+        <div class="result-detail">Correct</div>
+    </div>
+    <div>
+        <div style="font-size:1.5rem;font-weight:700;">
+            {% if accuracy >= 61 %}
+                <span style="color:var(--success);"><i class="fas fa-trophy"></i> PASS</span>
+            {% else %}
+                <span style="color:var(--danger);"><i class="fas fa-times-circle"></i> FAIL</span>
+            {% endif %}
+        </div>
+        <div class="result-detail">합격기준 61%</div>
+    </div>
+</div>
+
+<!-- Session Info -->
+{% if quiz_session %}
+<div class="card" style="padding:12px 16px;">
+    <span class="badge badge-info">{{ quiz_session.mode }}</span>
+    {% if quiz_session.filter_value %}
+    <span class="badge badge-primary">{{ quiz_session.filter_value }}</span>
+    {% endif %}
+    <span style="color:var(--text-muted);font-size:0.85rem;margin-left:8px;">
+        {{ quiz_session.completed_at.strftime('%Y-%m-%d %H:%M') if quiz_session.completed_at else '' }}
+    </span>
+</div>
+{% endif %}
+
+<!-- Translation Toggle -->
+<div style="margin-bottom:16px;text-align:right;">
+    <button type="button" class="translation-toggle" onclick="toggleAllTranslations(this)">
+        <i class="fas fa-language"></i> Show translation
+    </button>
+</div>
+
+<!-- Results Detail -->
+{% for r in results %}
+<div class="card" id="q-{{ loop.index }}">
+    <!-- Question Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div>
+            <span class="badge {% if r.is_correct %}badge-success{% else %}badge-danger{% endif %}">
+                Q{{ r.question.no }}
+                {% if r.is_correct %}<i class="fas fa-check"></i> Correct{% else %}<i class="fas fa-times"></i> Incorrect{% endif %}
+            </span>
+            {% if not r.answered %}
+            <span class="badge badge-warning">Unanswered</span>
+            {% endif %}
+        </div>
+        {% set ans_count = r.question.get_answer_count() %}
+        {% if ans_count > 1 %}
+        <span class="answer-count-hint">Correct {{ ans_count }} items</span>
+        {% endif %}
+    </div>
+
+    <!-- Classification Badges -->
+    <div class="question-meta">
+        {% if r.question.pmbok7_domain %}
+        <span class="badge badge-primary" title="PMBOK7 Domain">7: {{ r.question.pmbok7_domain }}</span>
+        {% endif %}
+        {% if r.question.pmbok8_domain %}
+        <span class="badge badge-info" title="PMBOK8 Domain">8: {{ r.question.pmbok8_domain }}</span>
+        {% endif %}
+        {% if r.question.methodology %}
+        <span class="badge badge-warning">{{ r.question.methodology }}</span>
+        {% endif %}
+        {% if r.question.pmbok8_process %}
+        <span class="badge badge-primary" title="PMBOK8 Process">{{ r.question.pmbok8_process }}</span>
+        {% endif %}
+        {% if r.question.pmbok8_new_topics and r.question.pmbok8_new_topics != 'Traditional PM' %}
+        <span class="badge badge-danger">{{ r.question.pmbok8_new_topics }}</span>
+        {% endif %}
+    </div>
+
+    <!-- Question Text with Translation -->
+    <div class="translation-wrapper">
+        <div class="original">
+            <div class="question-text">{{ r.question.question }}</div>
+        </div>
+        {% if r.question.question_kr %}
+        <div class="translation result-translation">
+            <div class="question-text" style="border-left-color:#fbbf24;">{{ r.question.question_kr }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Options -->
+    <ul class="option-list">
+        {% set options = [
+            ('A', r.question.opt_a, r.question.opt_a_kr),
+            ('B', r.question.opt_b, r.question.opt_b_kr),
+            ('C', r.question.opt_c, r.question.opt_c_kr),
+            ('D', r.question.opt_d, r.question.opt_d_kr),
+            ('E', r.question.opt_e, r.question.opt_e_kr)
+        ] %}
+        {% for letter, text, text_kr in options %}
+            {% if text %}
+            {% set is_user = letter in r.user_answer %}
+            {% set is_correct = letter in r.correct_answer %}
+            <li class="option-item {% if is_correct %}correct{% elif is_user and not is_correct %}wrong{% endif %}">
+                <span class="option-letter">{{ letter }}</span>
+                <div class="option-text">
+                    <div class="translation-wrapper">
+                        <div class="original">
+                            {{ text }}
+                            {% if is_user and is_correct %}
+                                <i class="fas fa-check" style="color:var(--success);margin-left:6px;"></i>
+                            {% elif is_user and not is_correct %}
+                                <i class="fas fa-times" style="color:var(--danger);margin-left:6px;"></i>
+                            {% elif is_correct %}
+                                <i class="fas fa-check" style="color:var(--success);margin-left:6px;"></i> <small style="color:var(--success);">Correct</small>
+                            {% endif %}
+                        </div>
+                        {% if text_kr %}
+                        <div class="translation result-translation">{{ text_kr }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+
+    <!-- Explanation (always visible in results) -->
+    <div class="explanation-box show">
+        <h4><i class="fas fa-lightbulb"></i> Explanation</h4>
+        <div class="translation-wrapper">
+            <div class="original">
+                <p>{{ r.question.explanation or 'No explanation available.' }}</p>
+            </div>
+            {% if r.question.explanation_kr %}
+            <div class="translation result-translation">
+                <p>{{ r.question.explanation_kr }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Detailed Classification -->
+    <details style="margin-top:12px;">
+        <summary style="cursor:pointer;color:var(--text-muted);font-size:0.85rem;">
+            <i class="fas fa-tags"></i> 상세 min류 정보
+        </summary>
+        <div style="padding:10px;font-size:0.85rem;color:var(--text-muted);line-height:1.8;">
+            {% if r.question.eco2021_domain %}2021 ECO Domain: {{ r.question.eco2021_domain }}<br>{% endif %}
+            {% if r.question.eco2021_task %}2021 ECO Task: {{ r.question.eco2021_task }}<br>{% endif %}
+            {% if r.question.pmbok7_domain %}PMBOK7 Domain: {{ r.question.pmbok7_domain }}<br>{% endif %}
+            {% if r.question.pmbok7_principle %}PMBOK7 Principle: {{ r.question.pmbok7_principle }}<br>{% endif %}
+            {% if r.question.methodology %}Methodology: {{ r.question.methodology }}<br>{% endif %}
+            {% if r.question.methodology_detail %}Methodology Detail: {{ r.question.methodology_detail }}<br>{% endif %}
+            {% if r.question.eco2026_domain %}2026 ECO Domain: {{ r.question.eco2026_domain }}<br>{% endif %}
+            {% if r.question.eco2026_task %}2026 ECO Task: {{ r.question.eco2026_task }}<br>{% endif %}
+            {% if r.question.pmbok8_domain %}PMBOK8 Domain: {{ r.question.pmbok8_domain }}<br>{% endif %}
+            {% if r.question.pmbok8_focus_area %}PMBOK8 Focus Area: {{ r.question.pmbok8_focus_area }}<br>{% endif %}
+            {% if r.question.pmbok8_principle %}PMBOK8 Principle: {{ r.question.pmbok8_principle }}<br>{% endif %}
+            {% if r.question.pmbok8_process %}PMBOK8 Process: {{ r.question.pmbok8_process }}<br>{% endif %}
+            {% if r.question.pmbok8_new_topics %}PMBOK8 New Topics: {{ r.question.pmbok8_new_topics }}{% endif %}
+        </div>
+    </details>
+</div>
+{% endfor %}
+
+<!-- Action Buttons -->
+<div style="display:flex;gap:12px;justify-content:center;margin-top:24px;">
+    <a href="{{ url_for('quiz_start') }}" class="btn btn-primary btn-lg">
+        <i class="fas fa-redo"></i> 다시 풀기
+    </a>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-lg">
+        <i class="fas fa-home"></i> Dashboard
+    </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleAllTranslations(btn) {
+    btn.classList.toggle('active');
+    const isActive = btn.classList.contains('active');
+    btn.innerHTML = isActive
+        ? '<i class="fas fa-language"></i> Hide translation'
+        : '<i class="fas fa-language"></i> Show translation';
+    document.querySelectorAll('.result-translation').forEach(el => {
+        el.classList.toggle('show', isActive);
+    });
+}
+</script>
+{% endblock %}

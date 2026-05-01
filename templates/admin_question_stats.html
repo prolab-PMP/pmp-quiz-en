@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Admin - Per-question accuracy{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom:20px;">
+    <a href="{{ url_for('admin_panel') }}" style="color:var(--text);text-decoration:none;">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    Per-question accuracy
+</h2>
+
+{% if stats %}
+<div class="card">
+    <div class="card-header"><i class="fas fa-chart-bar"></i> All Question Accuracy (낮은 순)</div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Question (앞 50자)</th>
+                    <th>시도수</th>
+                    <th>Correct수</th>
+                    <th>Accuracy</th>
+                    <th>PMBOK7</th>
+                    <th>PMBOK8</th>
+                    <th>Edit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gstat, q in stats %}
+                <tr>
+                    <td>{{ q.no }}</td>
+                    <td title="{{ q.question }}">{{ q.question[:50] }}...</td>
+                    <td>{{ gstat.total_attempts }}</td>
+                    <td>{{ gstat.correct_attempts }}</td>
+                    <td>
+                        <span class="badge {% if gstat.accuracy >= 70 %}badge-success{% elif gstat.accuracy >= 50 %}badge-warning{% else %}badge-danger{% endif %}">
+                            {{ "%.1f"|format(gstat.accuracy) }}%
+                        </span>
+                    </td>
+                    <td><small>{{ q.pmbok7_domain or '-' }}</small></td>
+                    <td><small>{{ q.pmbok8_domain or '-' }}</small></td>
+                    <td>
+                        <a href="{{ url_for('admin_question_edit', q_no=q.no, back=request.url) }}"
+                           class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        <div class="icon"><i class="fas fa-chart-bar"></i></div>
+        <p>yet Question별 통계 데이터가 없습니다.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

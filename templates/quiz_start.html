@@ -1,0 +1,911 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - Practice{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom:20px;"><i class="fas fa-pen-to-square"></i> Practice</h2>
+
+<!-- Top tabs -->
+<div class="tabs">
+    <button class="tab active" onclick="switchTab('pmbok7', this)">📘 PMBOK 7edition basis</button>
+    <button class="tab" onclick="switchTab('pmbok8', this)">📗 PMBOK 8edition basis</button>
+    <button class="tab" onclick="switchTab('special', this)">⚡ 특별 모드</button>
+</div>
+
+<!-- ══════════ 7edition tabs ══════════ -->
+<div id="tab-pmbok7" class="tab-content active">
+<form method="POST" action="{{ url_for('quiz_begin') }}" id="form-pmbok7" onsubmit="return prepareSubmit('pmbok7')">
+    <input type="hidden" name="mode" value="slicer">
+    <input type="hidden" name="filter_json" id="filter_json_pmbok7" value="{}">
+    <input type="hidden" name="count" id="count_pmbok7" value="30">
+
+    <!-- ① 2021 ECO (Hierarchical) -->
+    {% if categories.pmbok7.eco_domain %}
+    <div class="slicer-card" id="sc-pmbok7-eco">
+        <div class="sc-header" onclick="toggleCard('sc-pmbok7-eco')">
+            <div class="sc-title">
+                <span class="sc-icon">🔷</span>
+                <strong>2021 ECO</strong>
+                <span class="sc-subtitle">Domain &rarr; Task</span>
+                <span class="sc-badge" id="badge-pmbok7-eco"></span>
+            </div>
+            <span class="sc-arrow">▾</span>
+        </div>
+        <div class="sc-body" id="body-sc-pmbok7-eco">
+            <!-- Domain 칩 -->
+            <div class="sc-level parent-row">
+                <span class="sc-level-label">Domain</span>
+                <div class="chip-row">
+                {% for dom in categories.pmbok7.eco_domain %}
+                <span class="slicer-chip parent-chip"
+                      data-tab="pmbok7" data-tree="eco2021" data-domain="{{ dom }}"
+                      onclick="toggleDomain(this)">{{ dom }}</span>
+                {% endfor %}
+                </div>
+            </div>
+            <!-- Task 서브칩 (Domain별, Select 시 표시) -->
+            {% for dom, tasks in categories.trees.eco2021.items() %}
+            {% if tasks %}
+            <div class="sc-level child-row" id="row-pmbok7-eco2021-{{ dom|replace(' ','_') }}" style="display:none;">
+                <span class="sc-level-label child-label">↳ {{ dom }}</span>
+                <div class="chip-row">
+                {% for task in tasks %}
+                <span class="slicer-chip task-chip"
+                      data-tab="pmbok7" data-tree="eco2021" data-domain="{{ dom }}" data-task="{{ task }}"
+                      onclick="toggleTask(this)">{{ task }}</span>
+                {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ② Performance Domain (Flat) -->
+    {% if categories.pmbok7.domain %}
+    <div class="slicer-card" id="sc-pmbok7-dom">
+        <div class="sc-header" onclick="toggleCard('sc-pmbok7-dom')">
+            <div class="sc-title">
+                <span class="sc-icon">🔶</span>
+                <strong>Performance Domain</strong>
+                <span class="sc-badge" id="badge-pmbok7-pmbok7_domain"></span>
+            </div>
+            <span class="sc-arrow">▾</span>
+        </div>
+        <div class="sc-body" id="body-sc-pmbok7-dom">
+            <div class="sc-level">
+                <div class="chip-row">
+                {% for item in categories.pmbok7.domain %}
+                <span class="slicer-chip flat-chip"
+                      data-tab="pmbok7" data-key="pmbok7_domain" data-val="{{ item }}"
+                      onclick="toggleFlat(this)">{{ item }}</span>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ③ Principle (Flat) -->
+    {% if categories.pmbok7.principle %}
+    <div class="slicer-card" id="sc-pmbok7-prin">
+        <div class="sc-header" onclick="toggleCard('sc-pmbok7-prin')">
+            <div class="sc-title">
+                <span class="sc-icon">📐</span>
+                <strong>Principle</strong>
+                <span class="sc-badge" id="badge-pmbok7-pmbok7_principle"></span>
+            </div>
+            <span class="sc-arrow">▾</span>
+        </div>
+        <div class="sc-body" id="body-sc-pmbok7-prin">
+            <div class="sc-level">
+                <div class="chip-row">
+                {% for item in categories.pmbok7.principle %}
+                <span class="slicer-chip flat-chip"
+                      data-tab="pmbok7" data-key="pmbok7_principle" data-val="{{ item }}"
+                      onclick="toggleFlat(this)">{{ item }}</span>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ④ Methodology (Hierarchical) -->
+    {% if categories.methodology %}
+    <div class="slicer-card" id="sc-pmbok7-meth">
+        <div class="sc-header" onclick="toggleCard('sc-pmbok7-meth')">
+            <div class="sc-title">
+                <span class="sc-icon">⚙️</span>
+                <strong>Methodology</strong>
+                <span class="sc-subtitle">Method &rarr; Detail</span>
+                <span class="sc-badge" id="badge-pmbok7-methodology"></span>
+            </div>
+            <span class="sc-arrow">▾</span>
+        </div>
+        <div class="sc-body" id="body-sc-pmbok7-meth">
+            <div class="sc-level parent-row">
+                <span class="sc-level-label">Method</span>
+                <div class="chip-row">
+                {% for meth in categories.methodology %}
+                <span class="slicer-chip parent-chip"
+                      data-tab="pmbok7" data-tree="methodology" data-domain="{{ meth }}"
+                      onclick="toggleDomain(this)">{{ meth }}</span>
+                {% endfor %}
+                </div>
+            </div>
+            {% for meth, details in categories.trees.methodology.items() %}
+            {% if details %}
+            <div class="sc-level child-row" id="row-pmbok7-methodology-{{ meth|replace(' ','_') }}" style="display:none;">
+                <span class="sc-level-label child-label">↳ {{ meth }}</span>
+                <div class="chip-row">
+                {% for det in details %}
+                <span class="slicer-chip task-chip"
+                      data-tab="pmbok7" data-tree="methodology" data-domain="{{ meth }}" data-task="{{ det }}"
+                      onclick="toggleTask(this)">{{ det }}</span>
+                {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Exam Mode -->
+    <div class="slicer-card" style="background:linear-gradient(135deg,#667eea08,#764ba208);border-color:var(--primary);">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:4px 0;">
+            <div>
+                <strong><i class="fas fa-file-alt"></i> PMP Exam Mode (7th Edition)</strong>
+                <div style="font-size:0.85rem;color:var(--text-muted);">180Randomly drawn questions</div>
+            </div>
+            <button type="button" class="btn btn-success" onclick="startExam('pmbok7_exam')">
+                <i class="fas fa-clipboard-check"></i> Start Exam (180questions)
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom panel -->
+    <div class="start-panel" id="start-pmbok7">
+        <div class="start-panel-inner">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">
+                <div class="selected-summary" id="summary-pmbok7" style="margin-bottom:0;flex:1;">
+                    <span style="color:var(--text-muted);">No filter — Drawn from all questions.</span>
+                </div>
+                <button type="button" class="clear-btn" id="clearbtn-pmbok7"
+                        onclick="clearAll('pmbok7')" style="display:none;">
+                    <i class="fas fa-times-circle"></i> Clear
+                </button>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;">
+                <div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Question 수</div>
+                    <div class="count-btns" id="countbtns-pmbok7">
+                        {% for n in [10,30,50,100,'All'] %}
+                        <button type="button" class="count-btn {% if n==30 %}active{% endif %}"
+                                onclick="setCount('pmbok7','{{ n }}')">{{ n }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div style="text-align:center;">
+                    <div id="match-pmbok7" style="font-size:0.9rem;color:var(--text-muted);margin-bottom:6px;min-height:18px;"></div>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-play"></i> Start practice
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+</div>
+
+<!-- ══════════ 8edition tabs ══════════ -->
+<div id="tab-pmbok8" class="tab-content">
+<form method="POST" action="{{ url_for('quiz_begin') }}" id="form-pmbok8" onsubmit="return prepareSubmit('pmbok8')">
+    <input type="hidden" name="mode" value="slicer">
+    <input type="hidden" name="filter_json" id="filter_json_pmbok8" value="{}">
+    <input type="hidden" name="count" id="count_pmbok8" value="30">
+
+    <!-- ① 2026 ECO (Hierarchical) -->
+    {% if categories.pmbok8.eco_domain %}
+    <div class="slicer-card" id="sc-pmbok8-eco">
+        <div class="sc-header" onclick="toggleCard('sc-pmbok8-eco')">
+            <div class="sc-title">
+                <span class="sc-icon">🔷</span>
+                <strong>2026 ECO</strong>
+                <span class="sc-subtitle">Domain &rarr; Task</span>
+                <span class="sc-badge" id="badge-pmbok8-eco"></span>
+            </div>
+            <span class="sc-arrow">▾</span>
+        </div>
+        <div class="sc-body" id="body-sc-pmbok8-eco">
+            <div class="sc-level parent-row">
+                <span class="sc-level-label">Domain</span>
+                <div class="chip-row">
+                {% for dom in categories.pmbok8.eco_domain %}
+                <span class="slicer-chip parent-chip"
+                      data-tab="pmbok8" data-tree="eco2026" data-domain="{{ dom }}"
+                      onclick="toggleDomain(this)">{{ dom }}</span>
+                {% endfor %}
+                </div>
+            </div>
+            {% for dom, tasks in categories.trees.eco2026.items() %}
+            {% if tasks %}
+            <div class="sc-level child-row" id="row-pmbok8-eco2026-{{ dom|replace(' ','_') }}" style="display:none;">
+                <span class="sc-level-label child-label">↳ {{ dom }}</span>
+                <div class="chip-row">
+                {% for task in tasks %}
+                <span class="slicer-chip task-chip"
+                      data-tab="pmbok8" data-tree="eco2026" data-domain="{{ dom }}" data-task="{{ task }}"
+                      onclick="toggleTask(this)">{{ task }}</span>
+                {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ② Performance Domain (Flat) -->
+    {% if categories.pmbok8.domain %}
+    <div class="slicer-card" id="sc-pmbok8-dom">
+        <div class="sc-header" onclick="toggleCard('sc-pmbok8-dom')">
+            <div class="sc-title">
+                <span class="sc-icon">🔶</span>
+                <strong>Performance Domain</strong>
+                <span class="sc-badge" id="badge-pmbok8-pmbok8_domain"></span>
+            </div>
+            <span class="sc-arrow">▾</span>
+        </div>
+        <div class="sc-body" id="body-sc-pmbok8-dom">
+            <div class="sc-level">
+                <div class="chip-row">
+                {% for item in categories.pmbok8.domain %}
+                <span class="slicer-chip flat-chip"
+                      data-tab="pmbok8" data-key="pmbok8_domain" data-val="{{ item }}"
+                      onclick="toggleFlat(this)">{{ item }}</span>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ③ Principle (Flat) -->
+    {% if categories.pmbok8.principle %}
+    <div class="slicer-card" id="sc-pmbok8-prin">
+        <div class="sc-header" onclick="toggleCard('sc-pmbok8-prin')">
+            <div class="sc-title">
+                <span class="sc-icon">📐</span>
+                <strong>Principle</strong>
+                <span class="sc-badge" id="badge-pmbok8-pmbok8_principle"></span>
+            </div>
+            <span class="sc-arrow">▾</span>
+        </div>
+        <div class="sc-body" id="body-sc-pmbok8-prin">
+            <div class="sc-level">
+                <div class="chip-row">
+                {% for item in categories.pmbok8.principle %}
+                <span class="slicer-chip flat-chip"
+                      data-tab="pmbok8" data-key="pmbok8_principle" data-val="{{ item }}"
+                      onclick="toggleFlat(this)">{{ item }}</span>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ④ Focus Area (Flat) -->
+    {% if categories.pmbok8.focus_area %}
+    <div class="slicer-card" id="sc-pmbok8-fa">
+        <div class="sc-header" onclick="toggleCard('sc-pmbok8-fa')">
+            <div class="sc-title">
+                <span class="sc-icon">🎯</span>
+                <strong>Focus Area</strong>
+                <span class="sc-badge" id="badge-pmbok8-pmbok8_focus_area"></span>
+            </div>
+            <span class="sc-arrow">▾</span>
+        </div>
+        <div class="sc-body" id="body-sc-pmbok8-fa">
+            <div class="sc-level">
+                <div class="chip-row">
+                {% for item in categories.pmbok8.focus_area %}
+                <span class="slicer-chip flat-chip"
+                      data-tab="pmbok8" data-key="pmbok8_focus_area" data-val="{{ item }}"
+                      onclick="toggleFlat(this)">{{ item }}</span>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ⑤ Process 40 (Flat - Performance × Focus) -->
+    {% if categories.pmbok8.process %}
+    <div class="slicer-card" id="sc-pmbok8-proc">
+        <div class="sc-header" onclick="toggleCard('sc-pmbok8-proc')">
+            <div class="sc-title">
+                <span class="sc-icon">🔁</span>
+                <strong>Process 40</strong>
+                <span class="sc-subtitle">Performance × Focus</span>
+                <span class="sc-badge" id="badge-pmbok8-pmbok8_process"></span>
+            </div>
+            <span class="sc-arrow">▾</span>
+        </div>
+        <div class="sc-body" id="body-sc-pmbok8-proc">
+            <div class="sc-level">
+                <div class="chip-row">
+                {% for item in categories.pmbok8.process %}
+                <span class="slicer-chip flat-chip"
+                      data-tab="pmbok8" data-key="pmbok8_process" data-val="{{ item }}"
+                      onclick="toggleFlat(this)">{{ item }}</span>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ⑥ Methodology (Hierarchical, 7th Edition과 공유) -->
+    {% if categories.methodology %}
+    <div class="slicer-card" id="sc-pmbok8-meth">
+        <div class="sc-header" onclick="toggleCard('sc-pmbok8-meth')">
+            <div class="sc-title">
+                <span class="sc-icon">⚙️</span>
+                <strong>Methodology</strong>
+                <span class="sc-subtitle">Method &rarr; Detail</span>
+                <span class="sc-badge" id="badge-pmbok8-methodology"></span>
+            </div>
+            <span class="sc-arrow">▾</span>
+        </div>
+        <div class="sc-body" id="body-sc-pmbok8-meth">
+            <div class="sc-level parent-row">
+                <span class="sc-level-label">Method</span>
+                <div class="chip-row">
+                {% for meth in categories.methodology %}
+                <span class="slicer-chip parent-chip"
+                      data-tab="pmbok8" data-tree="methodology" data-domain="{{ meth }}"
+                      onclick="toggleDomain(this)">{{ meth }}</span>
+                {% endfor %}
+                </div>
+            </div>
+            {% for meth, details in categories.trees.methodology.items() %}
+            {% if details %}
+            <div class="sc-level child-row" id="row-pmbok8-methodology-{{ meth|replace(' ','_') }}" style="display:none;">
+                <span class="sc-level-label child-label">↳ {{ meth }}</span>
+                <div class="chip-row">
+                {% for det in details %}
+                <span class="slicer-chip task-chip"
+                      data-tab="pmbok8" data-tree="methodology" data-domain="{{ meth }}" data-task="{{ det }}"
+                      onclick="toggleTask(this)">{{ det }}</span>
+                {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Exam Mode -->
+    <div class="slicer-card" style="background:linear-gradient(135deg,#11998e08,#38ef7d08);border-color:var(--success);">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:4px 0;">
+            <div>
+                <strong><i class="fas fa-file-alt"></i> PMP Exam Mode (8th Edition)</strong>
+                <div style="font-size:0.85rem;color:var(--text-muted);">185Randomly drawn questions</div>
+            </div>
+            <button type="button" class="btn btn-success" onclick="startExam('pmbok8_exam')">
+                <i class="fas fa-clipboard-check"></i> Start Exam (185questions)
+            </button>
+        </div>
+    </div>
+
+    <div class="start-panel" id="start-pmbok8">
+        <div class="start-panel-inner">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">
+                <div class="selected-summary" id="summary-pmbok8" style="margin-bottom:0;flex:1;">
+                    <span style="color:var(--text-muted);">No filter — Drawn from all questions.</span>
+                </div>
+                <button type="button" class="clear-btn" id="clearbtn-pmbok8"
+                        onclick="clearAll('pmbok8')" style="display:none;">
+                    <i class="fas fa-times-circle"></i> Clear
+                </button>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;">
+                <div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Question 수</div>
+                    <div class="count-btns" id="countbtns-pmbok8">
+                        {% for n in [10,30,50,100,'All'] %}
+                        <button type="button" class="count-btn {% if n==30 %}active{% endif %}"
+                                onclick="setCount('pmbok8','{{ n }}')">{{ n }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div style="text-align:center;">
+                    <div id="match-pmbok8" style="font-size:0.9rem;color:var(--text-muted);margin-bottom:6px;min-height:18px;"></div>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-play"></i> Start practice
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+</div>
+
+<!-- ══════════ 특별 탭 ══════════ -->
+<div id="tab-special" class="tab-content">
+    <div class="card">
+        <div class="card-header"><i class="fas fa-times-circle" style="color:var(--danger)"></i> Incorrect Practice</div>
+        {% if wrong_count > 0 %}
+        <p style="margin-bottom:16px;">현재 <strong style="color:var(--danger)">{{ wrong_count }} items</strong>의 Incorrect Question가 있습니다.</p>
+        <form method="POST" action="{{ url_for('quiz_begin') }}">
+            <input type="hidden" name="mode" value="wrong_answers">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <select name="count" class="form-control" style="width:140px;">
+                    <option value="10">10Question</option>
+                    <option value="30">30Question</option>
+                    <option value="50">50Question</option>
+                    <option value="{{ wrong_count }}">All ({{ wrong_count }}Question)</option>
+                </select>
+                <button type="submit" class="btn btn-danger btn-lg">
+                    <i class="fas fa-redo"></i> Incorrect 풀기 Start
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon"><i class="fas fa-check-circle" style="color:var(--success)"></i></div>
+            <p>Incorrect Question가 없습니다! 계속 열심히 하세요!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-header"><i class="fas fa-shuffle"></i> Random 풀기 (All)</div>
+        <form method="POST" action="{{ url_for('quiz_begin') }}">
+            <input type="hidden" name="mode" value="random">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <select name="count" class="form-control" style="width:140px;">
+                    <option value="10">10Question</option>
+                    <option value="30" selected>30Question</option>
+                    <option value="50">50Question</option>
+                    <option value="100">100Question</option>
+                </select>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-shuffle"></i> Random 풀기 Start
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Hidden exam form -->
+<form method="POST" action="{{ url_for('quiz_begin') }}" id="exam-form" style="display:none;">
+    <input type="hidden" name="mode" id="exam-mode" value="">
+</form>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* ── Slicer Card ── */
+.slicer-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+.sc-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 13px 16px; cursor: pointer; user-select: none;
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+}
+.sc-header:hover { background: var(--surface); }
+.sc-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sc-icon { font-size: 1rem; }
+.sc-subtitle { font-size: 0.78rem; color: var(--text-muted); background: var(--surface); padding: 2px 8px; border-radius: 10px; }
+.sc-badge {
+    background: var(--primary); color: #fff;
+    font-size: 0.7rem; border-radius: 10px; padding: 1px 7px; font-weight: 700;
+}
+.sc-badge:empty { display: none; }
+.sc-arrow { color: var(--text-muted); font-size: 0.85rem; transition: transform .2s; }
+.sc-header.collapsed .sc-arrow { transform: rotate(-90deg); }
+.sc-body { padding: 10px 14px 14px; }
+.sc-body.hidden { display: none; }
+
+/* ── Levels ── */
+.sc-level { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.sc-level:last-child { margin-bottom: 0; }
+.sc-level-label {
+    flex: 0 0 72px; font-size: 0.75rem; font-weight: 700;
+    color: var(--text-muted); padding-top: 6px; text-align: right;
+    white-space: nowrap;
+}
+.sc-level-label.child-label { color: var(--primary); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
+
+/* ── parent-row / child-row styling ── */
+.parent-row { border-bottom: 1px dashed var(--border); padding-bottom: 10px; margin-bottom: 4px; }
+.child-row {
+    margin-left: 14px;
+    padding: 8px 10px;
+    background: var(--surface);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 4px;
+    align-items: flex-start;
+}
+.child-row .sc-level-label { flex: 0 0 auto; padding-top: 5px; font-size: 0.72rem; max-width: 90px; white-space: normal; text-align: right; }
+
+/* ── Chips ── */
+.slicer-chip {
+    display: inline-block; padding: 5px 12px;
+    border: 1.5px solid var(--border); border-radius: 20px;
+    cursor: pointer; font-size: 0.82rem; line-height: 1.4;
+    transition: all .15s; background: var(--card-bg); color: var(--text);
+    user-select: none;
+}
+.slicer-chip:hover { border-color: var(--primary); color: var(--primary); }
+.slicer-chip.selected {
+    background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600;
+}
+.slicer-chip.parent-chip.selected {
+    background: var(--primary-dark, #1d4ed8); border-color: var(--primary-dark, #1d4ed8);
+}
+
+/* ── Count buttons ── */
+.count-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.count-btn {
+    padding: 6px 14px; border: 1px solid var(--border);
+    background: var(--card-bg); border-radius: 8px; cursor: pointer;
+    font-size: 0.9rem; transition: all .15s;
+}
+.count-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600; }
+
+/* ── Bottom panel ── */
+.start-panel {
+    position: sticky; bottom: 0; z-index: 50;
+    background: var(--card-bg); border-top: 2px solid var(--primary);
+    box-shadow: 0 -4px 20px rgba(0,0,0,.15); margin: 0 -16px; padding: 14px 16px;
+}
+.start-panel-inner { max-width: 800px; margin: 0 auto; }
+.selected-summary { font-size: 0.83rem; margin-bottom: 8px; min-height: 20px; line-height: 1.5; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── Clear button ── */
+.clear-btn {
+    flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px; border-radius: 8px; cursor: pointer;
+    font-size: 0.8rem; font-weight: 600; white-space: nowrap;
+    border: 1.5px solid var(--danger); color: var(--danger);
+    background: transparent; transition: all .15s;
+}
+.clear-btn:hover { background: var(--danger); color: #fff; }
+
+@media (max-width: 600px) {
+    .sc-level { flex-direction: column; gap: 4px; }
+    .sc-level-label { text-align: left; flex: none; padding-top: 0; }
+    .child-row { margin-left: 8px; }
+}
+</style>
+
+<script>
+// ═══════════════════════════════════════════
+// Tree data from server
+// ═══════════════════════════════════════════
+const TREES = {
+    eco2021: {{ categories.trees.eco2021 | tojson }},
+    eco2026: {{ categories.trees.eco2026 | tojson }},
+    methodology: {{ categories.trees.methodology | tojson }},
+};
+
+// Map tree name → filter key pair
+const TREE_KEYS = {
+    eco2021:     { parent: 'eco2021_domain',   child: 'eco2021_task' },
+    eco2026:     { parent: 'eco2026_domain',   child: 'eco2026_task' },
+    methodology: { parent: 'methodology',      child: 'methodology_detail' },
+};
+
+// ═══════════════════════════════════════════
+// State: { tab: { filterKey: Set } }
+// ═══════════════════════════════════════════
+const state = {
+    pmbok7: { eco2021_domain: new Set(), eco2021_task: new Set(), pmbok7_domain: new Set(), pmbok7_principle: new Set(), methodology: new Set(), methodology_detail: new Set() },
+    pmbok8: { eco2026_domain: new Set(), eco2026_task: new Set(), pmbok8_domain: new Set(), pmbok8_principle: new Set(), pmbok8_focus_area: new Set(), pmbok8_process: new Set(), methodology: new Set(), methodology_detail: new Set() },
+    counts: { pmbok7: 30, pmbok8: 30 },
+    fetchTimer: null,
+};
+
+// ═══════════════════════════════════════════
+// Tab switching
+// ═══════════════════════════════════════════
+function switchTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+// Card collapse / expand
+// ═══════════════════════════════════════════
+function toggleCard(cardId) {
+    const body = document.getElementById('body-' + cardId);
+    const header = body ? body.previousElementSibling : null;
+    if (!body) return;
+    body.classList.toggle('hidden');
+    if (header) header.classList.toggle('collapsed');
+}
+
+// ═══════════════════════════════════════════
+// Domain (parent) chip toggle
+// Shows/hides task row + updates state
+// ═══════════════════════════════════════════
+function toggleDomain(chip) {
+    const tab   = chip.dataset.tab;
+    const tree  = chip.dataset.tree;   // eco2021 | eco2026 | methodology
+    const dom   = chip.dataset.domain;
+    const keys  = TREE_KEYS[tree];
+
+    chip.classList.toggle('selected');
+    const selected = chip.classList.contains('selected');
+
+    // Show/hide task sub-row
+    const rowId = `row-${tab}-${tree}-${dom.replace(/ /g,'_')}`;
+    const row = document.getElementById(rowId);
+    if (row) row.style.display = selected ? 'flex' : 'none';
+
+    // Update state
+    if (selected) state[tab][keys.parent].add(dom);
+    else {
+        state[tab][keys.parent].delete(dom);
+        // Deselect all tasks for this domain
+        const tasks = TREES[tree][dom] || [];
+        tasks.forEach(t => {
+            state[tab][keys.child].delete(t);
+            const tChip = row ? row.querySelector(`.task-chip[data-task="${CSS.escape(t)}"]`) : null;
+            if (tChip) tChip.classList.remove('selected');
+        });
+    }
+
+    updateBadge(tab, tree);
+    updateSummary(tab);
+    debounceFetchCount(tab);
+}
+
+// ═══════════════════════════════════════════
+// Task (child) chip toggle
+// ═══════════════════════════════════════════
+function toggleTask(chip) {
+    const tab  = chip.dataset.tab;
+    const tree = chip.dataset.tree;
+    const task = chip.dataset.task;
+    const keys = TREE_KEYS[tree];
+
+    chip.classList.toggle('selected');
+    if (chip.classList.contains('selected')) state[tab][keys.child].add(task);
+    else state[tab][keys.child].delete(task);
+
+    updateBadge(tab, tree);
+    updateSummary(tab);
+    debounceFetchCount(tab);
+}
+
+// ═══════════════════════════════════════════
+// Flat chip toggle (Performance Domain, Principle, Focus Area, Process)
+// ═══════════════════════════════════════════
+function toggleFlat(chip) {
+    const tab = chip.dataset.tab;
+    const key = chip.dataset.key;
+    const val = chip.dataset.val;
+
+    chip.classList.toggle('selected');
+    if (chip.classList.contains('selected')) state[tab][key].add(val);
+    else state[tab][key].delete(val);
+
+    updateBadge(tab, null, key);
+    updateSummary(tab);
+    debounceFetchCount(tab);
+}
+
+// ═══════════════════════════════════════════
+// Badge update
+// ═══════════════════════════════════════════
+function updateBadge(tab, tree, flatKey) {
+    if (tree) {
+        const keys = TREE_KEYS[tree];
+        const total = state[tab][keys.parent].size + state[tab][keys.child].size;
+        const badgeId = `badge-${tab}-${tree === 'eco2021' ? 'eco' : tree === 'eco2026' ? 'eco' : 'methodology'}`;
+        // eco badge uses short id
+        const b = document.getElementById(`badge-${tab}-${tree === 'eco2021' ? 'eco' : tree === 'eco2026' ? 'eco' : 'methodology'}`);
+        if (b) b.textContent = total > 0 ? total : '';
+    }
+    if (flatKey) {
+        const b = document.getElementById(`badge-${tab}-${flatKey}`);
+        if (b) b.textContent = state[tab][flatKey] ? (state[tab][flatKey].size > 0 ? state[tab][flatKey].size : '') : '';
+    }
+}
+
+// ═══════════════════════════════════════════
+// Summary text
+// ═══════════════════════════════════════════
+const LABEL_MAP = {
+    eco2021_domain: '2021 ECO Domain', eco2021_task: 'ECO Task',
+    pmbok7_domain: 'Performance Domain', pmbok7_principle: 'Principle',
+    eco2026_domain: '2026 ECO Domain', eco2026_task: 'ECO Task',
+    pmbok8_domain: 'Performance Domain', pmbok8_principle: 'Principle',
+    pmbok8_focus_area: 'Focus Area', pmbok8_process: 'Process',
+    methodology: 'Methodology', methodology_detail: 'Method Detail',
+};
+function updateSummary(tab) {
+    const el = document.getElementById('summary-' + tab);
+    const st = state[tab];
+    const parts = [];
+
+    // Hierarchical summaries
+    for (const [tree, keys] of Object.entries(TREE_KEYS)) {
+        if (!st[keys.parent] && !st[keys.child]) continue;
+        const doms = [...(st[keys.parent] || [])];
+        const tasks = [...(st[keys.child] || [])];
+        if (doms.length === 0 && tasks.length === 0) continue;
+        const label = tree === 'eco2021' ? '2021 ECO' : tree === 'eco2026' ? '2026 ECO' : 'Methodology';
+        let text = `<strong>${label}</strong>: `;
+        if (tasks.length > 0) text += tasks.map(v=>`<em>${v}</em>`).join(', ');
+        else text += doms.map(v=>`<em>${v}</em>`).join(', ');
+        parts.push(text);
+    }
+    // Flat summaries
+    for (const [key, set] of Object.entries(st)) {
+        if (key in TREE_KEYS || !set.size) continue;
+        if (['eco2021_task','eco2021_domain','eco2026_task','eco2026_domain','methodology','methodology_detail'].includes(key)) continue;
+        const label = LABEL_MAP[key] || key;
+        parts.push(`<strong>${label}</strong>: ${[...set].map(v=>`<em>${v}</em>`).join(', ')}`);
+    }
+
+    const clearBtn = document.getElementById('clearbtn-' + tab);
+
+    if (parts.length === 0) {
+        el.innerHTML = '<span style="color:var(--text-muted);">No filter — Drawn from all questions.</span>';
+        if (clearBtn) clearBtn.style.display = 'none';
+    } else {
+        el.innerHTML = '📌 ' + parts.join(' &nbsp;<span style="color:var(--border)">|</span>&nbsp; ');
+        if (clearBtn) clearBtn.style.display = '';
+    }
+}
+
+// ═══════════════════════════════════════════
+// Count buttons
+// ═══════════════════════════════════════════
+function setCount(tab, val) {
+    document.querySelectorAll(`#countbtns-${tab} .count-btn`).forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    state.counts[tab] = (val === 'All') ? 9999 : parseInt(val);
+    document.getElementById('count_' + tab).value = state.counts[tab];
+}
+
+// ═══════════════════════════════════════════
+// Debounced fetch → live count
+// ═══════════════════════════════════════════
+function debounceFetchCount(tab) {
+    clearTimeout(state.fetchTimer);
+    state.fetchTimer = setTimeout(() => fetchCount(tab), 400);
+}
+function fetchCount(tab) {
+    const filters = buildFilters(tab);
+    const el = document.getElementById('match-' + tab);
+    if (Object.keys(filters).length === 0) { el.textContent = ''; return; }
+    el.textContent = 'Loading…';
+    fetch('/api/filter_count', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(filters)
+    }).then(r => r.json()).then(d => {
+        el.innerHTML = `this question <strong style="color:var(--primary)">${d.count}</strong> items`;
+    }).catch(() => { el.textContent = ''; });
+}
+
+// ═══════════════════════════════════════════
+// Build filter JSON
+// ═══════════════════════════════════════════
+function buildFilters(tab) {
+    const st = state[tab];
+    const filters = {};
+
+    // Hierarchical: domain → no tasks = domain filter; tasks → task filter
+    for (const [tree, keys] of Object.entries(TREE_KEYS)) {
+        const parentKey = keys.parent;
+        const childKey  = keys.child;
+
+        // Which parent key belongs to this tab?
+        if (!(parentKey in st)) continue;
+
+        const selectedDoms = [...st[parentKey]];
+        const selectedTasks = [...(st[childKey] || [])];
+
+        const domsWithNoTasks = [];
+        const usedTasksFromDoms = [];
+
+        for (const dom of selectedDoms) {
+            const domTasks = TREES[tree][dom] || [];
+            const pickedTasks = domTasks.filter(t => st[childKey] && st[childKey].has(t));
+            if (pickedTasks.length === 0) domsWithNoTasks.push(dom);
+            else usedTasksFromDoms.push(...pickedTasks);
+        }
+        // Tasks that are selected (regardless of whether parent domain is selected)
+        const allTasks = [...new Set([...usedTasksFromDoms, ...selectedTasks])];
+
+        if (domsWithNoTasks.length) filters[parentKey] = domsWithNoTasks;
+        if (allTasks.length) filters[childKey] = allTasks;
+    }
+
+    // Flat filters
+    const flatKeys = Object.keys(st).filter(k =>
+        !['eco2021_domain','eco2021_task','eco2026_domain','eco2026_task','methodology','methodology_detail'].includes(k)
+    );
+    for (const key of flatKeys) {
+        const set = st[key];
+        if (set && set.size > 0) filters[key] = [...set];
+    }
+
+    return filters;
+}
+
+// ═══════════════════════════════════════════
+// Form submit
+// ═══════════════════════════════════════════
+function prepareSubmit(tab) {
+    const filters = buildFilters(tab);
+    document.getElementById('filter_json_' + tab).value = JSON.stringify(filters);
+    document.getElementById('count_' + tab).value = state.counts[tab];
+    return true;
+}
+
+// ═══════════════════════════════════════════
+// Exam mode
+// ═══════════════════════════════════════════
+function startExam(mode) {
+    document.getElementById('exam-mode').value = mode;
+    document.getElementById('exam-form').submit();
+}
+
+// ═══════════════════════════════════════════
+// Clear all selections for a tab
+// ═══════════════════════════════════════════
+function clearAll(tab) {
+    const st = state[tab];
+
+    // Reset all Sets to empty
+    for (const key of Object.keys(st)) {
+        if (st[key] instanceof Set) st[key].clear();
+    }
+
+    // Deselect all chips visually
+    document.querySelectorAll(`.slicer-chip[data-tab="${tab}"]`)
+        .forEach(c => c.classList.remove('selected'));
+
+    // Hide all child rows
+    document.querySelectorAll(`#tab-${tab} .child-row`)
+        .forEach(r => r.style.display = 'none');
+
+    // Clear all badges
+    document.querySelectorAll(`#tab-${tab} .sc-badge`)
+        .forEach(b => b.textContent = '');
+
+    // Clear match count
+    document.getElementById('match-' + tab).textContent = '';
+
+    updateSummary(tab);
+}
+
+// Init
+updateSummary('pmbok7');
+updateSummary('pmbok8');
+</script>
+{% endblock %}

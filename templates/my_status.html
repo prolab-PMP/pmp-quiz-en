@@ -1,0 +1,570 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - My Status{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom:20px;"><i class="fas fa-chart-line"></i> My Status</h2>
+{% if sample_mode %}
+<div style="margin-bottom:20px;padding:14px 18px;background:linear-gradient(90deg,#fef3c7,#fde68a);border-left:4px solid #f59e0b;border-radius:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    <i class="fas fa-eye" style="font-size:1.4rem;color:#92400e;"></i>
+    <div style="flex:1;min-width:240px;">
+        <div style="font-weight:700;color:#78350f;font-size:0.95rem;">📊 Free user — 샘플 데이터 미리View</div>
+        <div style="color:#92400e;font-size:0.85rem;margin-top:2px;">아래 모든 통계는 <strong>예시 데이터</strong>입니다. 유료 전환 후 본인의 실제 학습 데이터가 동day한 형태로 표시됩니다.</div>
+    </div>
+    <a href="https://smartstore.naver.com/sub-note/products/13378117649" target="_blank" rel="noopener"
+       style="background:#03C75A;color:#fff;padding:8px 16px;border-radius:6px;font-weight:700;font-size:0.85rem;text-decoration:none;white-space:nowrap;">
+        <i class="fas fa-arrow-up"></i> 유료 전환
+    </a>
+</div>
+{% endif %}
+
+
+<!-- Expired/Free 유저 구매 배너 -->
+{% if not current_user.is_admin and not current_user.is_valid() %}
+<div style="margin-bottom:20px;padding:20px 24px;background:linear-gradient(135deg,#0f2d57,#1d5fa6);border-radius:12px;color:#fff;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;">
+    <div>
+        <div style="font-size:1.05rem;font-weight:700;margin-bottom:4px;">
+            <i class="fas fa-lock" style="margin-right:8px;color:#fbbf24;"></i>
+            {% if current_user.validity_end %}Your access has expired{% else %}Free user입니다{% endif %}
+        </div>
+        <div style="font-size:0.88rem;color:#bfdbfe;line-height:1.6;">
+            All 2,000+ Question · Incorrect 관리 · By category 통계는 유료버전에서 이용 가능합니다.<br>
+            구매 후 Email address를 Contact창에 남기시면 바로 활성화해드립니다.
+        </div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;flex-shrink:0;">
+        <a href="https://smartstore.naver.com/sub-note/products/13378117649"
+           target="_blank" rel="noopener"
+           style="display:inline-flex;align-items:center;gap:7px;background:#03C75A;color:#fff;padding:10px 20px;border-radius:8px;font-weight:700;font-size:0.92rem;text-decoration:none;white-space:nowrap;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M16.273 12.845L7.376 0H0v24h7.727V11.155l8.897 12.845H24V0h-7.727z"/></svg>
+            Buy on Naver Smart Store
+        </a>
+        <a href="mailto:songdoinfo@naver.com?subject=PMP Quiz Premium inquiry"
+           style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,0.15);color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;font-size:0.92rem;text-decoration:none;white-space:nowrap;border:1px solid rgba(255,255,255,0.3);">
+            <i class="fas fa-envelope"></i> Email inquiry
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Account Info & Engagement -->
+<div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
+    <div class="stat-card">
+        <div class="stat-value" style="font-size:1.1rem;word-break:break-all;">{{ current_user.email }}</div>
+        <div class="stat-label">계정</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color:{% if current_user.is_admin %}var(--primary){% elif validity_remaining and validity_remaining > 30 %}var(--success){% elif validity_remaining and validity_remaining > 0 %}var(--warning){% else %}var(--danger){% endif %}">
+            {% if current_user.is_admin %}무제한{% elif validity_remaining %}{{ validity_remaining }}day{% else %}Expired{% endif %}
+        </div>
+        <div class="stat-label">남은 Valid until</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color:var(--danger)">{{ wrong_count }}</div>
+        <div class="stat-label">Incorrect Question수</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ sessions_count if sessions_count is defined else sessions|length }}</div>
+        <div class="stat-label">총 풀이 횟수</div>
+    </div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);">
+        <div class="stat-value" style="color:#92400e;">🔥 {{ streak_days|default(0) }}day</div>
+        <div class="stat-label">Streak</div>
+    </div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);">
+        <div class="stat-value" style="color:#1e40af;font-size:1.25rem;">{{ "%.1f"|format(overall_accuracy|default(0)) }}%</div>
+        <div class="stat-label">All Accuracy</div>
+    </div>
+</div>
+
+{% if weak_domains and weak_domains|length > 0 %}
+<div class="card" style="margin-top:16px;">
+    <div class="card-header"><i class="fas fa-bullseye" style="color:#ef4444"></i> 보강이 필요한 약점 Domain <span style="font-size:0.78rem;color:var(--text-muted);font-weight:400;">— 카드 클릭 시 30Question 즉시 풀이</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;padding:6px 0;">
+    {% for w in weak_domains %}
+        <form method="POST" action="{{ url_for('quiz_begin') }}" style="flex:1;min-width:200px;margin:0;">
+            <input type="hidden" name="mode" value="slicer">
+            <input type="hidden" name="count" value="30">
+            <input type="hidden" name="filter_json" value="{{ w.filter_json|default('{}') }}">
+            <button type="submit" class="weak-card-btn"
+                    style="width:100%;text-align:left;padding:12px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;cursor:pointer;transition:all .15s;">
+                <div style="font-size:0.85rem;color:#7f1d1d;font-weight:600;margin-bottom:4px;word-break:keep-all;">{{ w.name }}</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="flex:1;background:#fff;border-radius:4px;height:8px;overflow:hidden;">
+                        <div style="height:100%;width:{{ w.accuracy }}%;background:#ef4444;"></div>
+                    </div>
+                    <span style="font-size:0.85rem;font-weight:700;color:#b91c1c;">{{ "%.0f"|format(w.accuracy) }}%</span>
+                </div>
+                <div style="margin-top:8px;font-size:0.78rem;color:#dc2626;font-weight:700;">
+                    <i class="fas fa-play-circle"></i> 이 Domain 30Practice →
+                </div>
+            </button>
+        </form>
+    {% endfor %}
+    </div>
+    <p style="margin:10px 0 0;font-size:0.82rem;color:var(--text-muted);">
+        ⚡ 약점 Domain 카드를 클릭하면 해당 min야 30Question로 바로 이동합니다.
+    </p>
+</div>
+{% endif %}
+
+<!-- Tabs -->
+<div class="tabs">
+    <button class="tab active" onclick="switchStatusTab('trend', this)">Accuracy 추이</button>
+    <button class="tab" onclick="switchStatusTab('pmbok7', this)">PMBOK 7th Edition</button>
+    <button class="tab" onclick="switchStatusTab('pmbok8', this)">PMBOK 8th Edition</button>
+    <button class="tab" onclick="switchStatusTab('history', this)">풀이 기록</button>
+</div>
+
+<!-- ── Trend ── -->
+<div id="tab-trend" class="tab-content active">
+    <div class="card">
+        <div class="card-header"><i class="fas fa-chart-line"></i> day별 Accuracy 추이</div>
+        {% if daily_stats %}
+        <div class="chart-container"><canvas id="trendChart"></canvas></div>
+        {% else %}
+        <div class="empty-state"><p>yet 풀이 기록이 없습니다.</p></div>
+        {% endif %}
+    </div>
+
+    <!-- 메인 Domain Accuracy 비교 차트 -->
+    {% if cat_stats and (cat_stats.pmbok7.eco2021_domain or cat_stats.pmbok8.eco2026_domain) %}
+    <div class="card">
+        <div class="card-header"><i class="fas fa-chart-column"></i> 메인 Domain Accuracy 비교 (PMBOK 7th Edition / 8th Edition)</div>
+        <div class="chart-container" style="position:relative;height:340px;">
+            <canvas id="domainChart"></canvas>
+        </div>
+        <p style="margin:8px 0 0;font-size:0.8rem;color:var(--text-muted);">초록 ≥70% · 노랑 50~69% · 빨강 <50%. 막대를 클릭하면 해당 Domain 30Question로 이동합니다.</p>
+    </div>
+    {% endif %}
+
+    <!-- 다양한 By category 차트 grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;margin-top:16px;">
+
+        <!-- Performance Domain (7th Edition vs 8th Edition) — Radar -->
+        {% if cat_stats and (cat_stats.pmbok7.pmbok7_domain or cat_stats.pmbok8.pmbok8_domain) %}
+        <div class="card">
+            <div class="card-header"><i class="fas fa-radar" style="color:#8b5cf6"></i> Performance Domain — 7th Edition vs 8th Edition (Radar)</div>
+            <div class="chart-container" style="position:relative;height:320px;">
+                <canvas id="performanceRadar"></canvas>
+            </div>
+            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">레이더 정점/축 클릭 시 해당 Domain 30Question Start</p>
+        </div>
+        {% endif %}
+
+        <!-- Principle — Polar Area -->
+        {% if cat_stats and (cat_stats.pmbok7.pmbok7_principle or cat_stats.pmbok8.pmbok8_principle) %}
+        <div class="card">
+            <div class="card-header"><i class="fas fa-compass-drafting" style="color:#10b981"></i> Principle Accuracy (Polar Area)</div>
+            <div class="chart-container" style="position:relative;height:320px;">
+                <canvas id="principlePolar"></canvas>
+            </div>
+            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">반경이 클수록 Accuracy 높음 · 클릭 시 Start practice</p>
+        </div>
+        {% endif %}
+
+        <!-- Methodology — Doughnut -->
+        {% if cat_stats and cat_stats.pmbok7.methodology %}
+        <div class="card">
+            <div class="card-header"><i class="fas fa-circle-notch" style="color:#f59e0b"></i> Methodology 시도 비중 (Doughnut)</div>
+            <div class="chart-container" style="position:relative;height:320px;">
+                <canvas id="methodologyDoughnut"></canvas>
+            </div>
+            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">조각 크기 = 시도 횟수, 색 농도 = Accuracy · 조각 클릭 시 Start practice</p>
+        </div>
+        {% endif %}
+
+        <!-- Focus Area (8th Edition) — Horizontal Bar -->
+        {% if cat_stats and cat_stats.pmbok8.pmbok8_focus_area %}
+        <div class="card">
+            <div class="card-header"><i class="fas fa-bullseye-arrow" style="color:#ef4444"></i> Focus Area (8th Edition) (Horizontal Bar)</div>
+            <div class="chart-container" style="position:relative;height:320px;">
+                <canvas id="focusAreaBar"></canvas>
+            </div>
+            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">막대 클릭 시 해당 Focus Area 30Question Start</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- 클릭 차트용 hidden form -->
+<form method="POST" action="{{ url_for('quiz_begin') }}" id="chart-quick-form" style="display:none;">
+    <input type="hidden" name="mode" value="slicer">
+    <input type="hidden" name="count" value="30">
+    <input type="hidden" name="filter_json" id="chart-filter-json">
+</form>
+
+<!-- ── PMBOK 7th Edition ── -->
+<div id="tab-pmbok7" class="tab-content">
+
+    {% set groups7 = [
+        ('eco2021_domain',   '2021 ECO Domain'),
+        ('eco2021_task',     '2021 ECO Task'),
+        ('pmbok7_domain',    'Performance Domain'),
+        ('pmbok7_principle', 'Principle'),
+        ('methodology',      'Methodology'),
+    ] %}
+
+    {% for key, label in groups7 %}
+    {% set rows = cat_stats.pmbok7[key] %}
+    <div class="card" style="margin-bottom:16px;">
+        <div class="card-header" style="cursor:pointer;user-select:none;"
+             onclick="toggleSection('s7_{{ key }}')">
+            <span><i class="fas fa-layer-group" style="margin-right:6px;"></i>{{ label }}</span>
+            <span id="icon_s7_{{ key }}" style="float:right;font-size:0.85rem;color:var(--text-muted);">▼</span>
+        </div>
+        <div id="s7_{{ key }}">
+        {% if rows %}
+            <div style="padding:8px 0;">
+            {% for r in rows %}
+            <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);">
+                <div style="flex:0 0 180px;min-width:0;font-size:0.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ r.name }}">{{ r.name }}</div>
+                <div style="flex:1;background:var(--surface);border-radius:4px;height:14px;overflow:hidden;">
+                    <div style="height:100%;width:{{ r.accuracy }}%;background:{% if r.accuracy >= 70 %}var(--success){% elif r.accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %};border-radius:4px;transition:width 0.4s;"></div>
+                </div>
+                <div style="flex:0 0 90px;text-align:right;font-size:0.82rem;color:var(--text-muted);">
+                    {{ r.correct }}/{{ r.total }}<br>
+                    <span class="badge {% if r.accuracy >= 70 %}badge-success{% elif r.accuracy >= 50 %}badge-warning{% else %}badge-danger{% endif %}" style="font-size:0.78rem;">{{ "%.0f"|format(r.accuracy) }}%</span>
+                </div>
+                <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin:0;flex:0 0 auto;">
+                    <input type="hidden" name="mode" value="slicer">
+                    <input type="hidden" name="count" value="30">
+                    <input type="hidden" name="filter_json" value='{{ r.filter_json|default('{}') }}'>
+                    <button type="submit" class="row-play-btn" title="이 min류 30Practice"
+                            style="background:var(--primary,#2563eb);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+                        ▶ 풀기
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state" style="padding:20px 0;"><p style="margin:0;">해당 min류의 풀이 데이터가 없습니다.</p></div>
+        {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+
+<!-- ── PMBOK 8th Edition ── -->
+<div id="tab-pmbok8" class="tab-content">
+
+    {% set groups8 = [
+        ('eco2026_domain',   '2026 ECO Domain'),
+        ('eco2026_task',     '2026 ECO Task'),
+        ('pmbok8_domain',    'Performance Domain'),
+        ('pmbok8_principle', 'Principle'),
+        ('pmbok8_focus_area','Focus Area'),
+        ('pmbok8_process',   'Process 40'),
+        ('methodology',      'Methodology'),
+    ] %}
+
+    {% for key, label in groups8 %}
+    {% set rows = cat_stats.pmbok8[key] %}
+    <div class="card" style="margin-bottom:16px;">
+        <div class="card-header" style="cursor:pointer;user-select:none;"
+             onclick="toggleSection('s8_{{ key }}')">
+            <span><i class="fas fa-layer-group" style="margin-right:6px;"></i>{{ label }}</span>
+            <span id="icon_s8_{{ key }}" style="float:right;font-size:0.85rem;color:var(--text-muted);">▼</span>
+        </div>
+        <div id="s8_{{ key }}">
+        {% if rows %}
+            <div style="padding:8px 0;">
+            {% for r in rows %}
+            <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);">
+                <div style="flex:0 0 180px;min-width:0;font-size:0.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ r.name }}">{{ r.name }}</div>
+                <div style="flex:1;background:var(--surface);border-radius:4px;height:14px;overflow:hidden;">
+                    <div style="height:100%;width:{{ r.accuracy }}%;background:{% if r.accuracy >= 70 %}var(--success){% elif r.accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %};border-radius:4px;transition:width 0.4s;"></div>
+                </div>
+                <div style="flex:0 0 90px;text-align:right;font-size:0.82rem;color:var(--text-muted);">
+                    {{ r.correct }}/{{ r.total }}<br>
+                    <span class="badge {% if r.accuracy >= 70 %}badge-success{% elif r.accuracy >= 50 %}badge-warning{% else %}badge-danger{% endif %}" style="font-size:0.78rem;">{{ "%.0f"|format(r.accuracy) }}%</span>
+                </div>
+                <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin:0;flex:0 0 auto;">
+                    <input type="hidden" name="mode" value="slicer">
+                    <input type="hidden" name="count" value="30">
+                    <input type="hidden" name="filter_json" value='{{ r.filter_json|default('{}') }}'>
+                    <button type="submit" class="row-play-btn" title="이 min류 30Practice"
+                            style="background:var(--primary,#2563eb);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+                        ▶ 풀기
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state" style="padding:20px 0;"><p style="margin:0;">해당 min류의 풀이 데이터가 없습니다.</p></div>
+        {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+
+<!-- ── History ── -->
+<div id="tab-history" class="tab-content">
+    <div class="card">
+        <div class="card-header"><i class="fas fa-clock-rotate-left"></i> All 풀이 기록</div>
+        {% if sessions %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>날짜</th><th>모드</th><th>Filter</th><th>Question</th><th>Correct</th><th>Accuracy</th></tr>
+                </thead>
+                <tbody>
+                {% for s in sessions %}
+                <tr>
+                    <td style="white-space:nowrap;">{{ s.completed_at.strftime('%m/%d %H:%M') if s.completed_at else '-' }}</td>
+                    <td>
+                        {% if s.mode == 'random' %}Random
+                        {% elif s.mode == 'pmbok7_exam' %}7th EditionExam
+                        {% elif s.mode == 'pmbok8_exam' %}8th EditionExam
+                        {% elif s.mode == 'wrong_answers' %}Incorrect
+                        {% elif s.mode == 'slicer' %}슬라이서
+                        {% else %}{{ s.mode }}{% endif %}
+                    </td>
+                    <td style="font-size:0.8rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                        title="{{ s.filter_value or '' }}">{{ s.filter_value or '-' }}</td>
+                    <td>{{ s.total_questions }}</td>
+                    <td>{{ s.correct_count }}</td>
+                    <td>
+                        <span class="badge {% if s.accuracy >= 70 %}badge-success{% elif s.accuracy >= 50 %}badge-warning{% else %}badge-danger{% endif %}">
+                            {{ "%.1f"|format(s.accuracy) }}%
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state"><p>yet 풀이 기록이 없습니다.</p></div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="pc-only-notice">
+    <i class="fas fa-desktop"></i> 상세 통계는 PC에서 더 잘 보입니다.
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function switchStatusTab(tabName, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabName).classList.add('active');
+    btn.classList.add('active');
+}
+
+function toggleSection(id) {
+    const el = document.getElementById(id);
+    const icon = document.getElementById('icon_' + id);
+    if (!el) return;
+    const hidden = el.style.display === 'none';
+    el.style.display = hidden ? '' : 'none';
+    if (icon) icon.textContent = hidden ? '▼' : '▶';
+}
+
+// Trend Chart
+const dailyData = {{ daily_stats|tojson }};
+if (dailyData && dailyData.length > 0) {
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: dailyData.map(d => d.date),
+            datasets: [{
+                label: 'Accuracy (%)',
+                data: dailyData.map(d => d.avg_accuracy),
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(1) + '%' } }
+            }
+        }
+    });
+}
+</script>
+
+<script>
+// ── 메인 Domain Accuracy 비교 차트 (클릭하면 Start practice) ──
+(function buildDomainChart(){
+    const canvas = document.getElementById('domainChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const data7 = {{ cat_stats.pmbok7.eco2021_domain | tojson if cat_stats and cat_stats.pmbok7 and cat_stats.pmbok7.eco2021_domain else '[]' }};
+    const data8 = {{ cat_stats.pmbok8.eco2026_domain | tojson if cat_stats and cat_stats.pmbok8 and cat_stats.pmbok8.eco2026_domain else '[]' }};
+
+    const labels = [...new Set([...data7.map(d=>d.name), ...data8.map(d=>d.name)])];
+    const acc7 = labels.map(l => { const x = data7.find(d=>d.name===l); return x ? x.accuracy : null; });
+    const acc8 = labels.map(l => { const x = data8.find(d=>d.name===l); return x ? x.accuracy : null; });
+
+    const colorBy = v => v==null ? '#cbd5e1' : v >= 70 ? '#10b981' : v >= 50 ? '#f59e0b' : '#ef4444';
+
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {label: 'PMBOK 7th Edition (2021 ECO)', data: acc7, backgroundColor: acc7.map(colorBy), borderRadius: 4},
+                {label: 'PMBOK 8th Edition (2026 ECO)', data: acc8, backgroundColor: acc8.map(v=> v==null ? '#cbd5e1' : (v >= 70 ? '#059669' : v >= 50 ? '#d97706' : '#dc2626')), borderRadius: 4}
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: false,
+            scales: {x: {min: 0, max: 100, ticks: {callback: v => v + '%'}}},
+            plugins: {legend: {position: 'top'}, tooltip: {callbacks: {label: ctx => `${ctx.dataset.label}: ${ctx.parsed.x ?? '데이터 없음'}${ctx.parsed.x!=null ? '%' : ''}`}}},
+            onClick: (evt, els) => {
+                if (!els || !els.length) return;
+                const i = els[0].index;
+                const ds = els[0].datasetIndex;
+                const dom = labels[i];
+                const key = ds === 0 ? 'eco2021_domain' : 'eco2026_domain';
+                document.getElementById('chart-filter-json').value = JSON.stringify({[key]: [dom]});
+                document.getElementById('chart-quick-form').submit();
+            }
+        }
+    });
+})();
+</script>
+
+<script>
+// ── Performance Domain Radar (7th Edition vs 8th Edition) ──
+(function buildPerformanceRadar(){
+    const canvas = document.getElementById('performanceRadar');
+    if (!canvas || typeof Chart === 'undefined') return;
+    const data7 = {{ cat_stats.pmbok7.pmbok7_domain | tojson if cat_stats and cat_stats.pmbok7 else '[]' }};
+    const data8 = {{ cat_stats.pmbok8.pmbok8_domain | tojson if cat_stats and cat_stats.pmbok8 else '[]' }};
+    const labels = [...new Set([...data7.map(d=>d.name), ...data8.map(d=>d.name)])];
+    const v7 = labels.map(l => { const x = data7.find(d=>d.name===l); return x ? x.accuracy : 0; });
+    const v8 = labels.map(l => { const x = data8.find(d=>d.name===l); return x ? x.accuracy : 0; });
+    new Chart(canvas, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [
+                {label: '7th Edition', data: v7, backgroundColor: 'rgba(139,92,246,.2)', borderColor: '#8b5cf6', pointBackgroundColor: '#8b5cf6', pointRadius: 5, pointHoverRadius: 8},
+                {label: '8th Edition', data: v8, backgroundColor: 'rgba(16,185,129,.2)', borderColor: '#10b981', pointBackgroundColor: '#10b981', pointRadius: 5, pointHoverRadius: 8}
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {r: {min: 0, max: 100, ticks: {stepSize: 25, callback: v => v+'%'}}},
+            plugins: {legend: {position: 'top'}},
+            onClick: (evt, els) => {
+                if (!els || !els.length) return;
+                const i = els[0].index;
+                const ds = els[0].datasetIndex;
+                const dom = labels[i];
+                const key = ds === 0 ? 'pmbok7_domain' : 'pmbok8_domain';
+                document.getElementById('chart-filter-json').value = JSON.stringify({[key]: [dom]});
+                document.getElementById('chart-quick-form').submit();
+            }
+        }
+    });
+})();
+
+// ── Principle Polar Area ──
+(function buildPrinciplePolar(){
+    const canvas = document.getElementById('principlePolar');
+    if (!canvas || typeof Chart === 'undefined') return;
+    const data7 = {{ cat_stats.pmbok7.pmbok7_principle | tojson if cat_stats and cat_stats.pmbok7 else '[]' }};
+    const data8 = {{ cat_stats.pmbok8.pmbok8_principle | tojson if cat_stats and cat_stats.pmbok8 else '[]' }};
+    // 7th Edition/8th Edition을 합치고 source 표시 (label에 prefix)
+    const merged = [
+        ...data7.map(d => ({...d, src: '7', key: 'pmbok7_principle'})),
+        ...data8.map(d => ({...d, src: '8', key: 'pmbok8_principle'}))
+    ];
+    if (!merged.length) return;
+    const PASTEL = ['#dbeafe','#fce7f3','#dcfce7','#fef3c7','#e0e7ff','#ffedd5','#fee2e2','#cffafe','#fef9c3','#fae8ff'];
+    new Chart(canvas, {
+        type: 'polarArea',
+        data: {
+            labels: merged.map(d => `${d.src}Edition · ${d.name}`),
+            datasets: [{ data: merged.map(d => d.accuracy), backgroundColor: merged.map((_,i)=>PASTEL[i % PASTEL.length]), borderWidth: 1.5 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {r: {min: 0, max: 100, ticks: {stepSize: 25}}},
+            plugins: {legend: {position: 'right', labels: {boxWidth: 12, font: {size: 11}}}},
+            onClick: (evt, els) => {
+                if (!els || !els.length) return;
+                const m = merged[els[0].index];
+                document.getElementById('chart-filter-json').value = JSON.stringify({[m.key]: [m.name]});
+                document.getElementById('chart-quick-form').submit();
+            }
+        }
+    });
+})();
+
+// ── Methodology Doughnut (시도 비중) ──
+(function buildMethodologyDoughnut(){
+    const canvas = document.getElementById('methodologyDoughnut');
+    if (!canvas || typeof Chart === 'undefined') return;
+    const data = {{ cat_stats.pmbok7.methodology | tojson if cat_stats and cat_stats.pmbok7 else '[]' }};
+    if (!data.length) return;
+    const colors = data.map(d => d.accuracy >= 70 ? '#10b981' : d.accuracy >= 50 ? '#f59e0b' : '#ef4444');
+    new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: data.map(d => `${d.name} (${Math.round(d.accuracy)}%)`),
+            datasets: [{ data: data.map(d => d.total), backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {legend: {position: 'right', labels: {boxWidth: 12, font: {size: 11}}}},
+            onClick: (evt, els) => {
+                if (!els || !els.length) return;
+                const i = els[0].index;
+                const name = data[i].name;
+                document.getElementById('chart-filter-json').value = JSON.stringify({methodology: [name]});
+                document.getElementById('chart-quick-form').submit();
+            }
+        }
+    });
+})();
+
+// ── Focus Area (8th Edition) Horizontal Bar ──
+(function buildFocusAreaBar(){
+    const canvas = document.getElementById('focusAreaBar');
+    if (!canvas || typeof Chart === 'undefined') return;
+    const data = {{ cat_stats.pmbok8.pmbok8_focus_area | tojson if cat_stats and cat_stats.pmbok8 else '[]' }};
+    if (!data.length) return;
+    const colorBy = v => v >= 70 ? '#10b981' : v >= 50 ? '#f59e0b' : '#ef4444';
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: data.map(d => d.name),
+            datasets: [{label: 'Accuracy', data: data.map(d => d.accuracy), backgroundColor: data.map(d => colorBy(d.accuracy)), borderRadius: 4}]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: false,
+            scales: {x: {min: 0, max: 100, ticks: {callback: v => v + '%'}}},
+            plugins: {legend: {display: false}},
+            onClick: (evt, els) => {
+                if (!els || !els.length) return;
+                const i = els[0].index;
+                const name = data[i].name;
+                document.getElementById('chart-filter-json').value = JSON.stringify({pmbok8_focus_area: [name]});
+                document.getElementById('chart-quick-form').submit();
+            }
+        }
+    });
+})();
+</script>
+{% endblock %}

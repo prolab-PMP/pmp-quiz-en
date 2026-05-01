@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Free trial - Question {{ current }}/{{ total }}{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <span style="font-weight:600;">Free체험 {{ current }} / {{ total }}</span>
+    <span class="badge badge-warning">FREE</span>
+</div>
+<div class="progress-bar-wrapper">
+    <div class="progress-bar" style="width:{{ (current / total * 100)|round }}%;background:linear-gradient(90deg,#d97706,#f59e0b);"></div>
+</div>
+
+<form method="POST" action="{{ url_for('free_answer') }}" id="quizForm">
+    <input type="hidden" name="question_no" value="{{ question.no }}">
+
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <span class="badge badge-info">Q{{ question.no }}</span>
+            {% if question.question_kr %}
+            <button type="button" class="translation-toggle" onclick="toggleTranslation(this)">
+                <i class="fas fa-language"></i> Show translation
+            </button>
+            {% endif %}
+        </div>
+
+        {% set ans_count = question.get_answer_count() %}
+        {% if ans_count > 1 %}
+        <div class="answer-count-hint">
+            <i class="fas fa-info-circle"></i> Correct {{ ans_count }} items를 Select하세요
+        </div>
+        {% endif %}
+
+        <div class="translation-wrapper">
+            <div class="original">
+                <div class="question-text">{{ question.question }}</div>
+            </div>
+            {% if question.question_kr %}
+            <div class="translation">
+                <div class="question-text" style="border-left-color:#fbbf24;">{{ question.question_kr }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% set saved = answers.get(question.no|string, '').split(',') %}
+        <ul class="option-list">
+            {% set options = [
+                ('A', question.opt_a, question.opt_a_kr),
+                ('B', question.opt_b, question.opt_b_kr),
+                ('C', question.opt_c, question.opt_c_kr),
+                ('D', question.opt_d, question.opt_d_kr),
+                ('E', question.opt_e, question.opt_e_kr)
+            ] %}
+            {% for letter, text, text_kr in options %}
+                {% if text %}
+                <li class="option-item {% if letter in saved %}selected{% endif %}"
+                    onclick="toggleOption(this, '{{ letter }}')">
+                    <span class="option-letter">{{ letter }}</span>
+                    <div class="option-text">
+                        <div class="translation-wrapper">
+                            <div class="original">{{ text }}</div>
+                            {% if text_kr %}
+                            <div class="translation opt-translation">{{ text_kr }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+
+        <div id="selectedInputs">
+            {% for letter in saved if letter %}
+            <input type="hidden" name="selected" value="{{ letter }}">
+            {% endfor %}
+        </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:space-between;">
+        <button type="submit" name="action" value="prev" class="btn btn-outline" {% if current <= 1 %}disabled{% endif %}>
+            <i class="fas fa-chevron-left"></i> Previous
+        </button>
+
+        <button type="button" class="btn btn-success" onclick="document.getElementById('gradeForm').submit();"
+                {% if current < total %}style="display:none;"{% endif %}>
+            <i class="fas fa-check-double"></i> Submit
+        </button>
+
+        {% if current < total %}
+        <button type="submit" name="action" value="next" class="btn btn-primary">
+            Next <i class="fas fa-chevron-right"></i>
+        </button>
+        {% endif %}
+    </div>
+</form>
+
+<!-- Separate grade form -->
+<form method="POST" action="{{ url_for('free_grade') }}" id="gradeForm" style="display:none;">
+    <input type="hidden" name="question_no" value="{{ question.no }}">
+</form>
+
+{% if current >= total %}
+<div style="text-align:center;margin-top:16px;">
+    <form method="POST" action="{{ url_for('free_grade') }}">
+        <input type="hidden" name="question_no" value="{{ question.no }}">
+        <button type="submit" class="btn btn-success btn-lg">
+            <i class="fas fa-flag-checkered"></i> Submit
+        </button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleOption(el, letter) {
+    el.classList.toggle('selected');
+    const container = document.getElementById('selectedInputs');
+    container.innerHTML = '';
+    document.querySelectorAll('.option-item.selected').forEach(item => {
+        const l = item.querySelector('.option-letter').textContent.trim();
+        const input = document.createElement('input');
+        input.type = 'hidden'; input.name = 'selected'; input.value = l;
+        container.appendChild(input);
+    });
+}
+function toggleTranslation(btn) {
+    btn.classList.toggle('active');
+    const show = btn.classList.contains('active');
+    btn.innerHTML = show ? '<i class="fas fa-language"></i> Hide translation' : '<i class="fas fa-language"></i> Show translation';
+    document.querySelectorAll('.translation').forEach(el => el.classList.toggle('show', show));
+}
+</script>
+{% endblock %}

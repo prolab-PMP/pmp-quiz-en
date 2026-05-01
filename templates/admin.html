@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - Admin{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom:20px;"><i class="fas fa-gear"></i> Admin Panel</h2>
+
+<!-- Admin Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ total_questions }}</div>
+        <div class="stat-label">All Question 수</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ users|length }}</div>
+        <div class="stat-label">등록 사용자</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ users|selectattr('is_premium')|list|length }}</div>
+        <div class="stat-label">Premium 사용자</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color:{% if payment_enabled %}var(--success){% else %}var(--text-muted){% endif %}">
+            {% if payment_enabled %}ON{% else %}OFF{% endif %}
+        </div>
+        <div class="stat-label">Payment</div>
+    </div>
+</div>
+
+<!-- Admin Actions -->
+<div class="card">
+    <div class="card-header"><i class="fas fa-tools"></i> 관리 기능</div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;">
+        <form method="POST" action="{{ url_for('admin_load_data') }}">
+            <button class="btn btn-primary" onclick="return confirm('Question 데이터를 다시 로드하시겠습니까?');">
+                <i class="fas fa-database"></i> Question 데이터 로드
+            </button>
+        </form>
+        <form method="POST" action="{{ url_for('admin_toggle_payment') }}">
+            <button class="btn {% if payment_enabled %}btn-danger{% else %}btn-success{% endif %}">
+                <i class="fas fa-credit-card"></i>
+                Payment {% if payment_enabled %}비활성화{% else %}활성화{% endif %}
+            </button>
+        </form>
+        <a href="{{ url_for('admin_questions') }}" class="btn btn-outline">
+            <i class="fas fa-edit"></i> Question Edit
+        </a>
+        <a href="{{ url_for('admin_question_stats') }}" class="btn btn-outline">
+            <i class="fas fa-chart-bar"></i> Per-question accuracy
+        </a>
+        <a href="{{ url_for('admin_reports') }}" class="btn btn-outline" style="position:relative;">
+            <i class="fas fa-flag"></i> Report management
+            {% if pending_report_count and pending_report_count > 0 %}
+            <span style="position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border-radius:50%;width:18px;height:18px;font-size:0.7rem;display:flex;align-items:center;justify-content:center;">{{ pending_report_count }}</span>
+            {% endif %}
+        </a>
+    </div>
+</div>
+
+<!-- Add User -->
+<div class="card">
+    <div class="card-header"><i class="fas fa-user-plus"></i> 사용자 추가</div>
+    <form method="POST" action="{{ url_for('admin_add_user') }}" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:4px 0;">
+        <div>
+            <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:4px;">Email address</label>
+            <input type="email" name="email" placeholder="user@example.com" required
+                   class="form-control" style="width:260px;">
+        </div>
+        <div>
+            <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:4px;">Valid until</label>
+            <select name="months" class="form-control" style="width:110px;">
+                {% for m in range(1, 13) %}
+                <option value="{{ m }}" {% if m == 3 %}selected{% endif %}>{{ m }} mo</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:4px;">등급</label>
+            <select name="is_premium" class="form-control" style="width:100px;">
+                <option value="1">Premium</option>
+                <option value="0">Free</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> 추가</button>
+    </form>
+</div>
+
+<!-- User Management -->
+<div class="card">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <span><i class="fas fa-users"></i> 사용자 관리 <small style="color:var(--text-muted);font-weight:400;">({{ users|length }}명)</small></span>
+        <!-- 등급 Filter -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            {% set base = '?sort='~sort~'&order='~order %}
+            <a href="{{ base }}&grade=all"     class="btn btn-sm {% if filter_grade=='all'     %}btn-primary{% else %}btn-outline{% endif %}">All</a>
+            <a href="{{ base }}&grade=premium" class="btn btn-sm {% if filter_grade=='premium' %}btn-success{% else %}btn-outline{% endif %}">유료만</a>
+            <a href="{{ base }}&grade=free"    class="btn btn-sm {% if filter_grade=='free'    %}btn-warning{% else %}btn-outline{% endif %}">Free만</a>
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    {# 정렬 헬퍼 매크로 #}
+                    {% macro sort_link(col, label) %}
+                        {% set next_order = 'asc' if (sort == col and order == 'desc') else 'desc' %}
+                        {% set icon = '▲' if (sort == col and order == 'asc') else ('▼' if (sort == col and order == 'desc') else '⇅') %}
+                        <a href="?sort={{ col }}&order={{ next_order }}&grade={{ filter_grade }}"
+                           style="color:inherit;text-decoration:none;white-space:nowrap;">
+                            {{ label }} <span style="opacity:0.5;font-size:0.75rem;">{{ icon }}</span>
+                        </a>
+                    {% endmacro %}
+                    <th>{{ sort_link('email', 'Email') }}</th>
+                    <th>{{ sort_link('grade', '상태') }}</th>
+                    <th>{{ sort_link('validity', 'Valid until') }}</th>
+                    <th>{{ sort_link('last_login', '마지막 Log in') }}</th>
+                    <th>관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>
+                        {{ user.email }}
+                        {% if user.is_admin %}<span class="badge badge-danger">Admin</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if user.is_premium %}
+                        <span class="badge badge-success">유료</span>
+                        {% else %}
+                        <span class="badge badge-warning">Free</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.validity_end %}
+                            {{ user.validity_end.strftime('%Y-%m-%d') }}
+                            {% if user.is_valid() %}
+                            <span class="badge badge-success">유효</span>
+                            {% else %}
+                            <span class="badge badge-danger">Expired</span>
+                            {% endif %}
+                        {% else %}
+                        <span style="color:var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else '없음' }}</td>
+                    <td>
+                        <div class="admin-actions">
+                            <!-- Set Validity (오늘부터) -->
+                            <form method="POST" action="{{ url_for('admin_update_user', user_id=user.id) }}" style="display:flex;gap:4px;align-items:center;">
+                                <input type="hidden" name="action" value="set_validity">
+                                <select name="months" class="form-control" style="width:82px;padding:4px;">
+                                    {% for m in range(1, 13) %}
+                                    <option value="{{ m }}" {% if m == 3 %}selected{% endif %}>{{ m }} mo</option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-sm btn-primary" title="오늘부터 N mo로 재설정">설정</button>
+                            </form>
+                            <!-- Extend Validity (기존 종료day에서 연장) -->
+                            <form method="POST" action="{{ url_for('admin_update_user', user_id=user.id) }}" style="display:flex;gap:4px;align-items:center;">
+                                <input type="hidden" name="action" value="extend_validity">
+                                <select name="months" class="form-control" style="width:82px;padding:4px;">
+                                    {% for m in range(1, 13) %}
+                                    <option value="{{ m }}" {% if m == 3 %}selected{% endif %}>{{ m }} mo</option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-sm btn-success" title="현재 Expiry에서 N mo 추가 연장">연장</button>
+                            </form>
+
+                            {% if user.id != current_user.id %}
+                            <!-- Toggle Premium -->
+                            <form method="POST" action="{{ url_for('admin_update_user', user_id=user.id) }}">
+                                <input type="hidden" name="action" value="toggle_premium">
+                                <button class="btn btn-sm {% if user.is_premium %}btn-warning{% else %}btn-outline{% endif %}">
+                                    {% if user.is_premium %}Free전환{% else %}유료전환{% endif %}
+                                </button>
+                            </form>
+                            <!-- Delete -->
+                            <form method="POST" action="{{ url_for('admin_update_user', user_id=user.id) }}"
+                                  onsubmit="return confirm('{{ user.email }} 계정을 Delete하시겠습니까?');">
+                                <input type="hidden" name="action" value="delete">
+                                <button class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="pc-only-notice">
+    <i class="fas fa-desktop"></i> Admin 기능은 PC에서 사용을 권장합니다.
+</div>
+{% endblock %}

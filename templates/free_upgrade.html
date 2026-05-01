@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - 유료버전 안내{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;margin:60px auto;">
+    <div class="card" style="text-align:center;padding:40px 32px;">
+
+        <i class="fas fa-lock" style="font-size:3.5rem;color:var(--primary);margin-bottom:20px;"></i>
+        <h2 style="margin-bottom:12px;">Your free trial has ended</h2>
+        <p style="color:var(--text-muted);font-size:1rem;margin-bottom:32px;line-height:1.7;">
+            Free trial Question를 모두 풀었습니다.<br>
+            계속 학습하려면 유료버전을 구매하거나 계정에 Log in하세요.
+        </p>
+
+        <!-- 유료버전 혜택 -->
+        <div style="background:var(--surface);border-radius:12px;padding:24px;margin-bottom:32px;text-align:left;">
+            <h3 style="font-size:1rem;font-weight:700;margin-bottom:16px;color:var(--primary);">
+                <i class="fas fa-star"></i> 유료버전 혜택
+            </h3>
+            <ul style="list-style:none;padding:0;margin:0;line-height:2;">
+                <li><i class="fas fa-check-circle" style="color:var(--success);margin-right:8px;"></i> All <strong>2,219 items</strong> Question 무제한 이용</li>
+                <li><i class="fas fa-check-circle" style="color:var(--success);margin-right:8px;"></i> PMBOK 7th Edition / 8th Edition By category Question풀기</li>
+                <li><i class="fas fa-check-circle" style="color:var(--success);margin-right:8px;"></i> Incorrect 노트 자동 관리</li>
+                <li><i class="fas fa-check-circle" style="color:var(--success);margin-right:8px;"></i> day자별 · 카테고리별 Accuracy 통계</li>
+                <li><i class="fas fa-check-circle" style="color:var(--success);margin-right:8px;"></i> PMP Exam 기준 모의고사 (180/185questions)</li>
+                <li><i class="fas fa-check-circle" style="color:var(--success);margin-right:8px;"></i> 한/영 번역 View</li>
+            </ul>
+        </div>
+
+        <!-- 버튼 -->
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <!-- Buy on Naver Smart Store 버튼 (가장 강조) -->
+            <a href="https://smartstore.naver.com/sub-note/products/13378117649"
+               target="_blank" rel="noopener"
+               class="btn btn-lg"
+               style="background:#03C75A;color:#fff;font-size:1.05rem;font-weight:700;border:none;display:flex;align-items:center;justify-content:center;gap:8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white" style="flex-shrink:0;">
+                    <path d="M16.273 12.845L7.376 0H0v24h7.727V11.155l8.897 12.845H24V0h-7.727z"/>
+                </svg>
+                Buy on Naver Smart Store하기
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt"></i> already 구매했다면 Log in
+            </a>
+            <a href="{{ url_for('free_mode') }}" class="btn btn-outline" style="font-size:0.9rem;color:var(--text-muted);">
+                <i class="fas fa-arrow-left"></i> Free trial으로 돌아가기
+            </a>
+        </div>
+
+        <!-- 구매 안내 -->
+        <div style="margin-top:24px;padding:16px;background:var(--surface);border-radius:8px;font-size:0.85rem;color:var(--text-muted);text-align:left;line-height:1.8;">
+            <strong style="color:var(--text);">구매 후 이용 방법</strong><br>
+            ① Buy on Naver Smart Store<br>
+            ② 구매 시 이용할 Email address를 Contact창에 남겨wk세요<br>
+            ③ Admin가 계정 활성화 (기본 3 mo)<br>
+            ④ Email로 Log in 후 바로 이용 Start
+        </div>
+
+        <p style="margin-top:16px;font-size:0.8rem;color:var(--text-muted);">
+            Contact: <a href="mailto:songdoinfo@naver.com">songdoinfo@naver.com</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

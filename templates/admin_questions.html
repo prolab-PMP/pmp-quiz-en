@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Admin - Question 관리{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+    <a href="{{ url_for('admin_panel') }}" style="color:var(--text);text-decoration:none;font-size:1.3rem;">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <h2 style="margin:0;">Question 관리</h2>
+    <small style="color:var(--text-muted);">All {{ total }} items</small>
+</div>
+
+<!-- 검색 -->
+<div class="card" style="padding:16px;">
+    <form method="GET" action="{{ url_for('admin_questions') }}" style="display:flex;gap:8px;">
+        <input type="text" name="q" value="{{ search }}" placeholder="Question번호, Keyword, 한글 검색..."
+               class="form-control" style="flex:1;" autofocus>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> 검색</button>
+        {% if search %}
+        <a href="{{ url_for('admin_questions') }}" class="btn btn-outline">초기화</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Question 목록 -->
+<div class="card">
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:60px;">No</th>
+                    <th>Question</th>
+                    <th style="width:80px;">Correct</th>
+                    <th style="width:120px;">PMBOK7</th>
+                    <th style="width:120px;">PMBOK8</th>
+                    <th style="width:70px;">Edit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for q in questions %}
+                <tr>
+                    <td><strong>{{ q.no }}</strong></td>
+                    <td>
+                        <div style="max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                             title="{{ q.question }}">
+                            {{ q.question[:80] }}{% if q.question|length > 80 %}…{% endif %}
+                        </div>
+                        {% if q.question_kr %}
+                        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;
+                                    max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                             title="{{ q.question_kr }}">
+                            {{ q.question_kr[:60] }}{% if q.question_kr|length > 60 %}…{% endif %}
+                        </div>
+                        {% else %}
+                        <span style="font-size:0.75rem;color:var(--danger);">번역 없음</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-success">{{ q.answer }}</span>
+                    </td>
+                    <td><small style="color:var(--text-muted);">{{ q.pmbok7_domain or '-' }}</small></td>
+                    <td><small style="color:var(--text-muted);">{{ q.pmbok8_domain or '-' }}</small></td>
+                    <td>
+                        <a href="{{ url_for('admin_question_edit', q_no=q.no, back=request.url) }}"
+                           class="btn btn-sm btn-outline">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 페이지네이션 -->
+    {% if total_pages > 1 %}
+    <div style="display:flex;justify-content:center;align-items:center;gap:8px;padding:16px;flex-wrap:wrap;">
+        {% if page > 1 %}
+        <a href="?q={{ search }}&page={{ page - 1 }}" class="btn btn-sm btn-outline">◀ Previous</a>
+        {% endif %}
+
+        {% for p in range([1, page-2]|max, [total_pages+1, page+3]|min) %}
+        <a href="?q={{ search }}&page={{ p }}"
+           class="btn btn-sm {% if p == page %}btn-primary{% else %}btn-outline{% endif %}">{{ p }}</a>
+        {% endfor %}
+
+        {% if page < total_pages %}
+        <a href="?q={{ search }}&page={{ page + 1 }}" class="btn btn-sm btn-outline">Next ▶</a>
+        {% endif %}
+
+        <span style="color:var(--text-muted);font-size:0.85rem;">{{ page }} / {{ total_pages }}</span>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.pyo
+instance/
+*.db
+.env
+# data/PMP_Raw.xlsx  # include for deployment
+venv/
+.venv/
