@@ -66,11 +66,11 @@
         <!-- Question Text -->
         <div class="translation-wrapper">
             <div class="original">
-                <div class="question-text">{{ question.question }}</div>
+                <div class="question-text">{{ question.question | render_md_tables }}</div>
             </div>
             {% if question.question_kr %}
             <div class="translation" id="q-translation">
-                <div class="question-text" style="border-left-color:#fbbf24;">{{ question.question_kr }}</div>
+                <div class="question-text" style="border-left-color:#fbbf24;">{{ question.question_kr | render_md_tables }}</div>
             </div>
             {% endif %}
         </div>

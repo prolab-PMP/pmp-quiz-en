@@ -90,11 +90,11 @@
     <!-- Question Text with Translation -->
     <div class="translation-wrapper">
         <div class="original">
-            <div class="question-text">{{ r.question.question }}</div>
+            <div class="question-text">{{ r.question.question | render_md_tables }}</div>
         </div>
         {% if r.question.question_kr %}
         <div class="translation result-translation">
-            <div class="question-text" style="border-left-color:#fbbf24;">{{ r.question.question_kr }}</div>
+            <div class="question-text" style="border-left-color:#fbbf24;">{{ r.question.question_kr | render_md_tables }}</div>
         </div>
         {% endif %}
     </div>
@@ -141,11 +141,11 @@
         <h4><i class="fas fa-lightbulb"></i> Explanation</h4>
         <div class="translation-wrapper">
             <div class="original">
-                <p>{{ r.question.explanation or 'No explanation available.' }}</p>
+                <p>{{ (r.question.explanation or 'No explanation available.') | render_md_tables }}</p>
             </div>
             {% if r.question.explanation_kr %}
             <div class="translation result-translation">
-                <p>{{ r.question.explanation_kr }}</p>
+                <p>{{ r.question.explanation_kr | render_md_tables }}</p>
             </div>
             {% endif %}
         </div>

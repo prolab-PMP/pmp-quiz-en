@@ -1,5 +1,6 @@
 """PMP Quiz Web Application"""
 import os
+import re
 import json
 import random
 import bcrypt
@@ -8,6 +9,7 @@ from functools import wraps
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from markupsafe import Markup, escape
 from sqlalchemy import func, desc, and_, text
 
 from config import Config
@@ -16,6 +18,63 @@ from migrate import auto_migrate  # DB schema auto-sync (additive)
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# ══════════════════════════════════════════════════════
+# Jinja filter: render markdown tables in question/explanation text
+# Used by table-style questions (Q90001~90015) where the body
+# contains a Markdown-style "| col | col |" table.
+# Non-table text is HTML-escaped and \n is converted to <br>.
+# ══════════════════════════════════════════════════════
+_MD_TABLE_BLOCK = re.compile(
+    r'(^[ \t]*\|[^\n]+\|[ \t]*\n'                   # header row
+    r'[ \t]*\|[ \t\-:|]+\|[ \t]*\n'                  # separator row
+    r'(?:[ \t]*\|[^\n]+\|[ \t]*(?:\n|$))+)',         # one or more body rows
+    re.MULTILINE
+)
+
+
+def _md_table_to_html(block: str) -> str:
+    lines = [ln.strip() for ln in block.strip().split('\n') if ln.strip()]
+    if len(lines) < 2:
+        return escape(block)
+
+    def split_row(row: str):
+        return [c.strip() for c in row.strip().strip('|').split('|')]
+
+    header_cells = split_row(lines[0])
+    body_rows = [split_row(r) for r in lines[2:]]
+
+    out = ['<div class="table-wrapper" style="margin:10px 0;"><table class="md-table">']
+    out.append('<thead><tr>')
+    out.extend(f'<th>{escape(c)}</th>' for c in header_cells)
+    out.append('</tr></thead><tbody>')
+    for row in body_rows:
+        out.append('<tr>')
+        out.extend(f'<td>{escape(c)}</td>' for c in row)
+        out.append('</tr>')
+    out.append('</tbody></table></div>')
+    return ''.join(out)
+
+
+@app.template_filter('render_md_tables')
+def render_md_tables(text_input):
+    """Convert markdown tables in text to HTML; preserve newlines elsewhere."""
+    if not text_input:
+        return ''
+    s = str(text_input)
+    parts = []
+    last = 0
+    for m in _MD_TABLE_BLOCK.finditer(s):
+        before = s[last:m.start()]
+        if before:
+            parts.append(str(escape(before)).replace('\n', '<br>'))
+        parts.append(_md_table_to_html(m.group(1)))
+        last = m.end()
+    tail = s[last:]
+    if tail:
+        parts.append(str(escape(tail)).replace('\n', '<br>'))
+    return Markup(''.join(parts))
+
 
 db.init_app(app)
 login_manager = LoginManager()
@@ -62,42 +121,81 @@ FILTER_MAP = {
 }
 
 
-# ── Initialize DB ──
-with app.app_context():
-    db.create_all()
-    auto_migrate(db)  # ALTER TABLE for columns added to models since last deploy
-    # Create or promote admin users (idempotent)
-    for email in Config.ADMIN_EMAILS:
-        existing = User.query.filter_by(email=email).first()
-        if not existing:
-            admin = User(email=email, is_admin=True, is_premium=True)
-            admin.set_validity(months=120)
-            db.session.add(admin)
-            print(f'[INIT] admin 생성: {email}')
-        elif not existing.is_admin:
-            existing.is_admin = True
-            existing.is_premium = True
-            if not existing.validity_end or existing.validity_end < datetime.utcnow():
-                existing.set_validity(months=120)
-            print(f'[INIT] admin 자동 승격: {email}')
-    db.session.commit()
+# ══════════════════════════════════════════════════════
+# Lazy DB initialization
+# ──────────────────────────────────────────────────────
+# Heavy DB work (create_all, auto_migrate, admin seed, table-question seed,
+# auto-load) is deferred to the first incoming request so that the gunicorn
+# worker can bind to $PORT immediately. This prevents Railway's healthcheck
+# from timing out (502) on cold start when DATABASE_URL points to a slow
+# proxy connection.
+# ══════════════════════════════════════════════════════
+_DB_INITIALIZED = False
 
-    # 표 Question 15 items 시드 (idempotent)
+
+def _initialize_db_once():
+    """Run startup DB tasks exactly once. Safe to call from request context."""
+    global _DB_INITIALIZED
+    if _DB_INITIALIZED:
+        return
     try:
-        from seed_table_questions import seed_table_questions
-        seed_table_questions(db, Question)
-    except Exception as _e:
-        print(f'[INIT] 표 Question 시드 실패: {_e}')
+        db.create_all()
+        auto_migrate(db)  # ALTER TABLE for columns added to models since last deploy
+        # Create or promote admin users (idempotent)
+        for email in Config.ADMIN_EMAILS:
+            existing = User.query.filter_by(email=email).first()
+            if not existing:
+                admin = User(email=email, is_admin=True, is_premium=True)
+                admin.set_validity(months=120)
+                db.session.add(admin)
+                print(f'[INIT] admin created: {email}')
+            elif not existing.is_admin:
+                existing.is_admin = True
+                existing.is_premium = True
+                if not existing.validity_end or existing.validity_end < datetime.utcnow():
+                    existing.set_validity(months=120)
+                print(f'[INIT] admin auto-promoted: {email}')
+        db.session.commit()
 
-    # Auto-load questions if DB is empty
-    if Question.query.count() == 0:
-        filepath = 'data/PMP_Raw.xlsx'
-        if os.path.exists(filepath):
-            from load_data import load_questions
-            count = load_questions(filepath)
-            print(f"[STARTUP] Auto-loaded {count} questions from {filepath}")
-        else:
-            print(f"[STARTUP] No data file found at {filepath}")
+        # Table Question 15 items seed (idempotent)
+        try:
+            from seed_table_questions import seed_table_questions
+            seed_table_questions(db, Question)
+        except Exception as _e:
+            print(f'[INIT] Table Question seed failed: {_e}')
+
+        # Auto-load questions if DB is empty
+        if Question.query.count() == 0:
+            filepath = 'data/PMP_Raw.xlsx'
+            if os.path.exists(filepath):
+                from load_data import load_questions
+                count = load_questions(filepath)
+                print(f"[STARTUP] Auto-loaded {count} questions from {filepath}")
+            else:
+                print(f"[STARTUP] No data file found at {filepath}")
+        _DB_INITIALIZED = True
+        print('[INIT] DB initialization complete.')
+    except Exception as e:
+        # Don't latch the flag on failure so a future request can retry.
+        print(f'[INIT] DB initialization FAILED: {e}')
+        raise
+
+
+@app.before_request
+def _ensure_db_initialized():
+    """Lazy hook: initialize DB on first real request (not /healthz)."""
+    if _DB_INITIALIZED:
+        return
+    # Skip init for the healthcheck endpoint so Railway can probe instantly.
+    if request.path == '/healthz':
+        return
+    _initialize_db_once()
+
+
+@app.route('/healthz')
+def healthz():
+    """Railway healthcheck — must respond instantly without touching DB."""
+    return 'OK', 200
 
 # ══════════════════════════════════════════════════════
 # AUTH ROUTES

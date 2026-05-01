@@ -34,9 +34,9 @@
                 <span class="badge" style="background:#7c3aed;color:#fff;font-size:0.75rem;margin-left:4px;">PMBOK8: {{ bm.question.pmbok8_domain }}</span>
                 {% endif %}
             </div>
-            <div class="q-text">{{ bm.question.question }}</div>
+            <div class="q-text">{{ bm.question.question | render_md_tables }}</div>
             {% if bm.question.question_kr %}
-            <div class="q-text" style="color:var(--text-muted);font-size:0.88rem;margin-top:6px;border-left:3px solid #f59e0b;padding-left:8px;">{{ bm.question.question_kr }}</div>
+            <div class="q-text" style="color:var(--text-muted);font-size:0.88rem;margin-top:6px;border-left:3px solid #f59e0b;padding-left:8px;">{{ bm.question.question_kr | render_md_tables }}</div>
             {% endif %}
             <div style="margin-top:10px;">
                 <span class="answer-badge">Correct: {{ bm.question.answer }}</span>
@@ -56,10 +56,10 @@
             <i class="fas fa-lightbulb"></i> Explanation View
         </summary>
         <div style="margin-top:8px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);font-size:0.9rem;line-height:1.6;">
-            {{ bm.question.explanation }}
+            {{ bm.question.explanation | render_md_tables }}
             {% if bm.question.explanation_kr %}
             <hr style="border-color:var(--border);margin:10px 0;">
-            <div style="color:var(--text-muted);">{{ bm.question.explanation_kr }}</div>
+            <div style="color:var(--text-muted);">{{ bm.question.explanation_kr | render_md_tables }}</div>
             {% endif %}
         </div>
     </details>
