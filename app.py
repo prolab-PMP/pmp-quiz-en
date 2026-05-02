@@ -999,6 +999,59 @@ def my_status():
 # API ENDPOINTS
 # ══════════════════════════════════════════════════════
 
+@app.route('/api/framework_stats')
+@login_required
+def api_framework_stats():
+    """Return user accuracy + question counts per classification value, grouped by dimension.
+
+    Used by the dashboard's framework grid to color-code each classification box
+    by the user's strength in that area and display question availability.
+    """
+    uid = current_user.id
+
+    def values_for(col):
+        all_values = sorted(
+            v[0] for v in db.session.query(col).filter(col.isnot(None)).distinct().all()
+        )
+        stats_rows = db.session.query(
+            col,
+            func.sum(UserAnswerStat.correct_attempts).label('correct'),
+            func.sum(UserAnswerStat.total_attempts).label('total')
+        ).join(UserAnswerStat, UserAnswerStat.question_no == Question.no)\
+         .filter(UserAnswerStat.user_id == uid)\
+         .filter(col.isnot(None))\
+         .group_by(col).all()
+        stats_map = {r[0]: (int(r.total or 0), int(r.correct or 0)) for r in stats_rows}
+        cap_rows = db.session.query(col, func.count(Question.id))\
+            .filter(col.isnot(None)).group_by(col).all()
+        cap_map = {r[0]: int(r[1]) for r in cap_rows}
+        out = []
+        for v in all_values:
+            total, correct = stats_map.get(v, (0, 0))
+            out.append({
+                'name': v,
+                'total_attempts': total,
+                'correct_attempts': correct,
+                'accuracy': round(correct / total * 100, 1) if total > 0 else None,
+                'question_count': cap_map.get(v, 0),
+            })
+        return out
+
+    return jsonify({
+        'pmbok7_domain': values_for(Question.pmbok7_domain),
+        'pmbok7_principle': values_for(Question.pmbok7_principle),
+        'pmbok8_domain': values_for(Question.pmbok8_domain),
+        'pmbok8_principle': values_for(Question.pmbok8_principle),
+        'pmbok8_focus_area': values_for(Question.pmbok8_focus_area),
+        'pmbok8_process': values_for(Question.pmbok8_process),
+        'eco2021_domain': values_for(Question.eco2021_domain),
+        'eco2021_task': values_for(Question.eco2021_task),
+        'eco2026_domain': values_for(Question.eco2026_domain),
+        'eco2026_task': values_for(Question.eco2026_task),
+        'methodology': values_for(Question.methodology),
+    })
+
+
 @app.route('/api/subcategories')
 @login_required
 def api_subcategories():
