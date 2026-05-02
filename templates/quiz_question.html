@@ -231,4 +231,7 @@ function submitReport() {
 }
 // Click outside modal to close
 document.getElementById('reportModal').addEventListener('click', function(e) {
-    if (e.target === this) closeReport
+    if (e.target === this) closeReportModal();
+});
+</script>
+{% endblock %}

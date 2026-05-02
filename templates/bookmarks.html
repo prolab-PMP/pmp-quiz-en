@@ -83,4 +83,9 @@ function removeBookmark(qNo, btn) {
             const header = document.querySelector('h2 span');
             const current = parseInt(header.textContent) - 1;
             header.textContent = `(${current} items)`;
-            if (cur
+            if (current === 0) location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

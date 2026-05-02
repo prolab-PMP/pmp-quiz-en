@@ -127,4 +127,7 @@ function toggleTranslation(btn) {
     btn.classList.toggle('active');
     const show = btn.classList.contains('active');
     btn.innerHTML = show ? '<i class="fas fa-language"></i> Hide translation' : '<i class="fas fa-language"></i> Show translation';
-    document.querySelectorAll('.translation').forEach(el => el.classList.toggle('show
+    document.querySelectorAll('.translation').forEach(el => el.classList.toggle('show', show));
+}
+</script>
+{% endblock %}

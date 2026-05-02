@@ -195,4 +195,9 @@ function toggleAllTranslations(btn) {
         ? '<i class="fas fa-language"></i> Hide translation'
         : '<i class="fas fa-language"></i> Show translation';
     document.querySelectorAll('.result-translation').forEach(el => {
+        el.classList.toggle('show', isActive);
+    });
+}
+</script>
+{% endblock %}
     
