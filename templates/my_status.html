@@ -7,28 +7,28 @@
 <div style="margin-bottom:20px;padding:14px 18px;background:linear-gradient(90deg,#fef3c7,#fde68a);border-left:4px solid #f59e0b;border-radius:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
     <i class="fas fa-eye" style="font-size:1.4rem;color:#92400e;"></i>
     <div style="flex:1;min-width:240px;">
-        <div style="font-weight:700;color:#78350f;font-size:0.95rem;">📊 Free user — 샘플 데이터 미리View</div>
-        <div style="color:#92400e;font-size:0.85rem;margin-top:2px;">아래 모든 통계는 <strong>예시 데이터</strong>입니다. 유료 전환 후 본인의 실제 학습 데이터가 동day한 형태로 표시됩니다.</div>
+        <div style="font-weight:700;color:#78350f;font-size:0.95rem;">📊 Free user — sample data preview</div>
+        <div style="color:#92400e;font-size:0.85rem;margin-top:2px;">All statistics below are <strong>sample data</strong>. After upgrading, your real learning data will be displayed in the same format.</div>
     </div>
     <a href="https://smartstore.naver.com/sub-note/products/13378117649" target="_blank" rel="noopener"
        style="background:#03C75A;color:#fff;padding:8px 16px;border-radius:6px;font-weight:700;font-size:0.85rem;text-decoration:none;white-space:nowrap;">
-        <i class="fas fa-arrow-up"></i> 유료 전환
+        <i class="fas fa-arrow-up"></i> Upgrade
     </a>
 </div>
 {% endif %}
 
 
-<!-- Expired/Free 유저 구매 배너 -->
+<!-- Expired/Free user purchase banner -->
 {% if not current_user.is_admin and not current_user.is_valid() %}
 <div style="margin-bottom:20px;padding:20px 24px;background:linear-gradient(135deg,#0f2d57,#1d5fa6);border-radius:12px;color:#fff;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;">
     <div>
         <div style="font-size:1.05rem;font-weight:700;margin-bottom:4px;">
             <i class="fas fa-lock" style="margin-right:8px;color:#fbbf24;"></i>
-            {% if current_user.validity_end %}Your access has expired{% else %}Free user입니다{% endif %}
+            {% if current_user.validity_end %}Your access has expired{% else %}You're a free user{% endif %}
         </div>
         <div style="font-size:0.88rem;color:#bfdbfe;line-height:1.6;">
-            All 2,000+ Question · Incorrect 관리 · By category 통계는 유료버전에서 이용 가능합니다.<br>
-            구매 후 Email address를 Contact창에 남기시면 바로 활성화해드립니다.
+            All 2,000+ questions · wrong-answer tracking · per-category analytics are available in the paid version.<br>
+            After purchase, leave your email address in the contact form and we'll activate it immediately.
         </div>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:10px;flex-shrink:0;">
@@ -50,21 +50,21 @@
 <div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
     <div class="stat-card">
         <div class="stat-value" style="font-size:1.1rem;word-break:break-all;">{{ current_user.email }}</div>
-        <div class="stat-label">계정</div>
+        <div class="stat-label">Account</div>
     </div>
     <div class="stat-card">
         <div class="stat-value" style="color:{% if current_user.is_admin %}var(--primary){% elif validity_remaining and validity_remaining > 30 %}var(--success){% elif validity_remaining and validity_remaining > 0 %}var(--warning){% else %}var(--danger){% endif %}">
-            {% if current_user.is_admin %}무제한{% elif validity_remaining %}{{ validity_remaining }}day{% else %}Expired{% endif %}
+            {% if current_user.is_admin %}Unlimited{% elif validity_remaining %}{{ validity_remaining }} days{% else %}Expired{% endif %}
         </div>
-        <div class="stat-label">남은 Valid until</div>
+        <div class="stat-label">Days remaining</div>
     </div>
     <div class="stat-card">
         <div class="stat-value" style="color:var(--danger)">{{ wrong_count }}</div>
-        <div class="stat-label">Incorrect Question수</div>
+        <div class="stat-label">Wrong-answer count</div>
     </div>
     <div class="stat-card">
         <div class="stat-value">{{ sessions_count if sessions_count is defined else sessions|length }}</div>
-        <div class="stat-label">총 풀이 횟수</div>
+        <div class="stat-label">Total Attempts</div>
     </div>
     <div class="stat-card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);">
         <div class="stat-value" style="color:#92400e;">🔥 {{ streak_days|default(0) }}day</div>
@@ -78,7 +78,7 @@
 
 {% if weak_domains and weak_domains|length > 0 %}
 <div class="card" style="margin-top:16px;">
-    <div class="card-header"><i class="fas fa-bullseye" style="color:#ef4444"></i> 보강이 필요한 약점 Domain <span style="font-size:0.78rem;color:var(--text-muted);font-weight:400;">— 카드 클릭 시 30Question 즉시 풀이</span></div>
+    <div class="card-header"><i class="fas fa-bullseye" style="color:#ef4444"></i> Weak domains to reinforce <span style="font-size:0.78rem;color:var(--text-muted);font-weight:400;">— Click a card to start 30 questions immediately</span></div>
     <div style="display:flex;flex-wrap:wrap;gap:10px;padding:6px 0;">
     {% for w in weak_domains %}
         <form method="POST" action="{{ url_for('quiz_begin') }}" style="flex:1;min-width:200px;margin:0;">
@@ -95,49 +95,49 @@
                     <span style="font-size:0.85rem;font-weight:700;color:#b91c1c;">{{ "%.0f"|format(w.accuracy) }}%</span>
                 </div>
                 <div style="margin-top:8px;font-size:0.78rem;color:#dc2626;font-weight:700;">
-                    <i class="fas fa-play-circle"></i> 이 Domain 30Practice →
+                    <i class="fas fa-play-circle"></i> Practice 30 in this domain →
                 </div>
             </button>
         </form>
     {% endfor %}
     </div>
     <p style="margin:10px 0 0;font-size:0.82rem;color:var(--text-muted);">
-        ⚡ 약점 Domain 카드를 클릭하면 해당 min야 30Question로 바로 이동합니다.
+        ⚡ Click a weak-domain card to jump straight to 30 questions in that area.
     </p>
 </div>
 {% endif %}
 
 <!-- Tabs -->
 <div class="tabs">
-    <button class="tab active" onclick="switchStatusTab('trend', this)">Accuracy 추이</button>
+    <button class="tab active" onclick="switchStatusTab('trend', this)">Accuracy trend</button>
     <button class="tab" onclick="switchStatusTab('pmbok7', this)">PMBOK 7th Edition</button>
     <button class="tab" onclick="switchStatusTab('pmbok8', this)">PMBOK 8th Edition</button>
-    <button class="tab" onclick="switchStatusTab('history', this)">풀이 기록</button>
+    <button class="tab" onclick="switchStatusTab('history', this)">Practice history</button>
 </div>
 
 <!-- ── Trend ── -->
 <div id="tab-trend" class="tab-content active">
     <div class="card">
-        <div class="card-header"><i class="fas fa-chart-line"></i> day별 Accuracy 추이</div>
+        <div class="card-header"><i class="fas fa-chart-line"></i> Daily accuracy trend</div>
         {% if daily_stats %}
         <div class="chart-container"><canvas id="trendChart"></canvas></div>
         {% else %}
-        <div class="empty-state"><p>yet 풀이 기록이 없습니다.</p></div>
+        <div class="empty-state"><p>No practice history yet.</p></div>
         {% endif %}
     </div>
 
-    <!-- 메인 Domain Accuracy 비교 차트 -->
+    <!-- Main domain accuracy comparison chart -->
     {% if cat_stats and (cat_stats.pmbok7.eco2021_domain or cat_stats.pmbok8.eco2026_domain) %}
     <div class="card">
-        <div class="card-header"><i class="fas fa-chart-column"></i> 메인 Domain Accuracy 비교 (PMBOK 7th Edition / 8th Edition)</div>
+        <div class="card-header"><i class="fas fa-chart-column"></i> Main domain accuracy comparison (PMBOK 7th / 8th Edition)</div>
         <div class="chart-container" style="position:relative;height:340px;">
             <canvas id="domainChart"></canvas>
         </div>
-        <p style="margin:8px 0 0;font-size:0.8rem;color:var(--text-muted);">초록 ≥70% · 노랑 50~69% · 빨강 <50%. 막대를 클릭하면 해당 Domain 30Question로 이동합니다.</p>
+        <p style="margin:8px 0 0;font-size:0.8rem;color:var(--text-muted);">Green ≥70% · Yellow 50–69% · Red <50%. Click a bar to start 30 questions in that domain.</p>
     </div>
     {% endif %}
 
-    <!-- 다양한 By category 차트 grid -->
+    <!-- Multi-category chart grid -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;margin-top:16px;">
 
         <!-- Performance Domain (7th Edition vs 8th Edition) — Radar -->
@@ -147,7 +147,7 @@
             <div class="chart-container" style="position:relative;height:320px;">
                 <canvas id="performanceRadar"></canvas>
             </div>
-            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">레이더 정점/축 클릭 시 해당 Domain 30Question Start</p>
+            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">Click a radar vertex/axis to start 30 questions in that domain</p>
         </div>
         {% endif %}
 
@@ -158,18 +158,18 @@
             <div class="chart-container" style="position:relative;height:320px;">
                 <canvas id="principlePolar"></canvas>
             </div>
-            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">반경이 클수록 Accuracy 높음 · 클릭 시 Start practice</p>
+            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">Larger radius = higher accuracy · click to start practice</p>
         </div>
         {% endif %}
 
         <!-- Methodology — Doughnut -->
         {% if cat_stats and cat_stats.pmbok7.methodology %}
         <div class="card">
-            <div class="card-header"><i class="fas fa-circle-notch" style="color:#f59e0b"></i> Methodology 시도 비중 (Doughnut)</div>
+            <div class="card-header"><i class="fas fa-circle-notch" style="color:#f59e0b"></i> Methodology attempt share (doughnut)</div>
             <div class="chart-container" style="position:relative;height:320px;">
                 <canvas id="methodologyDoughnut"></canvas>
             </div>
-            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">조각 크기 = 시도 횟수, 색 농도 = Accuracy · 조각 클릭 시 Start practice</p>
+            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">Slice size = attempts, color intensity = accuracy · click a slice to start practice</p>
         </div>
         {% endif %}
 
@@ -180,14 +180,14 @@
             <div class="chart-container" style="position:relative;height:320px;">
                 <canvas id="focusAreaBar"></canvas>
             </div>
-            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">막대 클릭 시 해당 Focus Area 30Question Start</p>
+            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">Click a bar to start 30 questions in that focus area</p>
         </div>
         {% endif %}
 
     </div>
 </div>
 
-<!-- 클릭 차트용 hidden form -->
+<!-- Hidden form for chart clicks -->
 <form method="POST" action="{{ url_for('quiz_begin') }}" id="chart-quick-form" style="display:none;">
     <input type="hidden" name="mode" value="slicer">
     <input type="hidden" name="count" value="30">
@@ -230,16 +230,16 @@
                     <input type="hidden" name="mode" value="slicer">
                     <input type="hidden" name="count" value="30">
                     <input type="hidden" name="filter_json" value='{{ r.filter_json|default('{}') }}'>
-                    <button type="submit" class="row-play-btn" title="이 min류 30Practice"
+                    <button type="submit" class="row-play-btn" title="Practice 30 in this category"
                             style="background:var(--primary,#2563eb);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">
-                        ▶ 풀기
+                        ▶ Practice
                     </button>
                 </form>
             </div>
             {% endfor %}
             </div>
         {% else %}
-            <div class="empty-state" style="padding:20px 0;"><p style="margin:0;">해당 min류의 풀이 데이터가 없습니다.</p></div>
+            <div class="empty-state" style="padding:20px 0;"><p style="margin:0;">No practice data for this category.</p></div>
         {% endif %}
         </div>
     </div>
@@ -285,16 +285,16 @@
                     <input type="hidden" name="mode" value="slicer">
                     <input type="hidden" name="count" value="30">
                     <input type="hidden" name="filter_json" value='{{ r.filter_json|default('{}') }}'>
-                    <button type="submit" class="row-play-btn" title="이 min류 30Practice"
+                    <button type="submit" class="row-play-btn" title="Practice 30 in this category"
                             style="background:var(--primary,#2563eb);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">
-                        ▶ 풀기
+                        ▶ Practice
                     </button>
                 </form>
             </div>
             {% endfor %}
             </div>
         {% else %}
-            <div class="empty-state" style="padding:20px 0;"><p style="margin:0;">해당 min류의 풀이 데이터가 없습니다.</p></div>
+            <div class="empty-state" style="padding:20px 0;"><p style="margin:0;">No practice data for this category.</p></div>
         {% endif %}
         </div>
     </div>
@@ -305,12 +305,12 @@
 <!-- ── History ── -->
 <div id="tab-history" class="tab-content">
     <div class="card">
-        <div class="card-header"><i class="fas fa-clock-rotate-left"></i> All 풀이 기록</div>
+        <div class="card-header"><i class="fas fa-clock-rotate-left"></i> All Practice history</div>
         {% if sessions %}
         <div class="table-wrapper">
             <table>
                 <thead>
-                    <tr><th>날짜</th><th>모드</th><th>Filter</th><th>Question</th><th>Correct</th><th>Accuracy</th></tr>
+                    <tr><th>Date</th><th>Mode</th><th>Filter</th><th>Question</th><th>Correct</th><th>Accuracy</th></tr>
                 </thead>
                 <tbody>
                 {% for s in sessions %}
@@ -321,7 +321,7 @@
                         {% elif s.mode == 'pmbok7_exam' %}7th EditionExam
                         {% elif s.mode == 'pmbok8_exam' %}8th EditionExam
                         {% elif s.mode == 'wrong_answers' %}Incorrect
-                        {% elif s.mode == 'slicer' %}슬라이서
+                        {% elif s.mode == 'slicer' %}Slicer
                         {% else %}{{ s.mode }}{% endif %}
                     </td>
                     <td style="font-size:0.8rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
@@ -339,13 +339,13 @@
             </table>
         </div>
         {% else %}
-        <div class="empty-state"><p>yet 풀이 기록이 없습니다.</p></div>
+        <div class="empty-state"><p>No practice history yet.</p></div>
         {% endif %}
     </div>
 </div>
 
 <div class="pc-only-notice">
-    <i class="fas fa-desktop"></i> 상세 통계는 PC에서 더 잘 보입니다.
+    <i class="fas fa-desktop"></i> Detailed statistics display better on a PC.
 </div>
 {% endblock %}
 
@@ -400,7 +400,7 @@ if (dailyData && dailyData.length > 0) {
 </script>
 
 <script>
-// ── 메인 Domain Accuracy 비교 차트 (클릭하면 Start practice) ──
+// ── Main domain accuracy comparison chart (click to start practice) ──
 (function buildDomainChart(){
     const canvas = document.getElementById('domainChart');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -427,7 +427,7 @@ if (dailyData && dailyData.length > 0) {
             indexAxis: 'y',
             responsive: true, maintainAspectRatio: false,
             scales: {x: {min: 0, max: 100, ticks: {callback: v => v + '%'}}},
-            plugins: {legend: {position: 'top'}, tooltip: {callbacks: {label: ctx => `${ctx.dataset.label}: ${ctx.parsed.x ?? '데이터 없음'}${ctx.parsed.x!=null ? '%' : ''}`}}},
+            plugins: {legend: {position: 'top'}, tooltip: {callbacks: {label: ctx => `${ctx.dataset.label}: ${ctx.parsed.x ?? 'No data'}${ctx.parsed.x!=null ? '%' : ''}`}}},
             onClick: (evt, els) => {
                 if (!els || !els.length) return;
                 const i = els[0].index;
@@ -484,7 +484,7 @@ if (dailyData && dailyData.length > 0) {
     if (!canvas || typeof Chart === 'undefined') return;
     const data7 = {{ cat_stats.pmbok7.pmbok7_principle | tojson if cat_stats and cat_stats.pmbok7 else '[]' }};
     const data8 = {{ cat_stats.pmbok8.pmbok8_principle | tojson if cat_stats and cat_stats.pmbok8 else '[]' }};
-    // 7th Edition/8th Edition을 합치고 source 표시 (label에 prefix)
+    // Combine 7/8 with source prefix on labels
     const merged = [
         ...data7.map(d => ({...d, src: '7', key: 'pmbok7_principle'})),
         ...data8.map(d => ({...d, src: '8', key: 'pmbok8_principle'}))
@@ -511,7 +511,7 @@ if (dailyData && dailyData.length > 0) {
     });
 })();
 
-// ── Methodology Doughnut (시도 비중) ──
+// ── Methodology doughnut (attempt share) ──
 (function buildMethodologyDoughnut(){
     const canvas = document.getElementById('methodologyDoughnut');
     if (!canvas || typeof Chart === 'undefined') return;

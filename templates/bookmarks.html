@@ -4,12 +4,12 @@
 {% block content %}
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
     <h2 style="font-size:1.4rem;font-weight:700;">
-        <i class="fas fa-bookmark" style="color:#f59e0b;"></i> Bookmarks한 Question
+        <i class="fas fa-bookmark" style="color:#f59e0b;"></i> Bookmarked Questions
         <span style="font-size:1rem;color:var(--text-muted);font-weight:400;">({{ bookmarks|length }} items)</span>
     </h2>
     {% if bookmarks %}
     <a href="{{ url_for('quiz_start') }}?mode=bookmark" class="btn btn-primary btn-sm">
-        <i class="fas fa-play"></i> Bookmarks로 풀기
+        <i class="fas fa-play"></i> Practice bookmarked
     </a>
     {% endif %}
 </div>
@@ -17,9 +17,9 @@
 {% if not bookmarks %}
 <div class="empty-state">
     <div class="icon"><i class="far fa-bookmark"></i></div>
-    <p>yet Bookmarks한 Question가 없습니다.</p>
-    <p style="font-size:0.9rem;margin-top:8px;color:var(--text-muted);">Practice 화면에서 <i class="far fa-bookmark"></i> 버튼을 눌러 Bookmarks하세요.</p>
-    <a href="{{ url_for('quiz_start') }}" class="btn btn-primary" style="margin-top:16px;">Question 풀러 가기</a>
+    <p>No bookmarked questions yet.</p>
+    <p style="font-size:0.9rem;margin-top:8px;color:var(--text-muted);">On the practice screen, click the <i class="far fa-bookmark"></i> button to bookmark a question.</p>
+    <a href="{{ url_for('quiz_start') }}" class="btn btn-primary" style="margin-top:16px;">Start practicing</a>
 </div>
 {% else %}
 {% for bm in bookmarks %}
@@ -45,11 +45,11 @@
         <button class="btn-bookmark active"
                 onclick="removeBookmark({{ bm.question.no }}, this)"
                 style="flex-shrink:0;">
-            <i class="fas fa-bookmark"></i> 해제
+            <i class="fas fa-bookmark"></i> Remove
         </button>
     </div>
 
-    <!-- Explanation 접기/펼치기 -->
+    <!-- Collapse/expand explanation -->
     {% if bm.question.explanation %}
     <details style="margin-top:12px;">
         <summary style="cursor:pointer;color:var(--text-muted);font-size:0.88rem;">
@@ -79,13 +79,8 @@ function removeBookmark(qNo, btn) {
     .then(data => {
         if (!data.bookmarked) {
             btn.closest('.bookmark-item').remove();
-            // 카운트 업데이트
+            // Update count
             const header = document.querySelector('h2 span');
             const current = parseInt(header.textContent) - 1;
             header.textContent = `(${current} items)`;
-            if (current === 0) location.reload();
-        }
-    });
-}
-</script>
-{% endblock %}
+            if (cur

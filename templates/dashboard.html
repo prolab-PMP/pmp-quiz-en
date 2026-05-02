@@ -2,38 +2,38 @@
 {% block title %}PMP Quiz - Dashboard{% endblock %}
 
 {% block content %}
-<!-- Hero Banner (safety-quiz 스타day) -->
+<!-- Hero banner -->
 <section class="hero">
     <h1>PMP Practice Questions</h1>
-    <p>PMBOK 7·8th Edition 기반 2,219Question를 카테고리·난이도·모드별로 자유롭게 학습하세요. 풀이 기록은 자동 Save되며, Incorrect노트와 성적 min석을 언제든 OK할 수 있습니다.</p>
+    <p>Study 2,219 PMBOK 7 & 8 questions by category, difficulty, and mode. Your progress is auto-saved, and you can review wrong-answer notes and performance analysis anytime.</p>
     <div class="badges">
-        <span>📂 총 {{ total_questions }}Question</span>
-        <span>📊 {{ total_sessions }}회 풀이</span>
-        <span>🎯 평균 {{ "%.1f"|format(avg_accuracy) }}%</span>
+        <span>📂 Total {{ total_questions }} questions</span>
+        <span>📊 {{ total_sessions }} attempts</span>
+        <span>🎯 Avg {{ "%.1f"|format(avg_accuracy) }}%</span>
         <span>👤 {{ current_user.email }}{% if current_user.is_admin %} · Admin{% endif %}{% if current_user.is_premium %} · Premium{% endif %}</span>
     </div>
 </section>
 
-<div class="section-title"><span class="tag">My Status</span> 빠른 진척도 요약</div>
+<div class="section-title"><span class="tag">My Status</span> Quick progress summary</div>
 
 <!-- Stats Grid -->
 <div class="stats-grid">
     <div class="stat-card">
         <div class="icon-badge ib-blue">📘</div>
         <div class="stat-value">{{ total_questions }}</div>
-        <div class="stat-label">All Question 수</div>
+        <div class="stat-label">Total questions</div>
     </div>
     <div class="stat-card">
         <div class="icon-badge ib-purple">✏️</div>
         <div class="stat-value">{{ total_sessions }}</div>
-        <div class="stat-label">풀이 횟수</div>
+        <div class="stat-label">Attempts</div>
     </div>
     <div class="stat-card">
         <div class="icon-badge {% if avg_accuracy >= 70 %}ib-green{% elif avg_accuracy >= 50 %}ib-warn{% else %}ib-danger{% endif %}">🎯</div>
         <div class="stat-value" style="color:{% if avg_accuracy >= 70 %}var(--success){% elif avg_accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %}">
             {{ "%.1f"|format(avg_accuracy) }}%
         </div>
-        <div class="stat-label">평균 Accuracy</div>
+        <div class="stat-label">Avg. accuracy</div>
     </div>
     <div class="stat-card">
         <div class="icon-badge ib-danger">❌</div>
@@ -42,14 +42,14 @@
     </div>
 </div>
 
-<div class="section-title"><span class="tag purple">빠른 Start</span> Recommended modes</div>
+<div class="section-title"><span class="tag purple">Quick start</span> Recommended modes</div>
 
-<!-- Recommended modes: 3 items 카드 -->
+<!-- Recommended modes: 3 cards -->
 <div class="recommend-grid">
-    <!-- 카드 1: Domain practice -->
+    <!-- Card 1: Domain practice -->
     <div class="card recommend-card">
         <div class="card-header"><i class="fas fa-bullseye" style="color:#3b82f6"></i> Domain practice</div>
-        <p class="recommend-desc">대 min류 Domain 중 하나를 Select해 집중 학습합니다.</p>
+        <p class="recommend-desc">Pick one main domain and focus your study.</p>
 
         <div class="recommend-section-label">📘 PMBOK 7th Edition (2021 ECO)</div>
         <form method="POST" action="{{ url_for('quiz_begin') }}" class="recommend-form">
@@ -82,10 +82,10 @@
         </form>
     </div>
 
-    <!-- 카드 2: Exam-style Exam Mode -->
+    <!-- Card 2: Exam-style mode -->
     <div class="card recommend-card">
         <div class="card-header"><i class="fas fa-clipboard-check" style="color:#10b981"></i> Exam-style Exam Mode</div>
-        <p class="recommend-desc">실제 PMP Exam처럼 questions 무작위 추출 + day괄 채점.</p>
+        <p class="recommend-desc">Mock exam: random questions like the real PMP exam, graded all at once.</p>
         <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin-bottom:10px;">
             <input type="hidden" name="mode" value="pmbok7_exam">
             <button class="btn btn-success btn-block">
@@ -100,11 +100,11 @@
         </form>
     </div>
 
-    <!-- 카드 3: Incorrect focused practice -->
+    <!-- Card 3: Wrong-answer focused practice -->
     <div class="card recommend-card">
         <div class="card-header"><i class="fas fa-times-circle" style="color:#ef4444"></i> Incorrect focused practice</div>
         {% if wrong_count > 0 %}
-        <p class="recommend-desc">현재 <strong style="color:var(--danger)">{{ wrong_count }} items</strong>의 Incorrect이 있습니다.</p>
+        <p class="recommend-desc">You currently have <strong style="color:var(--danger)">{{ wrong_count }}</strong> wrong-answer items.</p>
         <form method="POST" action="{{ url_for('quiz_begin') }}">
             <input type="hidden" name="mode" value="wrong_answers">
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
@@ -116,20 +116,20 @@
                 </select>
             </div>
             <button class="btn btn-danger btn-block">
-                <i class="fas fa-redo"></i> Incorrect 풀기 Start
+                <i class="fas fa-redo"></i> Start wrong-answer practice
             </button>
         </form>
         {% else %}
         <div class="empty-state" style="padding:18px 0;">
             <div class="icon" style="font-size:2rem;"><i class="fas fa-check-circle" style="color:var(--success)"></i></div>
-            <p style="margin-top:8px;">Incorrect이 없습니다!<br>꾸준히 학습 중이세요 💪</p>
+            <p style="margin-top:8px;">No wrong answers!<br>Keep up the great work 💪</p>
         </div>
         {% endif %}
     </div>
 </div>
 
-<!-- By category Select 섹션 -->
-<div class="section-title" id="detail-select"><span class="tag green">상세</span> Question유형 By category Select</div>
+<!-- Category select section -->
+<div class="section-title" id="detail-select"><span class="tag green">Detail</span> Choose question category</div>
 
 
 
@@ -158,7 +158,7 @@
             <span class="sc-arrow">▾</span>
         </div>
         <div class="sc-body" id="body-sc-pmbok7-eco">
-            <!-- Domain 칩 -->
+            <!-- Domain chip -->
             <div class="sc-level parent-row">
                 <span class="sc-level-label">Domain</span>
                 <div class="chip-row">
@@ -169,7 +169,7 @@
                 {% endfor %}
                 </div>
             </div>
-            <!-- Task 서브칩 (Domain별, Select 시 표시) -->
+            <!-- Task sub-chip (per domain, shown on select) -->
             {% for dom, tasks in categories.trees.eco2021.items() %}
             {% if tasks %}
             <div class="sc-level child-row" id="row-pmbok7-eco2021-{{ dom|replace(' ','_') }}" style="display:none;">
@@ -306,7 +306,7 @@
             </div>
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;">
                 <div>
-                    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Question 수</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Question count</div>
                     <div class="count-btns" id="countbtns-pmbok7">
                         {% for n in [10,30,50,100,'All'] %}
                         <button type="button" class="count-btn {% if n==30 %}active{% endif %}"
@@ -475,7 +475,7 @@
     </div>
     {% endif %}
 
-    <!-- ⑥ Methodology (Hierarchical, 7th Edition과 공유) -->
+    <!-- ⑥ Methodology (hierarchical, shared with 7th Edition) -->
     {% if categories.methodology %}
     <div class="slicer-card" id="sc-pmbok8-meth">
         <div class="sc-header" onclick="toggleCard('sc-pmbok8-meth')">
@@ -542,7 +542,7 @@
             </div>
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;">
                 <div>
-                    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Question 수</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Question count</div>
                     <div class="count-btns" id="countbtns-pmbok8">
                         {% for n in [10,30,50,100,'All'] %}
                         <button type="button" class="count-btn {% if n==30 %}active{% endif %}"
@@ -569,14 +569,14 @@
 <!-- Recent Sessions -->
 {% if recent %}
 <div class="card">
-    <div class="card-header"><i class="fas fa-clock-rotate-left"></i> 최근 풀이 기록</div>
+    <div class="card-header"><i class="fas fa-clock-rotate-left"></i> Recent practice history</div>
     <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
-                    <th>날짜</th>
-                    <th>모드</th>
-                    <th>Question 수</th>
+                    <th>Date</th>
+                    <th>Mode</th>
+                    <th>Question count</th>
                     <th>Accuracy</th>
                 </tr>
             </thead>
@@ -588,8 +588,8 @@
                         {% if s.mode == 'random' %}Random
                         {% elif s.mode == 'pmbok7_exam' %}PMPExam(7th Edition)
                         {% elif s.mode == 'pmbok8_exam' %}PMPExam(8th Edition)
-                        {% elif s.mode == 'wrong_answers' %}Incorrect풀기
-                        {% elif s.mode == 'category' %}{{ s.filter_value or '카테고리' }}
+                        {% elif s.mode == 'wrong_answers' %}Wrong-answer practice
+                        {% elif s.mode == 'category' %}{{ s.filter_value or 'Category' }}
                         {% else %}{{ s.mode }}{% endif %}
                     </td>
                     <td>{{ s.correct_count }}/{{ s.total_questions }}</td>
@@ -614,28 +614,28 @@
         {% set remaining = (current_user.validity_end - now()).days if now is defined else 0 %}
         <p>Expiry: <strong>{{ current_user.validity_end.strftime('%Y-%m-%d') }}</strong>
         {% if current_user.is_valid() %}
-            <span class="badge badge-success">이용 중</span>
+            <span class="badge badge-success">Active</span>
             {% if remaining <= 30 %}
-            {# Expired 30day 이내 → 갱신 유도 #}
+            {# Within 30 days of expiry → renewal prompt #}
             <div style="margin-top:12px;padding:12px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:0.88rem;line-height:1.7;">
-                <strong style="color:#c2410c;"><i class="fas fa-exclamation-circle"></i> Validity이 {{ remaining }}day 남았습니다</strong><br>
-                <span style="color:#92400e;">기간 연장은 Buy on Naver Smart Store 후 Contact해 wk세요.</span>
+                <strong style="color:#c2410c;"><i class="fas fa-exclamation-circle"></i> {{ remaining }} days of validity remaining</strong><br>
+                <span style="color:#92400e;">To extend, purchase on Naver Smart Store then contact us.</span>
                 <div style="margin-top:10px;">
                     <a href="https://smartstore.naver.com/sub-note/products/13378117649"
                        target="_blank" rel="noopener"
                        style="display:inline-flex;align-items:center;gap:6px;background:#03C75A;color:#fff;padding:7px 16px;border-radius:6px;font-weight:700;font-size:0.85rem;text-decoration:none;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M16.273 12.845L7.376 0H0v24h7.727V11.155l8.897 12.845H24V0h-7.727z"/></svg>
-                        기간 연장하기
+                        Extend validity
                     </a>
                 </div>
             </div>
             {% endif %}
         {% else %}
-            <span class="badge badge-danger">Expired됨</span>
+            <span class="badge badge-danger">Expired</span>
             {# Expired → Purchase prompt #}
             <div style="margin-top:12px;padding:16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:0.88rem;line-height:1.8;">
                 <strong style="color:#b91c1c;"><i class="fas fa-lock"></i> Your access has expired</strong><br>
-                <span style="color:#7f1d1d;">계속 이용하려면 Buy on Naver Smart Store 후 Email로 Contact해 wk세요.</span>
+                <span style="color:#7f1d1d;">To keep using, purchase on Naver Smart Store then email us.</span>
                 <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
                     <a href="https://smartstore.naver.com/sub-note/products/13378117649"
                        target="_blank" rel="noopener"
@@ -643,7 +643,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M16.273 12.845L7.376 0H0v24h7.727V11.155l8.897 12.845H24V0h-7.727z"/></svg>
                         Buy on Naver Smart Store
                     </a>
-                    <a href="mailto:songdoinfo@naver.com?subject=PMP Quiz 기간 연장 요청"
+                    <a href="mailto:songdoinfo@naver.com?subject=PMP Quiz validity extension request"
                        style="display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;color:#334155;padding:8px 18px;border-radius:6px;font-weight:600;font-size:0.88rem;text-decoration:none;border:1px solid #cbd5e1;">
                         <i class="fas fa-envelope"></i> Email inquiry
                     </a>
@@ -654,8 +654,8 @@
         {# Free user → Purchase prompt #}
         <p><span class="badge badge-warning">Free user</span></p>
         <div style="margin-top:12px;padding:16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:0.88rem;line-height:1.8;">
-            <strong style="color:#166534;"><i class="fas fa-star"></i> 유료버전으로 Upgrade</strong><br>
-            <span style="color:#14532d;">All 2,000+ Question, Incorrect 관리, By category 통계를 모두 이용하세요.</span>
+            <strong style="color:#166534;"><i class="fas fa-star"></i> Upgrade to paid version</strong><br>
+            <span style="color:#14532d;">Get unlimited access to all 2,000+ questions, wrong-answer tracking, and per-category analytics.</span>
             <div style="margin-top:12px;">
                 <a href="https://smartstore.naver.com/sub-note/products/13378117649"
                    target="_blank" rel="noopener"
@@ -694,7 +694,7 @@
 .btn-block { display: block; width: 100%; }
 .btn-sm { padding: 5px 12px; font-size: 0.83rem; }
 
-/* ── By category Select — 통day된 칩 너비 + 파스텔 색상 ── */
+/* ── Category select — unified chip width + pastel colors ── */
 .slicer-chip {
     display: inline-flex; align-items: center; justify-content: center;
     min-width: 84px;
@@ -704,17 +704,17 @@
     transition: all .15s; background: var(--card-bg); color: var(--text);
     user-select: none; text-align: center; white-space: nowrap;
 }
-/* ECO Domain — 파스텔 블루 */
+/* ECO Domain — pastel blue */
 .slicer-card[id$="-eco"] .slicer-chip:not(.selected) { background: #DBEAFE; color: #1e40af; border-color: #BFDBFE; }
-/* Performance Domain — 파스텔 핑크 */
+/* Performance Domain — pastel pink */
 .slicer-card[id$="-dom"] .slicer-chip:not(.selected) { background: #FCE7F3; color: #9d174d; border-color: #FBCFE8; }
-/* Principle — 파스텔 그린 */
+/* Principle — pastel green */
 .slicer-card[id$="-prin"] .slicer-chip:not(.selected) { background: #DCFCE7; color: #166534; border-color: #BBF7D0; }
-/* Methodology — 파스텔 옐로 */
+/* Methodology — pastel yellow */
 .slicer-card[id$="-meth"] .slicer-chip:not(.selected) { background: #FEF3C7; color: #92400e; border-color: #FDE68A; }
-/* Focus Area — 파스텔 인디고 */
+/* Focus Area — pastel indigo */
 .slicer-card[id$="-fa"] .slicer-chip:not(.selected) { background: #E0E7FF; color: #3730a3; border-color: #C7D2FE; }
-/* Process — 파스텔 오렌지 */
+/* Process — pastel orange */
 .slicer-card[id$="-proc"] .slicer-chip:not(.selected) { background: #FFEDD5; color: #9a3412; border-color: #FED7AA; }
 
 .slicer-chip.selected {
@@ -1149,7 +1149,7 @@ updateSummary('pmbok7');
 updateSummary('pmbok8');
 </script>
 <script>
-// Recommended modes - Domain 클릭 시 단day Select + submit 버튼 노출
+// Recommended modes - on domain click, single-select + show submit button
 function recPickDomain(chip) {
     const row = chip.closest('.recommend-domain-row');
     row.querySelectorAll('.rec-domain-chip').forEach(c => c.classList.remove('selected'));
@@ -1157,7 +1157,7 @@ function recPickDomain(chip) {
     const targetId = row.dataset.target;
     const key = row.dataset.key;
     document.getElementById(targetId).value = JSON.stringify({[key]: [chip.dataset.domain]});
-    // submit 버튼 노출
+    // Show submit button
     const btnId = targetId.replace('-filter','-submit');
     const btn = document.getElementById(btnId);
     if (btn) btn.style.display = 'inline-block';

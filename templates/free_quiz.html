@@ -3,7 +3,7 @@
 
 {% block content %}
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-    <span style="font-weight:600;">Free체험 {{ current }} / {{ total }}</span>
+    <span style="font-weight:600;">Free trial {{ current }} / {{ total }}</span>
     <span class="badge badge-warning">FREE</span>
 </div>
 <div class="progress-bar-wrapper">
@@ -26,7 +26,7 @@
         {% set ans_count = question.get_answer_count() %}
         {% if ans_count > 1 %}
         <div class="answer-count-hint">
-            <i class="fas fa-info-circle"></i> Correct {{ ans_count }} items를 Select하세요
+            <i class="fas fa-info-circle"></i> Select {{ ans_count }} correct answer(s)
         </div>
         {% endif %}
 
@@ -127,7 +127,4 @@ function toggleTranslation(btn) {
     btn.classList.toggle('active');
     const show = btn.classList.contains('active');
     btn.innerHTML = show ? '<i class="fas fa-language"></i> Hide translation' : '<i class="fas fa-language"></i> Show translation';
-    document.querySelectorAll('.translation').forEach(el => el.classList.toggle('show', show));
-}
-</script>
-{% endblock %}
+    document.querySelectorAll('.translation').forEach(el => el.classList.toggle('show

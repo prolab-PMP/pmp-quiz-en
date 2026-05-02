@@ -8,7 +8,7 @@
 <div class="tabs">
     <button class="tab active" onclick="switchTab('pmbok7', this)">📘 PMBOK 7edition basis</button>
     <button class="tab" onclick="switchTab('pmbok8', this)">📗 PMBOK 8edition basis</button>
-    <button class="tab" onclick="switchTab('special', this)">⚡ 특별 모드</button>
+    <button class="tab" onclick="switchTab('special', this)">⚡ Special mode</button>
 </div>
 
 <!-- ══════════ 7edition tabs ══════════ -->
@@ -31,7 +31,7 @@
             <span class="sc-arrow">▾</span>
         </div>
         <div class="sc-body" id="body-sc-pmbok7-eco">
-            <!-- Domain 칩 -->
+            <!-- Domain chip -->
             <div class="sc-level parent-row">
                 <span class="sc-level-label">Domain</span>
                 <div class="chip-row">
@@ -42,7 +42,7 @@
                 {% endfor %}
                 </div>
             </div>
-            <!-- Task 서브칩 (Domain별, Select 시 표시) -->
+            <!-- Task sub-chip (per domain, shown on select) -->
             {% for dom, tasks in categories.trees.eco2021.items() %}
             {% if tasks %}
             <div class="sc-level child-row" id="row-pmbok7-eco2021-{{ dom|replace(' ','_') }}" style="display:none;">
@@ -179,7 +179,7 @@
             </div>
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;">
                 <div>
-                    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Question 수</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Question count</div>
                     <div class="count-btns" id="countbtns-pmbok7">
                         {% for n in [10,30,50,100,'All'] %}
                         <button type="button" class="count-btn {% if n==30 %}active{% endif %}"
@@ -348,7 +348,7 @@
     </div>
     {% endif %}
 
-    <!-- ⑥ Methodology (Hierarchical, 7th Edition과 공유) -->
+    <!-- ⑥ Methodology (hierarchical, shared with 7th Edition) -->
     {% if categories.methodology %}
     <div class="slicer-card" id="sc-pmbok8-meth">
         <div class="sc-header" onclick="toggleCard('sc-pmbok8-meth')">
@@ -415,7 +415,7 @@
             </div>
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;">
                 <div>
-                    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Question 수</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Question count</div>
                     <div class="count-btns" id="countbtns-pmbok8">
                         {% for n in [10,30,50,100,'All'] %}
                         <button type="button" class="count-btn {% if n==30 %}active{% endif %}"
@@ -435,12 +435,12 @@
 </form>
 </div>
 
-<!-- ══════════ 특별 탭 ══════════ -->
+<!-- ══════════ Special tab ══════════ -->
 <div id="tab-special" class="tab-content">
     <div class="card">
         <div class="card-header"><i class="fas fa-times-circle" style="color:var(--danger)"></i> Incorrect Practice</div>
         {% if wrong_count > 0 %}
-        <p style="margin-bottom:16px;">현재 <strong style="color:var(--danger)">{{ wrong_count }} items</strong>의 Incorrect Question가 있습니다.</p>
+        <p style="margin-bottom:16px;">You currently have <strong style="color:var(--danger)">{{ wrong_count }}</strong> wrong-answer questions.</p>
         <form method="POST" action="{{ url_for('quiz_begin') }}">
             <input type="hidden" name="mode" value="wrong_answers">
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -451,20 +451,20 @@
                     <option value="{{ wrong_count }}">All ({{ wrong_count }}Question)</option>
                 </select>
                 <button type="submit" class="btn btn-danger btn-lg">
-                    <i class="fas fa-redo"></i> Incorrect 풀기 Start
+                    <i class="fas fa-redo"></i> Start wrong-answer practice
                 </button>
             </div>
         </form>
         {% else %}
         <div class="empty-state">
             <div class="icon"><i class="fas fa-check-circle" style="color:var(--success)"></i></div>
-            <p>Incorrect Question가 없습니다! 계속 열심히 하세요!</p>
+            <p>No wrong answers! Keep up the great work!</p>
         </div>
         {% endif %}
     </div>
 
     <div class="card">
-        <div class="card-header"><i class="fas fa-shuffle"></i> Random 풀기 (All)</div>
+        <div class="card-header"><i class="fas fa-shuffle"></i> Random practice (all)</div>
         <form method="POST" action="{{ url_for('quiz_begin') }}">
             <input type="hidden" name="mode" value="random">
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -475,7 +475,7 @@
                     <option value="100">100Question</option>
                 </select>
                 <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-shuffle"></i> Random 풀기 Start
+                    <i class="fas fa-shuffle"></i> Start random practice
                 </button>
             </div>
         </form>

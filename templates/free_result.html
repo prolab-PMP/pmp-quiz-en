@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Free trial - 결과{% endblock %}
+{% block title %}Free Trial - Results{% endblock %}
 
 {% block content %}
-<h2 style="margin-bottom:20px;"><i class="fas fa-clipboard-check"></i> Free trial 결과</h2>
+<h2 style="margin-bottom:20px;"><i class="fas fa-clipboard-check"></i> Free Trial Results</h2>
 
 <div class="result-summary {% if accuracy >= 61 %}pass{% else %}fail{% endif %}">
     <div>
@@ -19,7 +19,7 @@
 
 <!-- Mock stats for free users -->
 <div class="card">
-    <div class="card-header"><i class="fas fa-chart-pie"></i> 가상 통계 (Free trial)</div>
+    <div class="card-header"><i class="fas fa-chart-pie"></i> Sample statistics (free trial)</div>
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-value" style="color:var(--danger)">{{ total - correct_count }}</div>
@@ -27,11 +27,11 @@
         </div>
         <div class="stat-card">
             <div class="stat-value">{{ "%.0f"|format(accuracy) }}%</div>
-            <div class="stat-label">이번 회차 Accuracy</div>
+            <div class="stat-label">This session's accuracy</div>
         </div>
     </div>
     <p style="text-align:center;color:var(--text-muted);font-size:0.85rem;">
-        <i class="fas fa-lock"></i> 상세 통계, Incorrect 관리, 2000+ Question는 Log in 후 이용 가능합니다.
+        <i class="fas fa-lock"></i> Detailed analytics, wrong-answer tracking, and 2000+ questions are available after login.
     </p>
 </div>
 
@@ -95,10 +95,10 @@
 <div style="text-align:center;margin-top:32px;">
     <div class="card" style="padding:28px;background:linear-gradient(135deg,#667eea22,#764ba222);">
         <i class="fas fa-lock" style="font-size:2rem;color:var(--primary);margin-bottom:12px;"></i>
-        <h3 style="margin-bottom:8px;">더 많은 Question를 풀고 싶으신가요?</h3>
+        <h3 style="margin-bottom:8px;">Want to solve more questions?</h3>
         <p style="color:var(--text-muted);margin-bottom:20px;font-size:0.95rem;">
-            Free trial은 여기까지입니다.<br>
-            유료버전을 구매하면 All <strong>2,219 items</strong> Question를 무제한으로 이용할 수 있습니다.
+            The free trial ends here.<br>
+            Purchase the paid version to unlock unlimited access to all <strong>2,219</strong> questions.
         </p>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
             <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
@@ -122,7 +122,4 @@ function toggleAllTranslations(btn) {
     btn.classList.toggle('active');
     const show = btn.classList.contains('active');
     btn.innerHTML = show ? '<i class="fas fa-language"></i> Hide translation' : '<i class="fas fa-language"></i> Show translation';
-    document.querySelectorAll('.result-translation').forEach(el => el.classList.toggle('show', show));
-}
-</script>
-{% endblock %}
+    document.querySelectorAll('.result-translation')

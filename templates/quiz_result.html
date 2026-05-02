@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}PMP Quiz - 채점 결과{% endblock %}
+{% block title %}PMP Quiz - Quiz Results{% endblock %}
 
 {% block content %}
-<h2 style="margin-bottom:20px;"><i class="fas fa-clipboard-check"></i> 채점 결과</h2>
+<h2 style="margin-bottom:20px;"><i class="fas fa-clipboard-check"></i> Quiz Results</h2>
 
 <!-- Result Summary -->
 <div class="result-summary {% if accuracy >= 61 %}pass{% else %}fail{% endif %}">
@@ -24,7 +24,7 @@
                 <span style="color:var(--danger);"><i class="fas fa-times-circle"></i> FAIL</span>
             {% endif %}
         </div>
-        <div class="result-detail">합격기준 61%</div>
+        <div class="result-detail">Pass mark 61%</div>
     </div>
 </div>
 
@@ -154,7 +154,7 @@
     <!-- Detailed Classification -->
     <details style="margin-top:12px;">
         <summary style="cursor:pointer;color:var(--text-muted);font-size:0.85rem;">
-            <i class="fas fa-tags"></i> 상세 min류 정보
+            <i class="fas fa-tags"></i> Detailed classification info
         </summary>
         <div style="padding:10px;font-size:0.85rem;color:var(--text-muted);line-height:1.8;">
             {% if r.question.eco2021_domain %}2021 ECO Domain: {{ r.question.eco2021_domain }}<br>{% endif %}
@@ -178,7 +178,7 @@
 <!-- Action Buttons -->
 <div style="display:flex;gap:12px;justify-content:center;margin-top:24px;">
     <a href="{{ url_for('quiz_start') }}" class="btn btn-primary btn-lg">
-        <i class="fas fa-redo"></i> 다시 풀기
+        <i class="fas fa-redo"></i> Retry
     </a>
     <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-lg">
         <i class="fas fa-home"></i> Dashboard
@@ -195,8 +195,4 @@ function toggleAllTranslations(btn) {
         ? '<i class="fas fa-language"></i> Hide translation'
         : '<i class="fas fa-language"></i> Show translation';
     document.querySelectorAll('.result-translation').forEach(el => {
-        el.classList.toggle('show', isActive);
-    });
-}
-</script>
-{% endblock %}
+    

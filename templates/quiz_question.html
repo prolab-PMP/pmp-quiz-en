@@ -6,7 +6,7 @@
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
     <span style="font-weight:600;">Question {{ current }} / {{ total }}</span>
     <span style="color:var(--text-muted);font-size:0.85rem;">
-        답변: {{ all_answers|length }} / {{ total }}
+        Answered: {{ all_answers|length }} / {{ total }}
     </span>
 </div>
 <div class="progress-bar-wrapper">
@@ -40,15 +40,15 @@
                     <i class="fas fa-language"></i> Show translation
                 </button>
                 {% endif %}
-                <!-- Bookmarks 버튼 -->
+                <!-- Bookmark button -->
                 <button type="button"
                         id="bookmarkBtn"
                         class="btn-bookmark {% if is_bookmarked %}active{% endif %}"
                         onclick="toggleBookmark({{ question.no }})">
                     <i class="{% if is_bookmarked %}fas{% else %}far{% endif %} fa-bookmark"></i>
-                    {% if is_bookmarked %}Bookmarks됨{% else %}Bookmarks{% endif %}
+                    {% if is_bookmarked %}Bookmarked{% else %}Bookmarks{% endif %}
                 </button>
-                <!-- Report 버튼 -->
+                <!-- Report button -->
                 <button type="button" class="btn-report" onclick="openReportModal({{ question.no }})">
                     <i class="fas fa-flag"></i> Report
                 </button>
@@ -59,7 +59,7 @@
         {% set ans_count = question.get_answer_count() %}
         {% if ans_count > 1 %}
         <div class="answer-count-hint">
-            <i class="fas fa-info-circle"></i> Correct {{ ans_count }} items를 Select하세요
+            <i class="fas fa-info-circle"></i> Select {{ ans_count }} correct answer(s)
         </div>
         {% endif %}
 
@@ -117,7 +117,7 @@
         </button>
 
         <button type="submit" name="action" value="grade" class="btn btn-success"
-                onclick="return confirm('채점하시겠습니까? 답변하지 않은 Question는 Incorrect 처리됩니다.');">
+                onclick="return confirm('Submit for grading? Unanswered questions will be marked as incorrect.');">
             <i class="fas fa-check-double"></i> Submit
         </button>
 
@@ -127,25 +127,25 @@
         </button>
         {% else %}
         <button type="submit" name="action" value="grade" class="btn btn-success btn-lg"
-                onclick="return confirm('마지막 Question입니다. 채점하시겠습니까?');">
+                onclick="return confirm('This is the last question. Submit for grading?');">
             <i class="fas fa-flag-checkered"></i> Submit
         </button>
         {% endif %}
     </div>
 </form>
-<!-- Report 모달 -->
+<!-- Report modal -->
 <div class="modal-overlay" id="reportModal">
   <div class="modal-box">
     <h3><i class="fas fa-flag"></i> Report a question issue</h3>
     <input type="hidden" id="reportQNo" value="">
-    <label><input type="radio" name="reportReason" value="typo" checked> 오탈자/표기 Error</label>
+    <label><input type="radio" name="reportReason" value="typo" checked> Typo / spelling error</label>
     <label><input type="radio" name="reportReason" value="wrong_answer"> Correct Error</label>
     <label><input type="radio" name="reportReason" value="translation"> Translation error</label>
-    <label><input type="radio" name="reportReason" value="other"> 기타</label>
+    <label><input type="radio" name="reportReason" value="other"> Other</label>
     <textarea id="reportDetail" placeholder="Details (Select)"></textarea>
     <div class="modal-actions">
         <button class="btn btn-outline" onclick="closeReportModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="submitReport()">Report하기</button>
+        <button class="btn btn-primary" onclick="submitReport()">Submit report</button>
     </div>
   </div>
 </div>
@@ -184,7 +184,7 @@ function toggleTranslation(btn) {
     });
 }
 
-// ── Bookmarks 토글 ──
+// ── Bookmark toggle ──
 function toggleBookmark(qNo) {
     fetch('/api/bookmark/toggle', {
         method: 'POST',
@@ -196,7 +196,7 @@ function toggleBookmark(qNo) {
         const btn = document.getElementById('bookmarkBtn');
         if (data.bookmarked) {
             btn.classList.add('active');
-            btn.innerHTML = '<i class="fas fa-bookmark"></i> Bookmarks됨';
+            btn.innerHTML = '<i class="fas fa-bookmark"></i> Bookmarked';
         } else {
             btn.classList.remove('active');
             btn.innerHTML = '<i class="far fa-bookmark"></i> Bookmarks';
@@ -204,7 +204,7 @@ function toggleBookmark(qNo) {
     });
 }
 
-// ── Report 모달 ──
+// ── Report modal ──
 function openReportModal(qNo) {
     document.getElementById('reportQNo').value = qNo;
     document.getElementById('reportDetail').value = '';
@@ -226,12 +226,9 @@ function submitReport() {
     .then(r => r.json())
     .then(data => {
         closeReportModal();
-        alert(data.ok ? 'Report가 접수됐습니다. 감사합니다!' : (data.msg || 'An error occurred.'));
+        alert(data.ok ? 'Report submitted. Thank you!' : (data.msg || 'An error occurred.'));
     });
 }
-// 모달 바깥 클릭시 Close
+// Click outside modal to close
 document.getElementById('reportModal').addEventListener('click', function(e) {
-    if (e.target === this) closeReportModal();
-});
-</script>
-{% endblock %}
+    if (e.target === this) closeReport

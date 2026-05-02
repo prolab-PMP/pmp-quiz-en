@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block title %}PMP Quiz - Log in{% endblock %}
 
-{% block extra_head %}<style>/* standalone-login: Log in/가입 화면에서는 nav/footer 숨겨 깔끔하게 */.navbar, footer, .footer, body > footer { display: none !important; }body { background: var(--bg, #f5f7fb); }.login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }.login-card { width: 100%; max-width: 440px; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); padding: 40px 32px; text-align: center; }</style>{% endblock %}
+{% block extra_head %}<style>/* standalone-login: Hide nav/footer on login/signup pages for a clean look */.navbar, footer, .footer, body > footer { display: none !important; }body { background: var(--bg, #f5f7fb); }.login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }.login-card { width: 100%; max-width: 440px; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); padding: 40px 32px; text-align: center; }</style>{% endblock %}
 {% block content %}
 <div class="login-container">
     <div class="login-card">
         <i class="fas fa-graduation-cap" style="font-size:3rem;color:var(--primary);margin-bottom:16px;"></i>
         <h1>PMP Quiz</h1>
-        <p>Email과 Password로 Log in하세요.</p>
+        <p>Log in with your email and password.</p>
 
         <form method="POST" action="{{ url_for('login') }}" id="loginForm">
             <div class="form-group">
@@ -32,7 +32,7 @@
 
         <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
             <a href="{{ url_for('free_mode') }}" class="btn btn-outline btn-block">
-                <i class="fas fa-gift"></i> Log in 없이 Free trial (50Question)
+                <i class="fas fa-gift"></i> Free trial without login (50 questions)
             </a>
         </div>
     </div>
