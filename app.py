@@ -1161,6 +1161,28 @@ def admin_panel():
                            sort=sort, order=order, filter_grade=filter_grade,
                            pending_report_count=pending_report_count)
 
+@app.route('/admin/reload_questions', methods=['GET', 'POST'])
+@admin_required
+def admin_reload_questions():
+    """Force-reload questions from data/PMP_Raw.xlsx.
+    Idempotent: load_data.py upserts by question.no, so existing rows
+    are updated and new rows inserted. Safe to call multiple times.
+    Useful for the EN site whose initial DB only has the 15 seed table
+    questions; this populates the full 2,234-question dataset from the
+    xlsx that was committed to data/."""
+    filepath = 'data/PMP_Raw.xlsx'
+    if not os.path.exists(filepath):
+        flash(f'File not found: {filepath}', 'error')
+        return redirect(url_for('admin_panel'))
+    try:
+        from load_data import load_questions
+        count = load_questions(filepath)
+        flash(f'Reloaded {count} questions from {filepath}.', 'success')
+    except Exception as e:
+        flash(f'Reload failed: {e}', 'error')
+    return redirect(url_for('admin_panel'))
+
+
 @app.route('/admin/add_user', methods=['POST'])
 @admin_required
 def admin_add_user():
