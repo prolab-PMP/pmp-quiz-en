@@ -344,9 +344,9 @@ function renderView(viewKey) {
   const container = document.getElementById('fw-views');
   container.innerHTML = sections.map(section => {
     let items = currentStats[section.filterType] || [];
-    if (section.filterType.endsWith('_principle')) {
-      items = items.filter(it => it.name.split(' ').length >= 2);
-    }
+    // (KO had a 'split.length >= 2' filter for number-prefixed principles;
+    //  EN DB stores principles as single words so it would hide everything.
+    //  Intentionally omitted.)
     // Sort by question_count desc (most questions first)
     items = [...items].sort((a, b) => (b.question_count || 0) - (a.question_count || 0));
     if (items.length === 0) {
