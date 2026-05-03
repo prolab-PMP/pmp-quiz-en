@@ -7,42 +7,23 @@
 <div style="margin-bottom:20px;padding:14px 18px;background:linear-gradient(90deg,#fef3c7,#fde68a);border-left:4px solid #f59e0b;border-radius:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
     <i class="fas fa-eye" style="font-size:1.4rem;color:#92400e;"></i>
     <div style="flex:1;min-width:240px;">
+        {% if current_user.is_authenticated and current_user.validity_end %}
+            {% if current_user.is_valid() %}
+            <div style="font-weight:700;color:#78350f;font-size:0.95rem;">🎁 Trial active — analytics unlock after purchase</div>
+            <div style="color:#92400e;font-size:0.85rem;margin-top:2px;">During the trial you can <strong>practice questions freely</strong>. Stats below are <strong>sample data</strong>; after upgrade your real learning analytics will appear here.</div>
+            {% else %}
+            <div style="font-weight:700;color:#78350f;font-size:0.95rem;">🔒 Your access has expired</div>
+            <div style="color:#92400e;font-size:0.85rem;margin-top:2px;">Stats below are <strong>sample data</strong>. Upgrade to restore your real learning data and unlock all 2,234 questions.</div>
+            {% endif %}
+        {% else %}
         <div style="font-weight:700;color:#78350f;font-size:0.95rem;">📊 Free user — sample data preview</div>
         <div style="color:#92400e;font-size:0.85rem;margin-top:2px;">All statistics below are <strong>sample data</strong>. After upgrading, your real learning data will be displayed in the same format.</div>
+        {% endif %}
     </div>
-    <a href="https://smartstore.naver.com/sub-note/products/13378117649" target="_blank" rel="noopener"
-       style="background:#03C75A;color:#fff;padding:8px 16px;border-radius:6px;font-weight:700;font-size:0.85rem;text-decoration:none;white-space:nowrap;">
+    <a href="{{ url_for('upgrade') }}"
+       style="background:var(--primary);color:#fff;padding:8px 16px;border-radius:6px;font-weight:700;font-size:0.85rem;text-decoration:none;white-space:nowrap;">
         <i class="fas fa-arrow-up"></i> Upgrade
     </a>
-</div>
-{% endif %}
-
-
-<!-- Expired/Free user purchase banner -->
-{% if not current_user.is_admin and not current_user.is_valid() %}
-<div style="margin-bottom:20px;padding:20px 24px;background:linear-gradient(135deg,#0f2d57,#1d5fa6);border-radius:12px;color:#fff;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;">
-    <div>
-        <div style="font-size:1.05rem;font-weight:700;margin-bottom:4px;">
-            <i class="fas fa-lock" style="margin-right:8px;color:#fbbf24;"></i>
-            {% if current_user.validity_end %}Your access has expired{% else %}You're a free user{% endif %}
-        </div>
-        <div style="font-size:0.88rem;color:#bfdbfe;line-height:1.6;">
-            All 2,000+ questions · wrong-answer tracking · per-category analytics are available in the paid version.<br>
-            After purchase, leave your email address in the contact form and we'll activate it immediately.
-        </div>
-    </div>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;flex-shrink:0;">
-        <a href="https://smartstore.naver.com/sub-note/products/13378117649"
-           target="_blank" rel="noopener"
-           style="display:inline-flex;align-items:center;gap:7px;background:#03C75A;color:#fff;padding:10px 20px;border-radius:8px;font-weight:700;font-size:0.92rem;text-decoration:none;white-space:nowrap;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M16.273 12.845L7.376 0H0v24h7.727V11.155l8.897 12.845H24V0h-7.727z"/></svg>
-            Buy on Naver Smart Store
-        </a>
-        <a href="mailto:songdoinfo@naver.com?subject=PMP Quiz Premium inquiry"
-           style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,0.15);color:#fff;padding:10px 20px;border-radius:8px;font-weight:600;font-size:0.92rem;text-decoration:none;white-space:nowrap;border:1px solid rgba(255,255,255,0.3);">
-            <i class="fas fa-envelope"></i> Email inquiry
-        </a>
-    </div>
 </div>
 {% endif %}
 

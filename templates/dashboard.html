@@ -14,6 +14,63 @@
     </div>
 </section>
 
+{# ── Subscription / Validity status — single compact bar with one CTA ── #}
+{% if not current_user.is_admin %}
+{% set remaining = (current_user.validity_end - now()).days if (current_user.validity_end and now is defined) else 0 %}
+<div class="card" style="margin-bottom:16px;padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    {% if current_user.is_paid_premium() %}
+        {# ── Paid Premium ── #}
+        <div style="flex:1;min-width:240px;">
+            <div style="font-weight:700;font-size:0.95rem;">
+                <i class="fas fa-crown" style="color:#f59e0b;"></i> Premium Active
+                <span class="badge badge-success" style="margin-left:6px;">Active</span>
+            </div>
+            <div style="color:var(--text-muted);font-size:0.82rem;margin-top:3px;">
+                Expires {{ current_user.validity_end.strftime('%Y-%m-%d') }} · {{ remaining }} day{{ 's' if remaining != 1 else '' }} remaining
+            </div>
+        </div>
+        {% if remaining <= 30 %}
+        <a href="{{ url_for('upgrade') }}" class="btn btn-warning" style="white-space:nowrap;">
+            <i class="fas fa-sync-alt"></i> Extend
+        </a>
+        {% endif %}
+    {% elif current_user.is_trial() %}
+        {# ── Trial (auto-granted on signup, valid but not paid) ── #}
+        <div style="flex:1;min-width:240px;">
+            <div style="font-weight:700;font-size:0.95rem;">
+                🎁 Trial Active
+                <span class="badge badge-info" style="margin-left:6px;">{{ remaining }} day{{ 's' if remaining != 1 else '' }} left</span>
+            </div>
+            <div style="color:var(--text-muted);font-size:0.82rem;margin-top:3px;">
+                Trial ends {{ current_user.validity_end.strftime('%Y-%m-%d') }} · Upgrade to keep practicing &amp; unlock real analytics.
+            </div>
+        </div>
+        <a href="{{ url_for('upgrade') }}" class="btn btn-primary" style="white-space:nowrap;">
+            <i class="fas fa-arrow-up"></i> Upgrade
+        </a>
+    {% else %}
+        {# ── Expired or Free (no validity_end) ── #}
+        <div style="flex:1;min-width:240px;">
+            <div style="font-weight:700;font-size:0.95rem;">
+                {% if current_user.validity_end %}
+                    <i class="fas fa-lock" style="color:#dc2626;"></i> Access Expired
+                    <span class="badge badge-danger" style="margin-left:6px;">Expired {{ current_user.validity_end.strftime('%Y-%m-%d') }}</span>
+                {% else %}
+                    <i class="fas fa-unlock" style="color:#9ca3af;"></i> Free User
+                    <span class="badge badge-warning" style="margin-left:6px;">Limited</span>
+                {% endif %}
+            </div>
+            <div style="color:var(--text-muted);font-size:0.82rem;margin-top:3px;">
+                Upgrade to unlock all 2,234 questions, real-time analytics &amp; mock exams.
+            </div>
+        </div>
+        <a href="{{ url_for('upgrade') }}" class="btn btn-success" style="white-space:nowrap;">
+            <i class="fas fa-star"></i> See Plans
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+
 <div class="section-title"><span class="tag">My Status</span> Quick progress summary</div>
 
 <!-- Stats Grid -->
@@ -158,68 +215,6 @@
 </div>
 {% endif %}
 
-<!-- Validity Info -->
-{% if not current_user.is_admin %}
-<div class="card">
-    <div class="card-header"><i class="fas fa-calendar"></i> Validity</div>
-    {% if current_user.validity_end %}
-        {% set remaining = (current_user.validity_end - now()).days if now is defined else 0 %}
-        <p>Expires: <strong>{{ current_user.validity_end.strftime('%Y-%m-%d') }}</strong>
-        {% if current_user.is_valid() %}
-            <span class="badge badge-success">Active</span>
-            {% if remaining <= 30 %}
-            {# Within 30 days of expiry — renewal prompt #}
-            <div style="margin-top:12px;padding:12px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:0.88rem;line-height:1.7;">
-                <strong style="color:#c2410c;"><i class="fas fa-exclamation-circle"></i> {{ remaining }} days of validity remaining</strong><br>
-                <span style="color:#92400e;">To extend, purchase on Naver Smart Store then contact us.</span>
-                <div style="margin-top:10px;">
-                    <a href="https://smartstore.naver.com/sub-note/products/13378117649"
-                       target="_blank" rel="noopener"
-                       style="display:inline-flex;align-items:center;gap:6px;background:#03C75A;color:#fff;padding:7px 16px;border-radius:6px;font-weight:700;font-size:0.85rem;text-decoration:none;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M16.273 12.845L7.376 0H0v24h7.727V11.155l8.897 12.845H24V0h-7.727z"/></svg>
-                        Extend validity
-                    </a>
-                </div>
-            </div>
-            {% endif %}
-        {% else %}
-            <span class="badge badge-danger">Expired</span>
-            {# Expired — purchase prompt #}
-            <div style="margin-top:12px;padding:16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:0.88rem;line-height:1.8;">
-                <strong style="color:#b91c1c;"><i class="fas fa-lock"></i> Your access has expired</strong><br>
-                <span style="color:#7f1d1d;">To keep using, purchase on Naver Smart Store then email us.</span>
-                <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
-                    <a href="https://smartstore.naver.com/sub-note/products/13378117649"
-                       target="_blank" rel="noopener"
-                       style="display:inline-flex;align-items:center;gap:6px;background:#03C75A;color:#fff;padding:8px 18px;border-radius:6px;font-weight:700;font-size:0.88rem;text-decoration:none;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M16.273 12.845L7.376 0H0v24h7.727V11.155l8.897 12.845H24V0h-7.727z"/></svg>
-                        Buy on Naver Smart Store
-                    </a>
-                    <a href="mailto:songdoinfo@naver.com?subject=PMP Quiz validity extension request"
-                       style="display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;color:#334155;padding:8px 18px;border-radius:6px;font-weight:600;font-size:0.88rem;text-decoration:none;border:1px solid #cbd5e1;">
-                        <i class="fas fa-envelope"></i> Email inquiry
-                    </a>
-                </div>
-            </div>
-        {% endif %}
-    {% else %}
-        {# Free user — purchase prompt #}
-        <p><span class="badge badge-warning">Free user</span></p>
-        <div style="margin-top:12px;padding:16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:0.88rem;line-height:1.8;">
-            <strong style="color:#166534;"><i class="fas fa-star"></i> Upgrade to paid version</strong><br>
-            <span style="color:#14532d;">Get unlimited access to all 2,000+ questions, wrong-answer tracking, and per-category analytics.</span>
-            <div style="margin-top:12px;">
-                <a href="https://smartstore.naver.com/sub-note/products/13378117649"
-                   target="_blank" rel="noopener"
-                   style="display:inline-flex;align-items:center;gap:6px;background:#03C75A;color:#fff;padding:8px 18px;border-radius:6px;font-weight:700;font-size:0.88rem;text-decoration:none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M16.273 12.845L7.376 0H0v24h7.727V11.155l8.897 12.845H24V0h-7.727z"/></svg>
-                    Buy on Naver Smart Store
-                </a>
-            </div>
-        </div>
-    {% endif %}
-</div>
-{% endif %}
 
 {% endblock %}
 
