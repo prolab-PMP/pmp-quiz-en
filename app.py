@@ -336,6 +336,166 @@ def free_mode():
 def free_upgrade():
     return render_template('free_upgrade.html')
 
+
+# ══════════════════════════════════════════════════════
+# LEMON SQUEEZY PAYMENT INTEGRATION
+# ──────────────────────────────────────────────────────
+# Flow:
+#   1. User clicks "Buy Premium" -> /upgrade page (renders pricing).
+#   2. User clicks a plan -> redirected to Lemon Squeezy hosted checkout.
+#   3. User pays on Lemon Squeezy (cards / Apple Pay / etc.).
+#   4. Lemon Squeezy fires order_created webhook to /webhook/lemonsqueezy.
+#   5. Webhook handler verifies HMAC signature, looks up user by email,
+#      sets premium validity, returns 200.
+#   6. User is redirected to /payment/success with confirmation.
+#
+# Required env vars (set in Railway Variables when ready):
+#   - LEMONSQUEEZY_STORE_SLUG       (e.g. 'pmp-quiz')
+#   - LEMONSQUEEZY_WEBHOOK_SECRET   (used to verify signature)
+#   - LEMONSQUEEZY_VARIANT_3MO      (variant ID for 3-month plan)
+#   - LEMONSQUEEZY_VARIANT_6MO      (variant ID for 6-month plan, optional)
+#   - LEMONSQUEEZY_VARIANT_12MO     (variant ID for 12-month plan, optional)
+#
+# Until env vars are set, /upgrade renders a "coming soon" notice and
+# /webhook/lemonsqueezy returns 503. Site continues to work normally.
+# ══════════════════════════════════════════════════════
+import hmac
+import hashlib
+
+LEMONSQUEEZY_PLANS = [
+    # (variant env var name, label, price USD, months of validity)
+    ('LEMONSQUEEZY_VARIANT_3MO',  '3 Months Premium',  19, 3),
+    ('LEMONSQUEEZY_VARIANT_6MO',  '6 Months Premium',  29, 6),
+    ('LEMONSQUEEZY_VARIANT_12MO', '12 Months Premium', 49, 12),
+]
+
+
+def _lemonsqueezy_configured():
+    """True only if minimum env vars are set."""
+    return bool(
+        os.environ.get('LEMONSQUEEZY_STORE_SLUG')
+        and os.environ.get('LEMONSQUEEZY_WEBHOOK_SECRET')
+        and os.environ.get('LEMONSQUEEZY_VARIANT_3MO')
+    )
+
+
+def _build_checkout_url(variant_id, email):
+    """Build a Lemon Squeezy hosted checkout URL with prefilled email.
+    Pattern: https://{store_slug}.lemonsqueezy.com/buy/{variant_uuid}?checkout[email]=...
+    """
+    store_slug = os.environ.get('LEMONSQUEEZY_STORE_SLUG', '')
+    base = f'https://{store_slug}.lemonsqueezy.com/buy/{variant_id}'
+    # Tag the email so we can match the user on webhook
+    from urllib.parse import quote
+    return f'{base}?checkout[email]={quote(email)}'
+
+
+@app.route('/upgrade')
+@login_required
+def upgrade():
+    """Render premium plans + checkout buttons."""
+    plans = []
+    for env_var, label, price, months in LEMONSQUEEZY_PLANS:
+        variant_id = os.environ.get(env_var)
+        if not variant_id:
+            continue
+        plans.append({
+            'label': label,
+            'price': price,
+            'months': months,
+            'checkout_url': _build_checkout_url(variant_id, current_user.email),
+        })
+    return render_template(
+        'upgrade.html',
+        plans=plans,
+        configured=_lemonsqueezy_configured(),
+    )
+
+
+@app.route('/webhook/lemonsqueezy', methods=['POST'])
+def webhook_lemonsqueezy():
+    """Receive order_created event from Lemon Squeezy and grant premium.
+
+    Lemon Squeezy webhook docs: signature is HMAC-SHA256 of raw body using
+    the webhook secret, sent in X-Signature header (hex).
+    """
+    secret = os.environ.get('LEMONSQUEEZY_WEBHOOK_SECRET')
+    if not secret:
+        return 'webhook not configured', 503
+
+    raw_body = request.get_data()
+    received_sig = request.headers.get('X-Signature', '')
+    expected_sig = hmac.new(
+        secret.encode('utf-8'), raw_body, hashlib.sha256
+    ).hexdigest()
+    if not hmac.compare_digest(expected_sig, received_sig):
+        print(f'[lemonsqueezy] BAD signature. expected={expected_sig[:12]}... got={received_sig[:12]}...')
+        return 'bad signature', 401
+
+    try:
+        payload = json.loads(raw_body)
+    except Exception as e:
+        return f'bad json: {e}', 400
+
+    event_name = payload.get('meta', {}).get('event_name', '')
+    print(f'[lemonsqueezy] event={event_name}')
+
+    # Only process successful orders (not subscription_payment_failed etc.)
+    if event_name not in ('order_created', 'subscription_created', 'subscription_payment_success'):
+        return 'event ignored', 200
+
+    data = payload.get('data', {}).get('attributes', {})
+    customer_email = (data.get('user_email') or data.get('customer_email') or '').strip().lower()
+    if not customer_email:
+        print('[lemonsqueezy] no customer email in payload')
+        return 'no email', 400
+
+    # Find which variant was purchased to determine months of validity
+    variant_id = None
+    if event_name == 'order_created':
+        first_order_item = (data.get('first_order_item') or {})
+        variant_id = str(first_order_item.get('variant_id') or '')
+    if not variant_id:
+        # subscription events
+        variant_id = str(data.get('variant_id') or '')
+
+    months = 3  # default
+    for env_var, _label, _price, plan_months in LEMONSQUEEZY_PLANS:
+        if str(os.environ.get(env_var, '')) == variant_id:
+            months = plan_months
+            break
+
+    # Match user account (case-insensitive email)
+    user = User.query.filter(func.lower(User.email) == customer_email).first()
+    if not user:
+        # Auto-create the account so the buyer can immediately log in.
+        # (No password set; they'll need to use signup or password-reset.)
+        user = User(email=customer_email, is_premium=True)
+        user.set_validity(months=months)
+        db.session.add(user)
+        db.session.commit()
+        print(f'[lemonsqueezy] auto-created premium user {customer_email} (+{months}mo)')
+    else:
+        user.is_premium = True
+        user.extend_validity(months=months)
+        db.session.commit()
+        print(f'[lemonsqueezy] extended {customer_email} by {months} months '
+              f'(new end: {user.validity_end})')
+
+    return 'ok', 200
+
+
+@app.route('/payment/success')
+def payment_success():
+    """User-facing redirect after successful checkout."""
+    return render_template('payment_success.html')
+
+
+@app.route('/payment/cancel')
+def payment_cancel():
+    flash('Payment was canceled. You can try again anytime.', 'info')
+    return redirect(url_for('upgrade') if _lemonsqueezy_configured() else url_for('dashboard'))
+
 @app.route('/free/start', methods=['POST'])
 def free_start():
     # already Free trial을 Completed한 경우 Upgrade 페이지로 이동

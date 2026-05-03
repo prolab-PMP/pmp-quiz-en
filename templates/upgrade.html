@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - Upgrade to Premium{% endblock %}
+
+{% block content %}
+<section class="hero" style="text-align:center;">
+    <h1>Upgrade to Premium</h1>
+    <p>Unlock all 2,234 PMBOK 7 &amp; 8 questions, real-time analytics, wrong-answer notes, and PMP-style mock exams.</p>
+</section>
+
+{% if not configured %}
+<div class="card" style="text-align:center; padding:32px;">
+    <h2 style="margin-bottom:12px;"><i class="fas fa-clock"></i> Coming Soon</h2>
+    <p style="color:var(--text-muted); margin-bottom:24px;">
+        Online checkout is being set up. For now, contact
+        <a href="mailto:songdoinfo@naver.com">songdoinfo@naver.com</a>
+        to upgrade your account manually.
+    </p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+{% else %}
+
+<div class="card" style="padding:24px; margin-bottom:24px; background:linear-gradient(135deg,#eff6ff,#dbeafe);">
+    <div class="card-header" style="border-bottom:none; padding-bottom:8px;">
+        <i class="fas fa-star" style="color:#f59e0b;"></i> Premium Benefits
+    </div>
+    <ul style="list-style:none; padding:0; line-height:2; font-size:0.95rem;">
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Unlimited access to all <strong>2,234 questions</strong></li>
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> PMBOK 7 &amp; 8 per-category practice</li>
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Automated wrong-answer note management</li>
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Daily and per-category accuracy analytics</li>
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Mock exam (180 / 185 questions)</li>
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Multilingual translation toggle (KO / ZH / ES / JA)</li>
+    </ul>
+</div>
+
+<div class="recommend-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px;">
+    {% for plan in plans %}
+    <div class="card" style="text-align:center; padding:28px 20px; border:2px solid {% if loop.index == 2 %}var(--primary){% else %}var(--border){% endif %}; position:relative;">
+        {% if loop.index == 2 %}
+        <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--primary); color:#fff; padding:4px 14px; border-radius:12px; font-size:0.78rem; font-weight:700;">
+            BEST VALUE
+        </div>
+        {% endif %}
+        <h3 style="font-size:1.1rem; margin-bottom:8px; color:var(--text-muted); font-weight:600;">{{ plan.label }}</h3>
+        <div style="font-size:2.4rem; font-weight:800; color:var(--text); letter-spacing:-0.025em; margin:8px 0;">
+            ${{ plan.price }}
+        </div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:18px;">
+            ≈ ${{ "%.2f"|format(plan.price / plan.months) }} / month
+        </div>
+        <a href="{{ plan.checkout_url }}" class="btn btn-primary btn-block" style="display:block; padding:12px;">
+            <i class="fas fa-credit-card"></i> Buy Now
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card" style="margin-top:24px; padding:20px; font-size:0.88rem; color:var(--text-muted); line-height:1.7;">
+    <strong style="color:var(--text);">How it works:</strong><br>
+    1. Click <strong>Buy Now</strong> on a plan above.<br>
+    2. Complete payment on Lemon Squeezy (cards, Apple Pay, Google Pay supported).<br>
+    3. Your account is automatically upgraded — usually within seconds.<br>
+    4. Refresh the dashboard to see your new validity period.
+</div>
+
+<div style="text-align:center; margin-top:20px; font-size:0.85rem; color:var(--text-muted);">
+    Questions? <a href="mailto:songdoinfo@naver.com">songdoinfo@naver.com</a>
+    &nbsp;·&nbsp;
+    Secure checkout by <a href="https://www.lemonsqueezy.com" target="_blank" rel="noopener">Lemon Squeezy</a>
+</div>
+{% endif %}
+{% endblock %}

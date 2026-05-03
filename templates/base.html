@@ -29,6 +29,9 @@
                 <li><a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}"><i class="fas fa-home"></i> Dashboard</a></li>
                             <li><a href="{{ url_for('my_status') }}" class="{% if request.endpoint == 'my_status' %}active{% endif %}"><i class="fas fa-chart-line"></i> My Status</a></li>
                 <li><a href="{{ url_for('bookmarks') }}" class="{% if request.endpoint == 'bookmarks' %}active{% endif %}"><i class="fas fa-bookmark"></i> Bookmarks</a></li>
+                {% if not current_user.is_admin and not current_user.is_paid_premium() %}
+                <li><a href="{{ url_for('upgrade') }}" class="{% if request.endpoint == 'upgrade' %}active{% endif %}" style="color:#f59e0b;font-weight:700;"><i class="fas fa-star"></i> Upgrade</a></li>
+                {% endif %}
                 {% if current_user.is_admin %}
                 <li><a href="{{ url_for('admin_panel') }}" class="{% if 'admin' in request.endpoint %}active{% endif %}"><i class="fas fa-gear"></i> Admin</a></li>
                 {% endif %}
