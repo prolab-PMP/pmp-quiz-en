@@ -26,7 +26,7 @@
                 <span class="badge badge-success" style="margin-left:6px;">Active</span>
             </div>
             <div style="color:var(--text-muted);font-size:0.82rem;margin-top:3px;">
-                Expires {{ current_user.validity_end.strftime('%Y-%m-%d') }} · {{ remaining }} day{{ 's' if remaining != 1 else '' }} remaining
+                {% if current_user.validity_start %}Started {{ current_user.validity_start.strftime('%Y-%m-%d') }} · {% endif %}Expires {{ current_user.validity_end.strftime('%Y-%m-%d') }} · {{ remaining }} day{{ 's' if remaining != 1 else '' }} remaining
             </div>
         </div>
         {% if remaining <= 30 %}
@@ -42,7 +42,7 @@
                 <span class="badge badge-info" style="margin-left:6px;">{{ remaining }} day{{ 's' if remaining != 1 else '' }} left</span>
             </div>
             <div style="color:var(--text-muted);font-size:0.82rem;margin-top:3px;">
-                Trial ends {{ current_user.validity_end.strftime('%Y-%m-%d') }} · Upgrade to keep practicing &amp; unlock real analytics.
+                {% if current_user.validity_start %}Started {{ current_user.validity_start.strftime('%Y-%m-%d') }} · {% endif %}Trial ends {{ current_user.validity_end.strftime('%Y-%m-%d') }} · Upgrade to keep practicing.
             </div>
         </div>
         <a href="{{ url_for('upgrade') }}" class="btn btn-primary" style="white-space:nowrap;">
@@ -118,8 +118,23 @@
   <input type="hidden" name="mode" value="category">
   <input type="hidden" name="filter_type" id="fw-filter-type">
   <input type="hidden" name="filter_value" id="fw-filter-value">
-  <input type="hidden" name="count" value="10">
+  <input type="hidden" name="count" id="fw-quiz-count" value="10">
 </form>
+
+{# ── Question count picker modal (shown when user clicks a domain box) ── #}
+<div id="fw-count-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surface,#fff);border-radius:14px;padding:28px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <h3 style="margin:0 0 6px;font-size:1.05rem;">How many questions?</h3>
+    <p id="fw-count-subtitle" style="margin:0 0 18px;color:var(--text-muted);font-size:0.85rem;">Pick a session length.</p>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+      <button type="button" class="btn btn-outline fw-count-btn" data-count="10">10</button>
+      <button type="button" class="btn btn-outline fw-count-btn" data-count="30">30</button>
+      <button type="button" class="btn btn-outline fw-count-btn" data-count="50">50</button>
+      <button type="button" class="btn btn-outline fw-count-btn" data-count="0">All</button>
+    </div>
+    <button type="button" id="fw-count-cancel" class="btn btn-outline btn-block" style="margin-top:14px;">Cancel</button>
+  </div>
+</div>
 
 <div class="section-title"><span class="tag green">Mock &amp; Review</span> Recommended modes</div>
 
@@ -328,11 +343,41 @@ let currentStats = {};
 let currentView = 'pmbok7';
 
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function startQuiz(filterType, filterValue) {
+
+// startQuiz now opens a count-picker modal instead of submitting immediately.
+// User picks 10/30/50/All -> form submits with chosen count.
+function startQuiz(filterType, filterValue, availableCount) {
   document.getElementById('fw-filter-type').value = filterType;
   document.getElementById('fw-filter-value').value = filterValue;
-  document.getElementById('fw-quiz-form').submit();
+  // Update modal subtitle with the picked category + total questions in it
+  const sub = document.getElementById('fw-count-subtitle');
+  sub.textContent = filterValue + ' · ' + availableCount + ' question'
+                    + (availableCount === 1 ? '' : 's') + ' available';
+  // Mark the "All" button so we can substitute the real total at submit time
+  const allBtn = document.querySelector('.fw-count-btn[data-count="0"]');
+  if (allBtn) allBtn.dataset.allCount = availableCount;
+  document.getElementById('fw-count-modal').style.display = 'flex';
 }
+
+// Wire the count buttons + cancel button (one-time setup)
+document.querySelectorAll('.fw-count-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const raw = parseInt(btn.dataset.count, 10);
+    // 0 means "All" -> use the data-all-count value set when modal opened
+    const count = raw === 0 ? parseInt(btn.dataset.allCount || '0', 10) : raw;
+    document.getElementById('fw-quiz-count').value = count;
+    document.getElementById('fw-quiz-form').submit();
+  });
+});
+document.getElementById('fw-count-cancel').addEventListener('click', () => {
+  document.getElementById('fw-count-modal').style.display = 'none';
+});
+document.getElementById('fw-count-modal').addEventListener('click', (e) => {
+  // close when clicking the dim backdrop (not the inner card)
+  if (e.target.id === 'fw-count-modal') {
+    document.getElementById('fw-count-modal').style.display = 'none';
+  }
+});
 
 function renderView(viewKey) {
   const sections = VIEWS[viewKey];
@@ -364,7 +409,7 @@ function renderView(viewKey) {
           ? '<div class="fw-box-pct is-empty">—</div>'
           : '<div class="fw-box-pct">' + Math.round(acc) + '<span class="fw-box-pct-sym">%</span></div>';
         const meta = (acc == null) ? (it.question_count + ' Q') : (tries + ' attempts · ' + it.question_count + ' Q');
-        return '<div class="fw-box" data-filter-type="' + section.filterType + '" data-filter-value="' + escapeHtml(it.name) + '">' +
+        return '<div class="fw-box" data-filter-type="' + section.filterType + '" data-filter-value="' + escapeHtml(it.name) + '" data-count="' + (it.question_count || 0) + '">' +
           '<div class="fw-box-name">' + escapeHtml(it.name) + '</div>' +
           pctHtml +
           '<div class="fw-box-meta">' + meta + '</div>' +
@@ -373,7 +418,11 @@ function renderView(viewKey) {
       '</div></div>';
   }).join('');
   container.querySelectorAll('.fw-box').forEach(box => {
-    box.addEventListener('click', () => startQuiz(box.dataset.filterType, box.dataset.filterValue));
+    box.addEventListener('click', () => startQuiz(
+      box.dataset.filterType,
+      box.dataset.filterValue,
+      parseInt(box.dataset.count || '0', 10)
+    ));
   });
 }
 

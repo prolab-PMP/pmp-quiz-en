@@ -28,13 +28,8 @@
 
         <p style="margin-top:20px;font-size:0.9rem;color:var(--text-muted);">
             Don't have an account? <a href="{{ url_for('signup') }}" style="color:var(--primary);font-weight:700;">✨ Sign up</a>
+            <br><small style="color:var(--text-muted);">7-day free Premium trial included on sign up.</small>
         </p>
-
-        <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
-            <a href="{{ url_for('free_mode') }}" class="btn btn-outline btn-block">
-                <i class="fas fa-gift"></i> Free trial without login (50 questions)
-            </a>
-        </div>
     </div>
 </div>
 {% endblock %}
