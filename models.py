@@ -98,15 +98,34 @@ class Question(db.Model):
         return len(self.get_answer_list())
 
     # Multilingual content scaffolding (added by transform.py).
+    # Original JSON-options columns are kept for backward compat but are unused —
+    # the active per-language columns mirror KR structure (opt_a_xx ~ opt_e_xx).
     question_zh    = db.Column(db.Text)
-    options_zh     = db.Column(db.JSON)
+    options_zh     = db.Column(db.JSON)   # deprecated: use opt_a_zh~opt_e_zh
     explanation_zh = db.Column(db.Text)
     question_es    = db.Column(db.Text)
-    options_es     = db.Column(db.JSON)
+    options_es     = db.Column(db.JSON)   # deprecated: use opt_a_es~opt_e_es
     explanation_es = db.Column(db.Text)
     question_ja    = db.Column(db.Text)
-    options_ja     = db.Column(db.JSON)
+    options_ja     = db.Column(db.JSON)   # deprecated: use opt_a_ja~opt_e_ja
     explanation_ja = db.Column(db.Text)
+
+    # Per-language individual option columns (KR-pattern, populated by translation pipeline)
+    opt_a_zh = db.Column(db.Text)
+    opt_b_zh = db.Column(db.Text)
+    opt_c_zh = db.Column(db.Text)
+    opt_d_zh = db.Column(db.Text)
+    opt_e_zh = db.Column(db.Text)
+    opt_a_es = db.Column(db.Text)
+    opt_b_es = db.Column(db.Text)
+    opt_c_es = db.Column(db.Text)
+    opt_d_es = db.Column(db.Text)
+    opt_e_es = db.Column(db.Text)
+    opt_a_ja = db.Column(db.Text)
+    opt_b_ja = db.Column(db.Text)
+    opt_c_ja = db.Column(db.Text)
+    opt_d_ja = db.Column(db.Text)
+    opt_e_ja = db.Column(db.Text)
 
     def text_for(self, lang='en'):
         return getattr(self, 'question_' + lang, None) or self.question_en or ''
