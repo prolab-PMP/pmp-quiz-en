@@ -36,11 +36,37 @@ class User(UserMixin, db.Model):
         self.validity_end = datetime.utcnow() + timedelta(days=months * 30)
 
     def extend_validity(self, months=3):
-        """현재 Valid until 종료day 기준으로 연장 (Expired된 경우 오늘부터 연장)"""
+        """Extend current validity by N months. If expired, start from today."""
         base = self.validity_end if self.validity_end and self.validity_end > datetime.utcnow() else datetime.utcnow()
         if not self.validity_start:
             self.validity_start = datetime.utcnow()
         self.validity_end = base + timedelta(days=months * 30)
+
+    def set_trial(self, days=7):
+        """Grant N-day free Premium trial right after signup."""
+        self.is_premium = True
+        self.validity_start = datetime.utcnow()
+        self.validity_end = datetime.utcnow() + timedelta(days=days)
+
+    def is_trial(self):
+        """True if user is on the post-signup free trial (validity duration <= 8 days)."""
+        if not self.is_premium or not self.validity_end or not self.validity_start:
+            return False
+        if not self.is_valid():
+            return False
+        # set_trial(7) -> exactly 7 days. Allow up to 8 to absorb clock skew.
+        duration = self.validity_end - self.validity_start
+        return duration.days <= 8
+
+    def is_paid_premium(self):
+        """True only for paid (or admin). Trial/free/expired -> False.
+        Single source of truth for who sees real /status analytics and
+        who hides the Upgrade nav link."""
+        if self.is_admin:
+            return True
+        if not self.is_valid():
+            return False
+        return not self.is_trial()
 
 class Question(db.Model):
     __tablename__ = 'questions'
