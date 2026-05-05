@@ -4,9 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}PMP Quiz{% endblock %}</title>
+    {# Canonical + Open Graph (always points to the primary host) #}
+    {% set _primary = config.get('PRIMARY_HOST', 'pmp.wayexam.com') %}
+    {% set _canonical = 'https://' + _primary + request.path %}
+    <link rel="canonical" href="{{ _canonical }}">
+    <meta property="og:url" content="{{ _canonical }}">
+    <meta property="og:site_name" content="PMP Quiz">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+    {# Google AdSense — load only for non-paid users; skipped entirely if env var unset. #}
+    {% if config.get('ADSENSE_PUBLISHER_ID') and not (current_user.is_authenticated and current_user.is_paid_premium()) %}
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ config['ADSENSE_PUBLISHER_ID'] }}"
+            crossorigin="anonymous"></script>
+    {% endif %}
     {% block head %}{% endblock %}
     <!-- Dark mode flash prevention: applied before render -->
     <script>

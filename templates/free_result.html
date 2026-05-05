@@ -35,6 +35,11 @@
     </p>
 </div>
 
+{# Ad shown once at top of free-trial results page #}
+{% with slot = config['ADSENSE_SLOT_RESULT'] %}
+    {% include '_ads.html' %}
+{% endwith %}
+
 <!-- Translation Toggle -->
 <div style="margin-bottom:16px;text-align:right;">
     <button type="button" class="translation-toggle" onclick="toggleAllTranslations(this)">

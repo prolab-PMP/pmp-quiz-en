@@ -1,0 +1,29 @@
+{# ─────────────────────────────────────────────────────────────────────
+   Reusable Google AdSense unit. Include with a `slot` context var.
+
+       {% with slot = config['ADSENSE_SLOT_INLINE'] %}
+         {% include '_ads.html' %}
+       {% endwith %}
+
+   Renders nothing when:
+     - ADSENSE_PUBLISHER_ID env var is empty (i.e. AdSense not configured)
+     - `slot` is empty / missing
+     - the user is paid Premium or admin (no ads for them)
+
+   Anonymous (not logged in) users SEE ads.
+   Trial / Free / Expired users SEE ads.
+   Paid Premium + Admin: NO ads.
+   ───────────────────────────────────────────────────────────────────── #}
+{% set _publisher = config.get('ADSENSE_PUBLISHER_ID') %}
+{% set _is_paid = current_user.is_authenticated and current_user.is_paid_premium() %}
+{% if _publisher and slot and not _is_paid %}
+<div class="adsense-wrap" style="margin:18px auto;max-width:728px;text-align:center;min-height:90px;">
+  <ins class="adsbygoogle"
+       style="display:block;"
+       data-ad-client="{{ _publisher }}"
+       data-ad-slot="{{ slot }}"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+{% endif %}

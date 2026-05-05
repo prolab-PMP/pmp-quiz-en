@@ -110,6 +110,13 @@
         </div>
     </div>
 
+    {# Ad shown every 10 questions (10/20/30...), but not on the last one #}
+    {% if current % 10 == 0 and current < total %}
+        {% with slot = config['ADSENSE_SLOT_INLINE'] %}
+            {% include '_ads.html' %}
+        {% endwith %}
+    {% endif %}
+
     <!-- Navigation Buttons -->
     <div style="display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;">
         <button type="submit" name="action" value="prev" class="btn btn-outline" {% if current <= 1 %}disabled{% endif %}>

@@ -20,6 +20,24 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # ══════════════════════════════════════════════════════
+# 커스텀 도메인 redirect: *.up.railway.app → pmp.wayexam.com (301)
+# ══════════════════════════════════════════════════════
+PRIMARY_HOST = os.environ.get('PRIMARY_HOST', 'pmp.wayexam.com')
+
+
+@app.before_request
+def _redirect_to_primary_host():
+    host = (request.host or '').lower()
+    if (
+        host
+        and host != PRIMARY_HOST.lower()
+        and not host.startswith('localhost')
+        and not host.startswith('127.')
+    ):
+        target = 'https://' + PRIMARY_HOST + request.full_path.rstrip('?')
+        return redirect(target, code=301)
+
+# ══════════════════════════════════════════════════════
 # Jinja filter: render markdown tables in question/explanation text
 # Used by table-style questions (Q90001~90015) where the body
 # contains a Markdown-style "| col | col |" table.
@@ -1680,6 +1698,19 @@ def llms_txt():
         return content, 200, {'Content-Type': 'text/plain'}
     except FileNotFoundError:
         abort(404)
+
+@app.route('/ads.txt')
+def ads_txt():
+    """Serve ads.txt for Google AdSense publisher verification.
+    Format: 'google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0'
+    Generated dynamically from ADSENSE_PUBLISHER_ID env var.
+    """
+    publisher = app.config.get('ADSENSE_PUBLISHER_ID', '')
+    if not publisher:
+        abort(404)
+    pub_id = publisher.replace('ca-pub-', 'pub-') if publisher.startswith('ca-pub-') else publisher
+    body = f'google.com, {pub_id}, DIRECT, f08c47fec0942fa0\n'
+    return body, 200, {'Content-Type': 'text/plain'}
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

@@ -15,3 +15,15 @@ class Config:
     FREE_QUESTION_LIMIT = 50
     PAYMENT_ENABLED = False  # Payment 비활성화 (Admin가 나중에 활성화)
     DEFAULT_VALIDITY_MONTHS = 3
+
+    # ── Custom domain (used for canonical URL + redirect target) ──
+    PRIMARY_HOST = os.environ.get('PRIMARY_HOST', 'pmp.wayexam.com')
+
+    # ── Google AdSense (set in Railway env vars when ready) ──
+    # ADSENSE_PUBLISHER_ID: 'ca-pub-1234567890' (account-wide)
+    # ADSENSE_SLOT_INLINE: ad slot shown every 10 questions during quiz
+    # ADSENSE_SLOT_RESULT: ad slot at top of grading-result page
+    # If empty, no ads render anywhere on the site (graceful).
+    ADSENSE_PUBLISHER_ID = os.environ.get('ADSENSE_PUBLISHER_ID', '')
+    ADSENSE_SLOT_INLINE = os.environ.get('ADSENSE_SLOT_INLINE', '')
+    ADSENSE_SLOT_RESULT = os.environ.get('ADSENSE_SLOT_RESULT', '')

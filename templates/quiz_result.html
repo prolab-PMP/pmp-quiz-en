@@ -41,6 +41,11 @@
 </div>
 {% endif %}
 
+{# Ad shown once at top of results page (above per-question detail) #}
+{% with slot = config['ADSENSE_SLOT_RESULT'] %}
+    {% include '_ads.html' %}
+{% endwith %}
+
 <!-- Translation Toggle -->
 <div style="margin-bottom:16px;text-align:right;">
     <button type="button" class="translation-toggle" onclick="toggleAllTranslations(this)">
