@@ -1344,21 +1344,29 @@ def admin_panel():
 def admin_import_translations():
     """Merge zh/es/ja translations from data/PMP_Raw_translated.xlsx
     (sheet 'PMP_Translated') into Question rows by `no`.
-    Idempotent — running again just overwrites with the latest values."""
+    Idempotent — running again just overwrites with the latest values.
+
+    Returns plain-text response so any error shows the full traceback in the
+    browser instead of a generic 500 page (and avoids any redirect/template
+    surprises while debugging)."""
+    import traceback
     filepath = 'data/PMP_Raw_translated.xlsx'
-    if not os.path.exists(filepath):
-        flash(f'File not found: {filepath}', 'error')
-        return redirect(url_for('admin_panel'))
+    abs_path = os.path.abspath(filepath)
+    cwd = os.getcwd()
     try:
+        if not os.path.exists(filepath):
+            return (f"File not found.\ncwd={cwd}\nlooking for: {abs_path}\n"
+                    f"data/ contents: {os.listdir('data') if os.path.isdir('data') else 'no data/ dir'}\n"), 200, {'Content-Type': 'text/plain; charset=utf-8'}
+
         from openpyxl import load_workbook
         wb = load_workbook(filepath, read_only=True)
+        if 'PMP_Translated' not in wb.sheetnames:
+            return (f"Sheet 'PMP_Translated' not found.\nSheets: {wb.sheetnames}\n"), 200, {'Content-Type': 'text/plain; charset=utf-8'}
         ws = wb['PMP_Translated']
 
-        # Read header row to map column index → field name
         header = [c.value for c in next(ws.iter_rows(min_row=1, max_row=1))]
         col_idx = {name: i for i, name in enumerate(header) if name}
 
-        # xlsx column → Question model field
         field_map = {
             'Question_ZH': 'question_zh', 'OptA_ZH': 'opt_a_zh', 'OptB_ZH': 'opt_b_zh',
             'OptC_ZH': 'opt_c_zh', 'OptD_ZH': 'opt_d_zh', 'OptE_ZH': 'opt_e_zh',
@@ -1372,8 +1380,7 @@ def admin_import_translations():
         }
         no_col = col_idx.get('No')
         if no_col is None:
-            flash("'No' column not found in xlsx header.", 'error')
-            return redirect(url_for('admin_panel'))
+            return (f"'No' column missing.\nHeader: {header}\n"), 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
         updated = 0
         skipped = 0
@@ -1394,11 +1401,12 @@ def admin_import_translations():
                     setattr(q, field, str(val))
             updated += 1
         db.session.commit()
-        flash(f'Imported translations: updated {updated} rows (skipped {skipped} unmatched).', 'success')
+        return (f"OK. updated={updated}, skipped={skipped} (unmatched no).\n"
+                f"Header keys mapped: {sorted(set(field_map) & set(col_idx))}\n"), 200, {'Content-Type': 'text/plain; charset=utf-8'}
     except Exception as e:
         db.session.rollback()
-        flash(f'Import failed: {e}', 'error')
-    return redirect(url_for('admin_panel'))
+        tb = traceback.format_exc()
+        return (f"FAILED: {type(e).__name__}: {e}\n\n{tb}\n"), 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 
 @app.route('/admin/reload_questions', methods=['GET', 'POST'])
@@ -1784,25 +1792,4 @@ if __name__ == '__main__':
 SUPPORTED_LANGS = ('en', 'ko', 'zh', 'es', 'ja')
 
 @app.before_request
-def _resolve_lang():
-    from flask import g, request
-    lang = request.cookies.get('lang', 'en')
-    if lang not in SUPPORTED_LANGS:
-        lang = 'en'
-    g.lang = lang
-
-@app.context_processor
-def _inject_lang():
-    from flask import g
-    return {'current_lang': getattr(g, 'lang', 'en'),
-            'supported_langs': SUPPORTED_LANGS}
-
-@app.route('/lang/<lang>')
-def set_lang(lang):
-    from flask import redirect, request, make_response
-    if lang not in SUPPORTED_LANGS:
-        lang = 'en'
-    resp = make_response(redirect(request.referrer or '/'))
-    resp.set_cookie('lang', lang, max_age=60*60*24*365, samesite='Lax')
-    return resp
-
+def _resolve_
