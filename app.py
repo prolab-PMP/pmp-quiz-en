@@ -1792,4 +1792,24 @@ if __name__ == '__main__':
 SUPPORTED_LANGS = ('en', 'ko', 'zh', 'es', 'ja')
 
 @app.before_request
-def _resolve_
+def _resolve_lang():
+    from flask import g, request
+    lang = request.cookies.get('lang', 'en')
+    if lang not in SUPPORTED_LANGS:
+        lang = 'en'
+    g.lang = lang
+
+@app.context_processor
+def _inject_lang():
+    from flask import g
+    return {'current_lang': getattr(g, 'lang', 'en'),
+            'supported_langs': SUPPORTED_LANGS}
+
+@app.route('/lang/<lang>')
+def set_lang(lang):
+    from flask import redirect, request, make_response
+    if lang not in SUPPORTED_LANGS:
+        lang = 'en'
+    resp = make_response(redirect(request.referrer or '/'))
+    resp.set_cookie('lang', lang, max_age=60*60*24*365, samesite='Lax')
+    return resp
