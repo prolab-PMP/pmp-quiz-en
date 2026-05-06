@@ -153,12 +153,32 @@ class Question(db.Model):
     opt_d_ja = db.Column(db.Text)
     opt_e_ja = db.Column(db.Text)
 
+    # Multilingual helpers — English is the canonical column (`question`/`opt_a`/`explanation`).
+    # Other langs use `<field>_<code>` (e.g. `question_kr`, `opt_a_zh`, `explanation_ja`).
+    # 'ko' is treated as alias for 'kr' since DB columns use the legacy `_kr` suffix.
+    @staticmethod
+    def _lang_suffix(lang):
+        return 'kr' if lang == 'ko' else lang
+
     def text_for(self, lang='en'):
-        return getattr(self, 'question_' + lang, None) or self.question_en or ''
+        if lang == 'en':
+            return self.question or ''
+        return getattr(self, 'question_' + self._lang_suffix(lang), None) or self.question or ''
+
+    def opt_for(self, letter, lang='en'):
+        """letter: 'a'|'b'|'c'|'d'|'e' — returns option in the given language."""
+        base = 'opt_' + letter
+        if lang == 'en':
+            return getattr(self, base, None) or ''
+        return getattr(self, base + '_' + self._lang_suffix(lang), None) or getattr(self, base, None) or ''
+
     def options_for(self, lang='en'):
-        return getattr(self, 'options_' + lang, None) or self.options_en or {}
+        return {l.upper(): self.opt_for(l, lang) for l in ('a', 'b', 'c', 'd', 'e')}
+
     def explanation_for(self, lang='en'):
-        return getattr(self, 'explanation_' + lang, None) or self.explanation_en or ''
+        if lang == 'en':
+            return self.explanation or ''
+        return getattr(self, 'explanation_' + self._lang_suffix(lang), None) or self.explanation or ''
 
 class QuizSession(db.Model):
     __tablename__ = 'quiz_sessions'

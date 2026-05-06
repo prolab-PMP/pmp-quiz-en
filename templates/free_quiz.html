@@ -14,9 +14,12 @@
     <input type="hidden" name="question_no" value="{{ question.no }}">
 
     <div class="card">
+        {# Secondary-language text driven by the global lang picker (current_lang). #}
+        {% set _lang_for_q = current_lang if current_lang and current_lang != 'en' else 'ko' %}
+        {% set tr_question = question.text_for(_lang_for_q) %}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <span class="badge badge-info">Q{{ question.no }}</span>
-            {% if question.question_kr %}
+            {% if tr_question and tr_question != question.question %}
             <button type="button" class="translation-toggle" onclick="toggleTranslation(this)">
                 <i class="fas fa-language"></i> Show translation
             </button>
@@ -34,9 +37,9 @@
             <div class="original">
                 <div class="question-text">{{ question.question | render_md_tables }}</div>
             </div>
-            {% if question.question_kr %}
+            {% if tr_question and tr_question != question.question %}
             <div class="translation">
-                <div class="question-text" style="border-left-color:#fbbf24;">{{ question.question_kr | render_md_tables }}</div>
+                <div class="question-text" style="border-left-color:#fbbf24;">{{ tr_question | render_md_tables }}</div>
             </div>
             {% endif %}
         </div>
@@ -44,13 +47,13 @@
         {% set saved = answers.get(question.no|string, '').split(',') %}
         <ul class="option-list">
             {% set options = [
-                ('A', question.opt_a, question.opt_a_kr),
-                ('B', question.opt_b, question.opt_b_kr),
-                ('C', question.opt_c, question.opt_c_kr),
-                ('D', question.opt_d, question.opt_d_kr),
-                ('E', question.opt_e, question.opt_e_kr)
+                ('A', question.opt_a, question.opt_for('a', _lang_for_q)),
+                ('B', question.opt_b, question.opt_for('b', _lang_for_q)),
+                ('C', question.opt_c, question.opt_for('c', _lang_for_q)),
+                ('D', question.opt_d, question.opt_for('d', _lang_for_q)),
+                ('E', question.opt_e, question.opt_for('e', _lang_for_q))
             ] %}
-            {% for letter, text, text_kr in options %}
+            {% for letter, text, text_tr in options %}
                 {% if text %}
                 <li class="option-item {% if letter in saved %}selected{% endif %}"
                     onclick="toggleOption(this, '{{ letter }}')">
@@ -58,8 +61,8 @@
                     <div class="option-text">
                         <div class="translation-wrapper">
                             <div class="original">{{ text }}</div>
-                            {% if text_kr %}
-                            <div class="translation opt-translation">{{ text_kr }}</div>
+                            {% if text_tr and text_tr != text %}
+                            <div class="translation opt-translation">{{ text_tr }}</div>
                             {% endif %}
                         </div>
                     </div>

@@ -92,14 +92,19 @@
         {% endif %}
     </div>
 
+    {# Secondary-language text driven by the global lang picker (current_lang). #}
+    {% set _lang_for_q = current_lang if current_lang and current_lang != 'en' else 'ko' %}
+    {% set tr_question = r.question.text_for(_lang_for_q) %}
+    {% set tr_explanation = r.question.explanation_for(_lang_for_q) %}
+
     <!-- Question Text with Translation -->
     <div class="translation-wrapper">
         <div class="original">
             <div class="question-text">{{ r.question.question | render_md_tables }}</div>
         </div>
-        {% if r.question.question_kr %}
+        {% if tr_question and tr_question != r.question.question %}
         <div class="translation result-translation">
-            <div class="question-text" style="border-left-color:#fbbf24;">{{ r.question.question_kr | render_md_tables }}</div>
+            <div class="question-text" style="border-left-color:#fbbf24;">{{ tr_question | render_md_tables }}</div>
         </div>
         {% endif %}
     </div>
@@ -107,13 +112,13 @@
     <!-- Options -->
     <ul class="option-list">
         {% set options = [
-            ('A', r.question.opt_a, r.question.opt_a_kr),
-            ('B', r.question.opt_b, r.question.opt_b_kr),
-            ('C', r.question.opt_c, r.question.opt_c_kr),
-            ('D', r.question.opt_d, r.question.opt_d_kr),
-            ('E', r.question.opt_e, r.question.opt_e_kr)
+            ('A', r.question.opt_a, r.question.opt_for('a', _lang_for_q)),
+            ('B', r.question.opt_b, r.question.opt_for('b', _lang_for_q)),
+            ('C', r.question.opt_c, r.question.opt_for('c', _lang_for_q)),
+            ('D', r.question.opt_d, r.question.opt_for('d', _lang_for_q)),
+            ('E', r.question.opt_e, r.question.opt_for('e', _lang_for_q))
         ] %}
-        {% for letter, text, text_kr in options %}
+        {% for letter, text, text_tr in options %}
             {% if text %}
             {% set is_user = letter in r.user_answer %}
             {% set is_correct = letter in r.correct_answer %}
@@ -131,8 +136,8 @@
                                 <i class="fas fa-check" style="color:var(--success);margin-left:6px;"></i> <small style="color:var(--success);">Correct</small>
                             {% endif %}
                         </div>
-                        {% if text_kr %}
-                        <div class="translation result-translation">{{ text_kr }}</div>
+                        {% if text_tr and text_tr != text %}
+                        <div class="translation result-translation">{{ text_tr }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -148,9 +153,9 @@
             <div class="original">
                 <p>{{ (r.question.explanation or 'No explanation available.') | render_md_tables }}</p>
             </div>
-            {% if r.question.explanation_kr %}
+            {% if tr_explanation and tr_explanation != (r.question.explanation or '') %}
             <div class="translation result-translation">
-                <p>{{ r.question.explanation_kr | render_md_tables }}</p>
+                <p>{{ tr_explanation | render_md_tables }}</p>
             </div>
             {% endif %}
         </div>

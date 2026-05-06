@@ -1339,6 +1339,68 @@ def admin_panel():
                            sort=sort, order=order, filter_grade=filter_grade,
                            pending_report_count=pending_report_count)
 
+@app.route('/admin/import_translations', methods=['GET', 'POST'])
+@admin_required
+def admin_import_translations():
+    """Merge zh/es/ja translations from data/PMP_Raw_translated.xlsx
+    (sheet 'PMP_Translated') into Question rows by `no`.
+    Idempotent — running again just overwrites with the latest values."""
+    filepath = 'data/PMP_Raw_translated.xlsx'
+    if not os.path.exists(filepath):
+        flash(f'File not found: {filepath}', 'error')
+        return redirect(url_for('admin_panel'))
+    try:
+        from openpyxl import load_workbook
+        wb = load_workbook(filepath, read_only=True)
+        ws = wb['PMP_Translated']
+
+        # Read header row to map column index → field name
+        header = [c.value for c in next(ws.iter_rows(min_row=1, max_row=1))]
+        col_idx = {name: i for i, name in enumerate(header) if name}
+
+        # xlsx column → Question model field
+        field_map = {
+            'Question_ZH': 'question_zh', 'OptA_ZH': 'opt_a_zh', 'OptB_ZH': 'opt_b_zh',
+            'OptC_ZH': 'opt_c_zh', 'OptD_ZH': 'opt_d_zh', 'OptE_ZH': 'opt_e_zh',
+            'Explanation_ZH': 'explanation_zh',
+            'Question_ES': 'question_es', 'OptA_ES': 'opt_a_es', 'OptB_ES': 'opt_b_es',
+            'OptC_ES': 'opt_c_es', 'OptD_ES': 'opt_d_es', 'OptE_ES': 'opt_e_es',
+            'Explanation_ES': 'explanation_es',
+            'Question_JA': 'question_ja', 'OptA_JA': 'opt_a_ja', 'OptB_JA': 'opt_b_ja',
+            'OptC_JA': 'opt_c_ja', 'OptD_JA': 'opt_d_ja', 'OptE_JA': 'opt_e_ja',
+            'Explanation_JA': 'explanation_ja',
+        }
+        no_col = col_idx.get('No')
+        if no_col is None:
+            flash("'No' column not found in xlsx header.", 'error')
+            return redirect(url_for('admin_panel'))
+
+        updated = 0
+        skipped = 0
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            qno = row[no_col]
+            if not qno:
+                continue
+            q = Question.query.filter_by(no=qno).first()
+            if not q:
+                skipped += 1
+                continue
+            for xlsx_col, field in field_map.items():
+                ci = col_idx.get(xlsx_col)
+                if ci is None:
+                    continue
+                val = row[ci]
+                if val is not None and val != '':
+                    setattr(q, field, str(val))
+            updated += 1
+        db.session.commit()
+        flash(f'Imported translations: updated {updated} rows (skipped {skipped} unmatched).', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Import failed: {e}', 'error')
+    return redirect(url_for('admin_panel'))
+
+
 @app.route('/admin/reload_questions', methods=['GET', 'POST'])
 @admin_required
 def admin_reload_questions():
@@ -1718,7 +1780,8 @@ if __name__ == '__main__':
 
 
 # i18n: language resolver (added by transform.py)
-SUPPORTED_LANGS = ('en', 'zh', 'es', 'ja')
+# 'ko' is the secondary translation (Korean) — DB columns use legacy `_kr` suffix.
+SUPPORTED_LANGS = ('en', 'ko', 'zh', 'es', 'ja')
 
 @app.before_request
 def _resolve_lang():

@@ -22,7 +22,10 @@
     <a href="{{ url_for('quiz_start') }}" class="btn btn-primary" style="margin-top:16px;">Start practicing</a>
 </div>
 {% else %}
+{% set _lang_for_q = current_lang if current_lang and current_lang != 'en' else 'ko' %}
 {% for bm in bookmarks %}
+{% set tr_question = bm.question.text_for(_lang_for_q) %}
+{% set tr_explanation = bm.question.explanation_for(_lang_for_q) %}
 <div class="bookmark-item">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
         <div style="flex:1;min-width:0;">
@@ -35,8 +38,8 @@
                 {% endif %}
             </div>
             <div class="q-text">{{ bm.question.question | render_md_tables }}</div>
-            {% if bm.question.question_kr %}
-            <div class="q-text" style="color:var(--text-muted);font-size:0.88rem;margin-top:6px;border-left:3px solid #f59e0b;padding-left:8px;">{{ bm.question.question_kr | render_md_tables }}</div>
+            {% if tr_question and tr_question != bm.question.question %}
+            <div class="q-text" style="color:var(--text-muted);font-size:0.88rem;margin-top:6px;border-left:3px solid #f59e0b;padding-left:8px;">{{ tr_question | render_md_tables }}</div>
             {% endif %}
             <div style="margin-top:10px;">
                 <span class="answer-badge">Correct: {{ bm.question.answer }}</span>
@@ -57,9 +60,9 @@
         </summary>
         <div style="margin-top:8px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);font-size:0.9rem;line-height:1.6;">
             {{ bm.question.explanation | render_md_tables }}
-            {% if bm.question.explanation_kr %}
+            {% if tr_explanation and tr_explanation != (bm.question.explanation or '') %}
             <hr style="border-color:var(--border);margin:10px 0;">
-            <div style="color:var(--text-muted);">{{ bm.question.explanation_kr | render_md_tables }}</div>
+            <div style="color:var(--text-muted);">{{ tr_explanation | render_md_tables }}</div>
             {% endif %}
         </div>
     </details>
