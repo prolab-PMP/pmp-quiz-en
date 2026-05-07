@@ -100,7 +100,7 @@
 </div>
 
 
-<div class="section-title"><span class="tag purple">Quick start</span> Click a domain for instant 10-question practice</div>
+<div class="section-title"><span class="tag purple">Quick start</span> Click a domain for instant 20-question practice</div>
 
 <div class="fw-toolbar">
   <button class="fw-tab active" data-view="pmbok7"><i class="fas fa-book"></i> PMBOK 7</button>
@@ -118,7 +118,7 @@
   <input type="hidden" name="mode" value="category">
   <input type="hidden" name="filter_type" id="fw-filter-type">
   <input type="hidden" name="filter_value" id="fw-filter-value">
-  <input type="hidden" name="count" id="fw-quiz-count" value="10">
+  <input type="hidden" name="count" id="fw-quiz-count" value="20">
 </form>
 
 {# ── Question count picker modal (shown when user clicks a domain box) ── #}
@@ -127,7 +127,7 @@
     <h3 style="margin:0 0 6px;font-size:1.05rem;">How many questions?</h3>
     <p id="fw-count-subtitle" style="margin:0 0 18px;color:var(--text-muted);font-size:0.85rem;">Pick a session length.</p>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
-      <button type="button" class="btn btn-outline fw-count-btn" data-count="10">10</button>
+      <button type="button" class="btn btn-outline fw-count-btn" data-count="20">20</button>
       <button type="button" class="btn btn-outline fw-count-btn" data-count="30">30</button>
       <button type="button" class="btn btn-outline fw-count-btn" data-count="50">50</button>
       <button type="button" class="btn btn-outline fw-count-btn" data-count="0">All</button>
@@ -166,7 +166,7 @@
             <input type="hidden" name="mode" value="wrong_answers">
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
                 <select name="count" class="form-control" style="width:140px;">
-                    <option value="10">10 questions</option>
+                    <option value="20">20 questions</option>
                     <option value="30">30 questions</option>
                     <option value="50">50 questions</option>
                     <option value="{{ wrong_count }}">All ({{ wrong_count }})</option>
