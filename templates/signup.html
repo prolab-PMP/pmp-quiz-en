@@ -31,4 +31,18 @@
                        placeholder="Referrer email (optional)"
                        value="{{ referrer_email or '' }}"
                        style="text-align:center;font-size:0.95rem;">
-                <small style="display:block;text-align:center;color:var(--text-muted);margin-top:6px;font-size:0.82r
+                <small style="display:block;text-align:center;color:var(--text-muted);margin-top:6px;font-size:0.82rem;">
+                    💡 If a friend referred you, enter their email. When you upgrade to Premium later, <strong>both of you get +1 month free</strong>.
+                </small>
+            </div>
+            <button type="submit" class="btn btn-success btn-block btn-lg">
+                <i class="fas fa-user-plus"></i> Sign up
+            </button>
+        </form>
+
+        <p style="margin-top:20px;font-size:0.9rem;color:var(--text-muted);">
+            Already signed up? <a href="{{ url_for('login') }}" style="color:var(--primary);font-weight:700;">🔐 Log in</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
