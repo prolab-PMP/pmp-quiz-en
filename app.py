@@ -1148,7 +1148,8 @@ def my_status():
     sessions_count = len(sessions)
 
     # Free user라면 샘플로 치환 (실 데이터가 빈약해도 와우 효과)
-    if is_free_preview and (total_attempted == 0 or sessions_count == 0):
+    # Trial users always see sample stats (PMP-KR parity: stats are paid-only).
+    if is_free_preview:
         sample = _sample_my_status_data()
         daily_stats = sample['daily_stats']
         cat_stats = sample['cat_stats']
