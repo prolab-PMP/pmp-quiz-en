@@ -281,6 +281,7 @@ def signup():
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         password2 = request.form.get('password2', '')
+        referrer_email_raw = request.form.get('referrer_email', '').strip().lower()
         if not email or '@' not in email:
             flash('올바른 Email address를 입력해wk세요.', 'error')
             return render_template('signup.html', email=email)
@@ -294,9 +295,18 @@ def signup():
             flash('already 가입된 Email입니다. Log in해wk세요.', 'error')
             return redirect(url_for('login', email=email))
 
+        # Validate referrer (optional). Silently ignore if missing/invalid/self.
+        valid_referrer_email = None
+        if referrer_email_raw and '@' in referrer_email_raw and referrer_email_raw != email:
+            ref = User.query.filter(func.lower(User.email) == referrer_email_raw).first()
+            if ref:
+                valid_referrer_email = ref.email
+
         user = User(email=email)
         user.password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
         user.is_premium = False
+        if valid_referrer_email:
+            user.referrer_email = valid_referrer_email
         is_admin_email = email in Config.ADMIN_EMAILS
         if is_admin_email:
             user.is_admin = True
@@ -504,6 +514,19 @@ def webhook_lemonsqueezy():
         db.session.commit()
         print(f'[lemonsqueezy] extended {customer_email} by {months} months '
               f'(new end: {user.validity_end})')
+
+    # Refer-a-friend bonus: only on the user's FIRST paid order, only if their
+    # referrer is currently paid Premium. Both get +1mo, then flag is set.
+    if user and user.referrer_email and not user.referrer_bonus_applied:
+        ref = User.query.filter(func.lower(User.email) == user.referrer_email.lower()).first()
+        if ref and ref.is_paid_premium():
+            user.extend_validity(months=1)
+            ref.extend_validity(months=1)
+            user.referrer_bonus_applied = True
+            db.session.commit()
+            print(f'[referral] +1mo bonus granted to {user.email} and referrer {ref.email}')
+        else:
+            print(f'[referral] skipped: referrer {user.referrer_email} not paid premium')
 
     return 'ok', 200
 

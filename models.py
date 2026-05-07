@@ -16,6 +16,12 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
 
+    # Refer-a-friend program. referrer_email = email of the user who referred
+    # this account at signup. referrer_bonus_applied = True once the +1mo
+    # bonus has been granted to both parties (1-time only, on first paid order).
+    referrer_email = db.Column(db.String(255), nullable=True, index=True)
+    referrer_bonus_applied = db.Column(db.Boolean, default=False)
+
     # Relationships
     quiz_sessions = db.relationship('QuizSession', backref='user', lazy='dynamic')
     wrong_answers = db.relationship('WrongAnswer', backref='user', lazy='dynamic')
@@ -263,11 +269,4 @@ class QuestionReport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     question_no = db.Column(db.Integer, db.ForeignKey('questions.no'), nullable=False)
-    reason = db.Column(db.String(50), nullable=False)   # typo / wrong_answer / translation / other
-    detail = db.Column(db.Text)
-    status = db.Column(db.String(20), default='pending')  # pending / resolved / dismissed
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    resolved_at = db.Column(db.DateTime)
-
-    user = db.relationship('User', backref='reports')
-    question = db.relationship('Question', backref='reports')
+    reason = db.Column(db.String(50), nullable=False)   # typo / wrong_a

@@ -113,6 +113,7 @@
                     <th>{{ sort_link('grade', '상태') }}</th>
                     <th>{{ sort_link('validity', 'Valid until') }}</th>
                     <th>{{ sort_link('last_login', '마지막 Log in') }}</th>
+                    <th>추천인</th>
                     <th>관리</th>
                 </tr>
             </thead>
@@ -143,6 +144,16 @@
                         {% endif %}
                     </td>
                     <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else '없음' }}</td>
+                    <td style="font-size:0.82rem;">
+                        {% if user.referrer_email %}
+                            <span title="{{ user.referrer_email }}">{{ user.referrer_email }}</span>
+                            {% if user.referrer_bonus_applied %}
+                            <span class="badge badge-success" style="font-size:0.7rem;">bonus</span>
+                            {% endif %}
+                        {% else %}
+                            <span style="color:var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
                     <td>
                         <div class="admin-actions">
                             <!-- Set Validity (오늘부터) -->
@@ -176,21 +187,4 @@
                             </form>
                             <!-- Delete -->
                             <form method="POST" action="{{ url_for('admin_update_user', user_id=user.id) }}"
-                                  onsubmit="return confirm('{{ user.email }} 계정을 Delete하시겠습니까?');">
-                                <input type="hidden" name="action" value="delete">
-                                <button class="btn btn-sm btn-danger">Delete</button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<div class="pc-only-notice">
-    <i class="fas fa-desktop"></i> Admin 기능은 PC에서 사용을 권장합니다.
-</div>
-{% endblock %}
+                                  onsubmit

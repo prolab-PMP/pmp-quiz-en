@@ -26,14 +26,9 @@
                        placeholder="Password OK" required minlength="4"
                        style="text-align:center;font-size:1.05rem;">
             </div>
-            <button type="submit" class="btn btn-success btn-block btn-lg">
-                <i class="fas fa-user-plus"></i> Sign up
-            </button>
-        </form>
-
-        <p style="margin-top:20px;font-size:0.9rem;color:var(--text-muted);">
-            Already signed up? <a href="{{ url_for('login') }}" style="color:var(--primary);font-weight:700;">🔐 Log in</a>
-        </p>
-    </div>
-</div>
-{% endblock %}
+            <div class="form-group">
+                <input type="email" name="referrer_email" class="form-control"
+                       placeholder="Referrer email (optional)"
+                       value="{{ referrer_email or '' }}"
+                       style="text-align:center;font-size:0.95rem;">
+                <small style="display:block;text-align:center;color:var(--text-muted);margin-top:6px;font-size:0.82r
