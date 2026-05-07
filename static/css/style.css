@@ -649,18 +649,18 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .question-nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
-    margin: 16px 0;
+    gap: 3px;
+    margin: 6px 0 8px;
 }
 .question-nav .q-btn {
-    width: 34px;
-    height: 34px;
+    width: 22px;
+    height: 22px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border: 1px solid var(--border);
     border-radius: var(--r-sm);
-    font-size: 0.78rem;
+    font-size: 0.65rem;
     font-weight: 600;
     cursor: pointer;
     background: var(--surface);
@@ -1038,9 +1038,9 @@ tr:hover { background: var(--surface-alt); }
     .result-score { font-size: 2rem; }
 
     .question-nav .q-btn {
-        width: 30px;
-        height: 30px;
-        font-size: 0.72rem;
+        width: 18px;
+        height: 18px;
+        font-size: 0.55rem;
     }
 
     .option-item { padding: 12px 14px; }
