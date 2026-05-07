@@ -27,12 +27,17 @@ PRIMARY_HOST = os.environ.get('PRIMARY_HOST', 'pmp.wayexam.com')
 
 @app.before_request
 def _redirect_to_primary_host():
+    # Skip Railway healthcheck — it hits us on the internal hostname and
+    # expects a 200, not a 301.
+    if request.path == '/healthz':
+        return None
     host = (request.host or '').lower()
     if (
         host
         and host != PRIMARY_HOST.lower()
         and not host.startswith('localhost')
         and not host.startswith('127.')
+        and not host.endswith('.railway.internal')   # internal Railway routing
     ):
         target = 'https://' + PRIMARY_HOST + request.full_path.rstrip('?')
         return redirect(target, code=301)
