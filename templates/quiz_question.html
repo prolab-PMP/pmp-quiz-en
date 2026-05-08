@@ -292,21 +292,6 @@ document.getElementById('reportModal').addEventListener('click', function(e) {
       refresh();
     };
   }
-  function guard(btn){
-    if (!btn) return;
-    btn.addEventListener("click", function(e){
-      var n = selectedCount();
-      if (n > 0 && n < expected) {
-        var msg = 'This question requires ` + expected + ` answers. You have selected only ` + n + `.' + " \nContinue anyway?";
-        if (!confirm(msg)) {
-          e.preventDefault();
-          e.stopPropagation();
-          return false;
-        }
-      }
-    }, true);
-  }
-  document.querySelectorAll('button[name="action"][value="next"], button[name="action"][value="grade"]').forEach(guard);
   refresh();
 })();
 </script>
