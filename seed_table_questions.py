@@ -5,7 +5,7 @@ question_no 90001 ~ 90015 (day반 PMP Question 번호와 충돌 방지 위해 90
 TABLE_QUESTIONS = [
     # 1. EVM (Earned Value Management)
     {
-        "no": 90001,
+        "no": 2236,
         "question": "A project shows the following EVM data after 3 months. The project manager is reviewing the cost performance. What is the Cost Performance Index (CPI)?\n\n| Metric | Value |\n|---|---|\n| Planned Value (PV) | $50,000 |\n| Earned Value (EV) | $40,000 |\n| Actual Cost (AC) | $50,000 |\n| Budget at Completion (BAC) | $200,000 |",
         "opt_a": "0.80 (under budget)",
         "opt_b": "0.80 (over budget)",
@@ -27,7 +27,7 @@ TABLE_QUESTIONS = [
     },
     # 2. RACI Matrix
     {
-        "no": 90002,
+        "no": 2237,
         "question": "Review the following RACI matrix for a project deliverable. The team is confused about who has the final say. Who should make the final decision?\n\n| Activity | Sponsor | PM | Lead Dev | Tester |\n|---|---|---|---|---|\n| Approve final design | A | R | C | I |\n| Code implementation | I | A | R | C |\n| Acceptance testing | I | A | C | R |",
         "opt_a": "Sponsor (for design), PM (for code & testing)",
         "opt_b": "PM for everything",
@@ -49,7 +49,7 @@ TABLE_QUESTIONS = [
     },
     # 3. Critical Path
     {
-        "no": 90003,
+        "no": 2238,
         "question": "Given the following activity duration table, what is the critical path length?\n\n| Activity | Predecessor | Duration (days) |\n|---|---|---|\n| A | - | 5 |\n| B | A | 7 |\n| C | A | 3 |\n| D | B | 4 |\n| E | C | 6 |\n| F | D, E | 2 |",
         "opt_a": "12 days (A→C→E→F)",
         "opt_b": "14 days (A→B→D→F)",
@@ -71,7 +71,7 @@ TABLE_QUESTIONS = [
     },
     # 4. Risk Register / Probability-Impact
     {
-        "no": 90004,
+        "no": 2239,
         "question": "Review the following risk register. Which risk should the PM address FIRST?\n\n| Risk ID | Description | Probability | Impact |\n|---|---|---|---|\n| R1 | Vendor delay in component delivery | 0.5 | $50,000 |\n| R2 | Key developer leaving | 0.2 | $200,000 |\n| R3 | Scope creep from stakeholder | 0.7 | $30,000 |\n| R4 | Compliance audit failure | 0.1 | $500,000 |",
         "opt_a": "R1 (highest probability × moderate impact)",
         "opt_b": "R2 (highest expected monetary value)",
@@ -93,7 +93,7 @@ TABLE_QUESTIONS = [
     },
     # 5. Stakeholder Register
     {
-        "no": 90005,
+        "no": 2240,
         "question": "Review the following stakeholder register. Which engagement strategy is MOST appropriate for the CFO?\n\n| Stakeholder | Power | Interest | Current | Desired |\n|---|---|---|---|---|\n| CFO | High | Low | Resistant | Supportive |\n| End Users | Low | High | Neutral | Supportive |\n| Vendor | Med | Med | Supportive | Supportive |",
         "opt_a": "Keep informed (regular updates)",
         "opt_b": "Manage closely (high effort, frequent engagement)",
@@ -115,7 +115,7 @@ TABLE_QUESTIONS = [
     },
     # 6. Resource Histogram
     {
-        "no": 90006,
+        "no": 2241,
         "question": "The resource histogram shows weekly developer demand. Maximum available developers = 5. What is the PM's BEST action?\n\n| Week | 1 | 2 | 3 | 4 | 5 | 6 |\n|---|---|---|---|---|---|---|\n| Required Devs | 3 | 4 | 7 | 6 | 3 | 2 |",
         "opt_a": "Continue as planned, hire temp staff in weeks 3-4",
         "opt_b": "Apply resource leveling — extend project duration",
@@ -137,7 +137,7 @@ TABLE_QUESTIONS = [
     },
     # 7. Quality Control Chart
     {
-        "no": 90007,
+        "no": 2242,
         "question": "Review the daily defect rate. UCL=10, LCL=2, Mean=6. Which day requires investigation per the Rule of Seven?\n\n| Day | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |\n|---|---|---|---|---|---|---|---|---|\n| Defects | 7 | 8 | 7 | 8 | 7 | 9 | 8 | 7 |",
         "opt_a": "Day 6 (highest value 9)",
         "opt_b": "Day 8 (process now appears stable)",
@@ -159,7 +159,7 @@ TABLE_QUESTIONS = [
     },
     # 8. Issue Log
     {
-        "no": 90008,
+        "no": 2243,
         "question": "Review the issue log. Which issue requires escalation per the SOP (Standard Operating Procedure)?\n\n| ID | Description | Severity | Age (days) | Owner |\n|---|---|---|---|---|\n| I1 | Test environment unstable | Medium | 5 | Tester |\n| I2 | Customer reported security gap | Critical | 1 | PM |\n| I3 | Translation error in UI | Low | 12 | Developer |\n| I4 | Vendor invoice missing | Medium | 20 | PM |",
         "opt_a": "I1 — Medium severity",
         "opt_b": "I2 — Critical, but only 1 day old, give time",
@@ -181,7 +181,7 @@ TABLE_QUESTIONS = [
     },
     # 9. Decision Matrix (Vendor selection)
     {
-        "no": 90009,
+        "no": 2244,
         "question": "Review the weighted vendor scoring. Which vendor should be selected?\n\n| Criteria (Weight) | Vendor A | Vendor B | Vendor C |\n|---|---|---|---|\n| Cost (40%) | 70 | 90 | 60 |\n| Quality (35%) | 90 | 70 | 95 |\n| Schedule (25%) | 80 | 60 | 85 |",
         "opt_a": "Vendor A (highest quality)",
         "opt_b": "Vendor B (lowest cost)",
@@ -203,7 +203,7 @@ TABLE_QUESTIONS = [
     },
     # 10. Cost Baseline / Burn Rate
     {
-        "no": 90010,
+        "no": 2245,
         "question": "Review monthly burn rate against the cost baseline. What is the CRITICAL action?\n\n| Month | Baseline | Actual | Variance |\n|---|---|---|---|\n| 1 | $20,000 | $22,000 | +$2,000 |\n| 2 | $20,000 | $25,000 | +$5,000 |\n| 3 | $20,000 | $28,000 | +$8,000 |",
         "opt_a": "Continue — variance is small relative to total budget",
         "opt_b": "Update the cost baseline immediately",
@@ -225,7 +225,7 @@ TABLE_QUESTIONS = [
     },
     # 11. Lessons Learned
     {
-        "no": 90011,
+        "no": 2246,
         "question": "Review lessons learned register. Which lesson should be SHARED ORGANIZATION-WIDE first?\n\n| ID | Phase | Lesson | Reusability |\n|---|---|---|---|\n| L1 | Init | Skipped sponsor alignment, project drifted | Med |\n| L2 | Plan | Underestimated test data prep by 40% | High |\n| L3 | Exec | Vendor onboarding template saved 2 wks | High |\n| L4 | Close | Held remote retro with poor tooling | Low |",
         "opt_a": "L1 (avoid future drift)",
         "opt_b": "L2 (avoid future estimation errors)",
@@ -247,7 +247,7 @@ TABLE_QUESTIONS = [
     },
     # 12. Probability/Impact Risk Score
     {
-        "no": 90012,
+        "no": 2247,
         "question": "Use the P/I matrix to score risks (P × I = score). Which risk requires a DETAILED response plan (score ≥ 0.18)?\n\n| Risk | P | I | Score |\n|---|---|---|---|\n| R1 | 0.3 | 0.4 | 0.12 |\n| R2 | 0.5 | 0.4 | 0.20 |\n| R3 | 0.7 | 0.2 | 0.14 |\n| R4 | 0.1 | 0.8 | 0.08 |",
         "opt_a": "R1 only",
         "opt_b": "R2 only (score 0.20 ≥ 0.18)",
@@ -269,7 +269,7 @@ TABLE_QUESTIONS = [
     },
     # 13. Power-Interest Grid
     {
-        "no": 90013,
+        "no": 2248,
         "question": "Plot stakeholders on the Power-Interest grid based on the table. Where does the End User Champion belong?\n\n| Stakeholder | Power | Interest |\n|---|---|---|\n| CEO | 9 | 4 |\n| End User Champion | 3 | 9 |\n| Lead Architect | 7 | 8 |\n| Janitor | 1 | 2 |",
         "opt_a": "Manage closely (high power, high interest)",
         "opt_b": "Keep informed (low power, high interest)",
@@ -291,7 +291,7 @@ TABLE_QUESTIONS = [
     },
     # 14. Test Coverage
     {
-        "no": 90014,
+        "no": 2249,
         "question": "Review test coverage matrix. Which gap is MOST critical?\n\n| Module | Unit | Integration | UAT | Performance |\n|---|---|---|---|---|\n| Auth | ✓ | ✓ | ✓ | ✓ |\n| Payment | ✓ | ✓ | - | ✓ |\n| Reporting | ✓ | - | ✓ | - |\n| Admin | ✓ | ✓ | ✓ | - |",
         "opt_a": "Reporting — missing integration test",
         "opt_b": "Payment — missing UAT (user acceptance for monetary functions)",
@@ -313,7 +313,7 @@ TABLE_QUESTIONS = [
     },
     # 15. Change Control
     {
-        "no": 90015,
+        "no": 2250,
         "question": "Review change request log. Per the Change Control SOP, which CR should be PRESENTED TO CCB FIRST?\n\n| CR ID | Type | Cost Impact | Schedule Impact | Status |\n|---|---|---|---|---|\n| C1 | Defect fix | $0 | 0 days | Approved |\n| C2 | Scope add | $30,000 | +5 days | Pending |\n| C3 | Spec clarification | $0 | 0 days | Pending |\n| C4 | Vendor change | $80,000 | +10 days | Pending |",
         "opt_a": "C1 (smallest impact, easy)",
         "opt_b": "C2 (moderate scope add)",

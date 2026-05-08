@@ -2044,3 +2044,23 @@ def admin_apply_kr_translation_fixes():
     body += '<p><a href="/dashboard">Dashboard</a> &middot; <a href="/admin">Admin</a></p>'
     return body
 
+
+@app.route('/admin/cleanup_old_seed')
+@admin_required
+def admin_cleanup_old_seed():
+    """Remove legacy table-seed questions (no=90001-90015).
+    These were renumbered to 2236-2250 and merged into PMP_Raw.xlsx.
+    Idempotent — safe to call multiple times."""
+    deleted = []
+    for old_no in range(90001, 90016):
+        q = Question.query.filter_by(no=old_no).first()
+        if q:
+            db.session.delete(q)
+            deleted.append(old_no)
+    db.session.commit()
+    body = '<h2>Old Seed Cleanup</h2>'
+    body += f'<p>Deleted {len(deleted)} legacy questions (no={deleted})</p>'
+    body += '<p>New numbering 2236-2250 should be loaded via /admin/reload_questions or /admin/load_data.</p>'
+    body += '<p><a href="/dashboard">Dashboard</a> &middot; <a href="/admin">Admin</a></p>'
+    return body
+
