@@ -2084,5 +2084,5 @@ def admin_cleanup_old_seed():
         return ('<h2 style="color:#b91c1c">cleanup_old_seed error</h2>'
                 '<pre style="background:#fef2f2;padding:14px;border-radius:8px;'
                 'color:#7f1d1d;white-space:pre-wrap">' + html.escape(traceback.format_exc()) +
-                '</pre><p><a href="/admin">Admin</a></p>'), 500
+                '</pre><p><a href="/admin">Admin</a></p>')
 
