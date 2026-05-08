@@ -26,7 +26,7 @@
 <!-- Hero Banner -->
 <section class="hero">
     <h1>PMP Exam Practice</h1>
-    <p>Full coverage of PMBOK 7 &amp; 8 + Agile/Hybrid 25%+. Study 2,234 questions by category, difficulty, and mode. Your progress auto-saves, and you can review wrong-answer notes and performance analytics anytime.</p>
+    <p>Full coverage of PMBOK 7 &amp; 8 + Agile/Hybrid 25%+. Study {{ "{:,}".format(total_questions) }} questions by category, difficulty, and mode. Your progress auto-saves, and you can review wrong-answer notes and performance analytics anytime.</p>
     <div class="badges">
         <span>📂 Total {{ total_questions }} questions</span>
         <span>📊 {{ total_sessions }} attempts</span>
@@ -82,7 +82,7 @@
                 {% endif %}
             </div>
             <div style="color:var(--text-muted);font-size:0.82rem;margin-top:3px;">
-                Upgrade to unlock all 2,234 questions, real-time analytics &amp; mock exams.
+                Upgrade to unlock all {{ "{:,}".format(total_questions) }} questions, real-time analytics &amp; mock exams.
             </div>
         </div>
         <a href="{{ url_for('upgrade') }}" class="btn btn-success" style="white-space:nowrap;">
