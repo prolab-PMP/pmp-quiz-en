@@ -187,4 +187,21 @@
                             </form>
                             <!-- Delete -->
                             <form method="POST" action="{{ url_for('admin_update_user', user_id=user.id) }}"
-                                  onsubmit
+                                  onsubmit="return confirm('{{ user.email }} 계정을 Delete하시겠습니까?');">
+                                <input type="hidden" name="action" value="delete">
+                                <button class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="pc-only-notice">
+    <i class="fas fa-desktop"></i> Admin 기능은 PC에서 사용을 권장합니다.
+</div>
+{% endblock %}

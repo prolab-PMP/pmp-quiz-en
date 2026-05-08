@@ -2,6 +2,27 @@
 {% block title %}PMP Quiz - Dashboard{% endblock %}
 
 {% block content %}
+
+<form id="qno-jump-form" method="GET" action="" style="display:flex;align-items:center;gap:8px;margin:0 0 18px;padding:12px 16px;background:linear-gradient(90deg,#fef3c7,#fde68a);border-radius:10px;border-left:4px solid #f59e0b;">
+  <span style="font-size:0.85rem;font-weight:700;color:#92400e;flex-shrink:0">Jump to question by number</span>
+  <input type="number" id="qno-input" placeholder="e.g., 990" min="1" required
+         style="padding:6px 10px;border:1px solid #d97706;border-radius:6px;width:120px;font-size:0.9rem;">
+  <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap;">View</button>
+  <span style="margin-left:auto;font-size:0.75rem;color:#92400e;opacity:0.85"></span>
+</form>
+<script>
+(function(){
+  var f = document.getElementById('qno-jump-form');
+  if (!f) return;
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var n = parseInt(document.getElementById('qno-input').value, 10);
+    if (n > 0) {
+      window.open('/q/' + n, '_blank');
+    }
+  });
+})();
+</script>
 <!-- Hero Banner -->
 <section class="hero">
     <h1>PMP Exam Practice</h1>
@@ -101,6 +122,69 @@
 
 
 <div class="section-title"><span class="tag purple">Quick start</span> Click a domain for instant 20-question practice</div>
+
+
+<div class="section-title"><span class="tag" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:0">🎲 Quick start</span> Random pickup</div>
+<p style="color:var(--text-muted);font-size:0.85rem;margin:-8px 0 14px">Start instantly with random questions (free members can use)</p>
+<div class="random-quick-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px;">
+
+  <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin:0;">
+    <input type="hidden" name="mode" value="random">
+    <input type="hidden" name="count" value="30">
+    <button type="submit" class="random-quick-btn"
+            style="width:100%;padding:18px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);
+                   border:1.5px solid #c4b5fd;border-radius:12px;cursor:pointer;
+                   transition:all 0.18s ease;text-align:center;font-weight:700;
+                   color:#5b21b6;font-size:14px;">
+      <div style="font-size:1.6rem;margin-bottom:6px">⚡</div>
+      <div style="font-size:1rem;font-weight:800">30</div>
+      <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">30 questions · ~15 min</div>
+    </button>
+  </form>
+  <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin:0;">
+    <input type="hidden" name="mode" value="random">
+    <input type="hidden" name="count" value="50">
+    <button type="submit" class="random-quick-btn"
+            style="width:100%;padding:18px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);
+                   border:1.5px solid #c4b5fd;border-radius:12px;cursor:pointer;
+                   transition:all 0.18s ease;text-align:center;font-weight:700;
+                   color:#5b21b6;font-size:14px;">
+      <div style="font-size:1.6rem;margin-bottom:6px">🎯</div>
+      <div style="font-size:1rem;font-weight:800">50</div>
+      <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">50 questions · ~25 min</div>
+    </button>
+  </form>
+  <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin:0;">
+    <input type="hidden" name="mode" value="random">
+    <input type="hidden" name="count" value="100">
+    <button type="submit" class="random-quick-btn"
+            style="width:100%;padding:18px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);
+                   border:1.5px solid #c4b5fd;border-radius:12px;cursor:pointer;
+                   transition:all 0.18s ease;text-align:center;font-weight:700;
+                   color:#5b21b6;font-size:14px;">
+      <div style="font-size:1.6rem;margin-bottom:6px">📚</div>
+      <div style="font-size:1rem;font-weight:800">100</div>
+      <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">100 questions · ~50 min</div>
+    </button>
+  </form>
+  <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin:0;">
+    <input type="hidden" name="mode" value="random">
+    <input type="hidden" name="count" value="200">
+    <button type="submit" class="random-quick-btn"
+            style="width:100%;padding:18px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);
+                   border:1.5px solid #c4b5fd;border-radius:12px;cursor:pointer;
+                   transition:all 0.18s ease;text-align:center;font-weight:700;
+                   color:#5b21b6;font-size:14px;">
+      <div style="font-size:1.6rem;margin-bottom:6px">🏆</div>
+      <div style="font-size:1rem;font-weight:800">200</div>
+      <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">200 questions · mock exam</div>
+    </button>
+  </form>
+</div>
+<style>
+.random-quick-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(124,58,237,0.20); border-color: #7c3aed; }
+body.dark .random-quick-btn { background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(91,33,182,0.30)) !important; color: #ddd6fe !important; border-color: rgba(167,139,250,0.4) !important; }
+</style>
 
 <div class="fw-toolbar">
   <button class="fw-tab active" data-view="pmbok7"><i class="fas fa-book"></i> PMBOK 7</button>
@@ -449,4 +533,90 @@ async function loadStats() {
 
 loadStats();
 </script>
+
+<!-- Premium gate modal (shown when free/trial user clicks Premium-only feature) -->
+<div id="premium-gate-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surface);border-radius:16px;padding:32px 28px;max-width:480px;width:100%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.35);">
+    <div style="font-size:3.2rem;margin-bottom:8px">🔒</div>
+    <h3 style="margin:0 0 14px;font-size:1.25rem;color:var(--text)">🔒 Premium feature</h3>
+    <p style="color:var(--text-muted);font-size:0.92rem;line-height:1.65;margin-bottom:22px"><strong>Principle-based practice</strong> and <strong>Detailed slicer</strong> are available to Premium members only.<br><br>Free/Trial members can use <strong>Domain selection</strong> and <strong>Random pickup</strong>.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+      <a href="{{ url_for('upgrade') }}" class="btn btn-warning" style="padding:10px 22px;font-weight:700;text-decoration:none;border-radius:8px;background:#f59e0b;color:#fff;">✨ Upgrade to Premium</a>
+      <button type="button" onclick="document.getElementById('premium-gate-modal').style.display='none'"
+              class="btn btn-outline" style="padding:10px 22px;">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// Premium gating helpers
+window.IS_PAID_PREMIUM = {{ current_user.is_paid_premium() |tojson }};
+window.IS_ADMIN = {{ current_user.is_admin |tojson }};
+function showPremiumGate() {
+  document.getElementById('premium-gate-modal').style.display = 'flex';
+}
+// Close on backdrop click
+(function(){
+  var m = document.getElementById('premium-gate-modal');
+  if (m) m.addEventListener('click', function(e){ if (e.target === m) m.style.display='none'; });
+})();
+
+// Wrap startQuiz to gate principle filters
+(function(){
+  var orig = window.startQuiz;
+  if (!orig) return;
+  window.startQuiz = function(filterType, filterValue, availableCount) {
+    if (!window.IS_ADMIN && !window.IS_PAID_PREMIUM) {
+      if (filterType && filterType.toString().toLowerCase().indexOf('principle') >= 0) {
+        showPremiumGate();
+        return;
+      }
+    }
+    return orig(filterType, filterValue, availableCount);
+  };
+})();
+
+// Mark principle boxes with lock badge after render
+(function(){
+  if (window.IS_ADMIN || window.IS_PAID_PREMIUM) return;
+  function markBoxes() {
+    document.querySelectorAll('[data-filter-type]').forEach(function(el){
+      var ft = el.getAttribute('data-filter-type') || '';
+      if (ft.toLowerCase().indexOf('principle') >= 0 && !el.querySelector('.premium-lock-tag')) {
+        var tag = document.createElement('span');
+        tag.className = 'premium-lock-tag';
+        tag.textContent = '🔒';
+        tag.style.cssText = 'position:absolute;top:6px;right:6px;font-size:14px;background:rgba(245,158,11,0.95);color:#fff;padding:2px 6px;border-radius:6px;line-height:1;font-weight:700;z-index:5';
+        el.style.position = 'relative';
+        el.appendChild(tag);
+      }
+    });
+  }
+  // Watch for fw-views container changes
+  var target = document.getElementById('fw-views');
+  if (target) {
+    var obs = new MutationObserver(markBoxes);
+    obs.observe(target, {childList:true, subtree:true});
+    setTimeout(markBoxes, 1500);
+  }
+})();
+
+// Gate the 더 정밀한 분류 / Detailed link (anchor pointing to framework)
+(function(){
+  document.querySelectorAll('a[href$="/framework"], a[href*="framework"]').forEach(function(a){
+    a.addEventListener('click', function(e){
+      if (!window.IS_ADMIN && !window.IS_PAID_PREMIUM) {
+        e.preventDefault();
+        showPremiumGate();
+      }
+    });
+    if (!window.IS_ADMIN && !window.IS_PAID_PREMIUM) {
+      // Visual hint
+      a.innerHTML = a.innerHTML + ' <span style="display:inline-block;margin-left:6px;font-size:11px;background:#f59e0b;color:#fff;padding:2px 7px;border-radius:6px;font-weight:700;vertical-align:middle">🔒 Premium</span>';
+    }
+  });
+})();
+</script>
+
 {% endblock %}

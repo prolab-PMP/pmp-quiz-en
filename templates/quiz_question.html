@@ -79,6 +79,15 @@
         </div>
 
         <!-- Options -->
+        
+        {% if expected_count and expected_count > 1 %}
+        <div id="multi-select-badge" data-expected="{{ expected_count }}"
+             style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;margin:0 0 14px;
+                    background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;
+                    border-left:4px solid #f59e0b;border-radius:6px;font-weight:700;font-size:0.9rem;">
+          <span id="multi-select-status">⚠️ Choose {{ expected_count }} answers</span>
+        </div>
+        {% endif %}
         <ul class="option-list">
             {% set options = [
                 ('A', question.opt_a, question.opt_for('a', _lang_for_q)),
@@ -243,5 +252,62 @@ function submitReport() {
 document.getElementById('reportModal').addEventListener('click', function(e) {
     if (e.target === this) closeReportModal();
 });
+</script>
+
+<script>
+// Multi-select UX: badge counter + insufficient-pick guard
+(function(){
+  var badge = document.getElementById("multi-select-badge");
+  if (!badge) return;
+  var expected = parseInt(badge.getAttribute("data-expected"), 10) || 1;
+  var status = document.getElementById("multi-select-status");
+
+  function selectedCount(){
+    return document.querySelectorAll(".option-item.selected").length;
+  }
+  function refresh(){
+    var n = selectedCount();
+    var remaining = expected - n;
+    if (remaining > 0) {
+      status.textContent = "⚠️ " + n + " / " + expected + (' selected (' + remaining + ' more required)');
+      badge.style.background = "linear-gradient(135deg,#fef3c7,#fde68a)";
+      badge.style.borderLeftColor = "#f59e0b";
+      badge.style.color = "#92400e";
+    } else if (n === expected) {
+      status.textContent = "✅ " + n + " / " + expected + (' selected (complete)');
+      badge.style.background = "linear-gradient(135deg,#d1fae5,#a7f3d0)";
+      badge.style.borderLeftColor = "#10b981";
+      badge.style.color = "#065f46";
+    } else {
+      status.textContent = "⚠️ " + n + " / " + expected + (' selected (' + (n-expected) + ' too many)');
+      badge.style.background = "linear-gradient(135deg,#fee2e2,#fecaca)";
+      badge.style.borderLeftColor = "#ef4444";
+      badge.style.color = "#991b1b";
+    }
+  }
+  var origToggle = window.toggleOption;
+  if (typeof origToggle === "function") {
+    window.toggleOption = function(el, letter) {
+      origToggle(el, letter);
+      refresh();
+    };
+  }
+  function guard(btn){
+    if (!btn) return;
+    btn.addEventListener("click", function(e){
+      var n = selectedCount();
+      if (n > 0 && n < expected) {
+        var msg = 'This question requires ` + expected + ` answers. You have selected only ` + n + `.' + " \nContinue anyway?";
+        if (!confirm(msg)) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }
+    }, true);
+  }
+  document.querySelectorAll('button[name="action"][value="next"], button[name="action"][value="grade"]').forEach(guard);
+  refresh();
+})();
 </script>
 {% endblock %}

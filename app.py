@@ -743,6 +743,18 @@ def quiz_begin():
     count_raw = request.form.get('count', '10')
     count = int(count_raw) if count_raw.isdigit() else 10
 
+
+    # Premium gate: free/trial users may only use random + domain-category + exam modes
+    if not current_user.is_admin and not current_user.is_paid_premium():
+        if mode == 'slicer':
+            flash('Detailed slicer practice is a Premium-only feature. Free/Trial members can use Domain selection + Random pickup.', 'warning')
+            return redirect(url_for('dashboard'))
+        if mode == 'keyword':
+            flash('Keyword search practice is a Premium-only feature.', 'warning')
+            return redirect(url_for('dashboard'))
+        if mode == 'category' and 'principle' in (filter_type or '').lower():
+            flash('Principle-based practice is a Premium-only feature. Free/Trial members can use Domain selection + Random pickup.', 'warning')
+            return redirect(url_for('dashboard'))
     query = Question.query
 
     if mode == 'wrong_answers':
@@ -843,10 +855,16 @@ def quiz_question():
     is_bookmarked = bool(Bookmark.query.filter_by(
         user_id=current_user.id, question_no=q_nos[current]).first())
 
+    # Multi-select detection: N개 선택 필요한 문제
+    expected_count = 1
+    if question and question.answer:
+        expected_count = len([a for a in question.answer.split(',') if a.strip()])
+
     return render_template('quiz_question.html',
                          question=question,
                          current=current + 1,
                          total=len(q_nos),
+                         expected_count=expected_count,
                          saved_answer=saved_answer.split(',') if saved_answer else [],
                          all_answers=session.get('quiz_answers', {}),
                          q_nos=q_nos,
@@ -1366,7 +1384,8 @@ def admin_panel():
                            users=users,
                            total_questions=total_questions,
                            sort=sort, order=order, filter_grade=filter_grade,
-                           pending_report_count=pending_report_count)
+                           pending_report_count=pending_report_count,
+                           payment_enabled=app.config.get('PAYMENT_ENABLED', False))
 
 @app.route('/admin/import_translations', methods=['GET', 'POST'])
 @admin_required
@@ -1842,3 +1861,139 @@ def set_lang(lang):
     resp = make_response(redirect(request.referrer or '/'))
     resp.set_cookie('lang', lang, max_age=60*60*24*365, samesite='Lax')
     return resp
+
+
+@app.route('/admin/apply_question_fixes')
+@admin_required
+def admin_apply_question_fixes():
+    """일회성 hotfix: 사용자 신고 4건 정정 (Q990 / Q1513 / Q1768 / Q1196)."""
+    fixes = [
+        {'no': 990,  'answer': 'D'},
+        {'no': 1513, 'answer': 'B, E', 'opt_d': 'Project schedule'},
+        {'no': 1768, 'answer': 'B'},
+        {'no': 1196, 'question_kr': '」+'},  # placeholder, replaced below
+    ]
+    fixes[3]['question_kr'] = (
+        '프로젝트 관리자가 최근 하이브리드 프로젝트에 배정되었다. '
+        '팀에 합류한 지 몇 개월 후, 프로젝트 관리자는 '
+        '이 프로젝트의 일부가 조직 내 다른 프로젝트들과 의존성이 '
+        '있다는 사실을 깨달았다. 이러한 의존성은 아직 식별되지 않았다. '
+        '프로젝트 관리자는 무엇을 해야 하는가?'
+    )
+    results = []
+    for fix in fixes:
+        q = Question.query.filter_by(no=fix['no']).first()
+        if not q:
+            results.append('Q' + str(fix['no']) + ': NOT FOUND')
+            continue
+        changes = []
+        if 'answer' in fix and (q.answer or '').strip() != fix['answer']:
+            changes.append('answer ' + repr(q.answer) + ' -> ' + repr(fix['answer']))
+            q.answer = fix['answer']
+        if 'opt_d' in fix and (q.opt_d or '').strip() != fix['opt_d']:
+            changes.append('opt_d updated')
+            q.opt_d = fix['opt_d']
+        if 'question_kr' in fix and (q.question_kr or '').strip() != fix['question_kr'].strip():
+            changes.append('question_kr updated')
+            q.question_kr = fix['question_kr']
+        results.append('Q' + str(fix['no']) + ': ' + (', '.join(changes) if changes else 'no change needed'))
+    db.session.commit()
+    body = '<h2>Question Fixes Applied</h2><ul>' + ''.join('<li>' + r + '</li>' for r in results) + '</ul>'
+    body += '<p><a href="/dashboard">&larr; Dashboard</a> &middot; <a href="/admin">Admin</a></p>'
+    return body
+
+
+@app.route('/q/<int:q_no>')
+@login_required
+def jump_to_question(q_no):
+    """Q번호로 즉시 조회 — admin은 edit 페이지로, 일반 사용자는 1문제 quiz session 시작."""
+    q = Question.query.filter_by(no=q_no).first()
+    if not q:
+        flash(f'Q{q_no}: 해당 문제 번호가 존재하지 않습니다.', 'warning')
+        return redirect(url_for('dashboard'))
+    if current_user.is_admin:
+        return redirect(url_for('admin_question_edit', q_no=q_no))
+    # Regular user: 1-question quiz session
+    quiz_session = QuizSession(
+        user_id=current_user.id,
+        mode='category',
+        filter_type='question_no',
+        filter_value=str(q_no),
+        total_questions=1,
+    )
+    db.session.add(quiz_session)
+    db.session.commit()
+    session['quiz_session_id'] = quiz_session.id
+    session['quiz_questions'] = [q_no]
+    session['quiz_answers'] = {}
+    session['quiz_current'] = 0
+    return redirect(url_for('quiz_question'))
+
+
+@app.route('/admin/resync_kr_translations')
+@admin_required
+def admin_resync_kr_translations():
+    """PMP_Raw.xlsx의 한글 번역을 DB에 일괄 동기화 (영문은 건드리지 않음)."""
+    import os, openpyxl
+    xlsx_path = os.getenv('PMP_RAW_XLSX_PATH', '/app/PMP_Raw.xlsx')
+    if not os.path.exists(xlsx_path):
+        return f'<p style="color:red">xlsx 파일이 서버에 없음: {xlsx_path}</p><p>Railway env var <code>PMP_RAW_XLSX_PATH</code> 또는 파일 경로 확인.</p>'
+    wb = openpyxl.load_workbook(xlsx_path, read_only=True, data_only=True)
+    ws = wb['PMP_All_Data']
+    headers = [c.value for c in next(ws.iter_rows(min_row=1, max_row=1))]
+    def col(name, occ=0):
+        m = [i for i, h in enumerate(headers) if h == name]
+        return m[occ] if len(m) > occ else None
+
+    NO = col('No')
+    cols = {
+        'question_kr': col('Question_KR'),
+        'opt_a_kr': col('A_KR'),
+        'opt_b_kr': col('B_KR'),
+        'opt_c_kr': col('C_KR'),
+        'opt_d_kr': col('D_KR'),
+        'opt_e_kr': col('E_KR'),
+        'explanation_kr': col('Explanation_KR'),
+    }
+
+    results = {'updated': 0, 'unchanged': 0, 'not_found': 0, 'fields_changed': 0}
+    samples = []
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        no = row[NO]
+        if not no: continue
+        q = Question.query.filter_by(no=no).first()
+        if not q:
+            results['not_found'] += 1
+            continue
+        any_change = False
+        for attr, ci in cols.items():
+            if ci is None: continue
+            new_val = (str(row[ci]).strip() if row[ci] not in (None, '') else None)
+            cur_val = getattr(q, attr, None)
+            cur_val_str = (cur_val.strip() if isinstance(cur_val, str) else cur_val)
+            # Only update if different (and new_val not None unless current is)
+            if new_val != cur_val_str:
+                setattr(q, attr, new_val)
+                results['fields_changed'] += 1
+                any_change = True
+                if len(samples) < 30:
+                    samples.append(f"Q{no} {attr}: {repr(cur_val_str)[:40]} -> {repr(new_val)[:40]}")
+        if any_change:
+            results['updated'] += 1
+        else:
+            results['unchanged'] += 1
+    db.session.commit()
+    wb.close()
+
+    body = '<h2>KR Translation Resync Result</h2>'
+    body += '<ul>'
+    body += f'<li>Updated questions: <b>{results["updated"]}</b></li>'
+    body += f'<li>Unchanged: {results["unchanged"]}</li>'
+    body += f'<li>Total fields changed: <b>{results["fields_changed"]}</b></li>'
+    body += f'<li>Not found in DB: {results["not_found"]}</li>'
+    body += '</ul>'
+    if samples:
+        body += '<h3>Sample changes (first 30):</h3><pre style="font-size:12px;background:#f5f5f5;padding:10px;border-radius:6px">' + '\n'.join(samples) + '</pre>'
+    body += '<p><a href="/dashboard">Dashboard</a></p>'
+    return body
+
