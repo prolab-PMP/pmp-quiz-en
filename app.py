@@ -2058,7 +2058,7 @@ def admin_cleanup_old_seed():
         for old_no in range(90001, 90016):
             # Delete child rows first (FK constraints may not have CASCADE)
             for tbl in ['bookmarks', 'wrong_answers', 'question_global_stats',
-                        'question_reports', 'quiz_answers']:
+                        'question_reports', 'quiz_answers', 'user_answer_stats']:
                 try:
                     db.session.execute(_sql(f'DELETE FROM {tbl} WHERE question_no = :n'),
                                        {'n': old_no})
