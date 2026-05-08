@@ -2049,18 +2049,40 @@ def admin_apply_kr_translation_fixes():
 @admin_required
 def admin_cleanup_old_seed():
     """Remove legacy table-seed questions (no=90001-90015).
-    These were renumbered to 2236-2250 and merged into PMP_Raw.xlsx.
-    Idempotent — safe to call multiple times."""
-    deleted = []
-    for old_no in range(90001, 90016):
-        q = Question.query.filter_by(no=old_no).first()
-        if q:
-            db.session.delete(q)
-            deleted.append(old_no)
-    db.session.commit()
-    body = '<h2>Old Seed Cleanup</h2>'
-    body += f'<p>Deleted {len(deleted)} legacy questions (no={deleted})</p>'
-    body += '<p>New numbering 2236-2250 should be loaded via /admin/reload_questions or /admin/load_data.</p>'
-    body += '<p><a href="/dashboard">Dashboard</a> &middot; <a href="/admin">Admin</a></p>'
-    return body
+    Deletes child records first (bookmarks/wrong_answers/stats/reports/answers),
+    then the questions themselves. Idempotent."""
+    try:
+        from sqlalchemy import text as _sql
+        deleted = []
+        skipped = []
+        for old_no in range(90001, 90016):
+            # Delete child rows first (FK constraints may not have CASCADE)
+            for tbl in ['bookmarks', 'wrong_answers', 'question_global_stats',
+                        'question_reports', 'quiz_answers']:
+                try:
+                    db.session.execute(_sql(f'DELETE FROM {tbl} WHERE question_no = :n'),
+                                       {'n': old_no})
+                except Exception as ce:
+                    print(f'  child delete {tbl}/{old_no} skipped: {ce}')
+            # Now the question itself
+            q = Question.query.filter_by(no=old_no).first()
+            if q:
+                db.session.delete(q)
+                deleted.append(old_no)
+            else:
+                skipped.append(old_no)
+        db.session.commit()
+        body = '<h2>Old Seed Cleanup</h2>'
+        body += f'<p>Deleted {len(deleted)} legacy questions: {deleted}</p>'
+        body += f'<p>Already absent: {skipped}</p>'
+        body += '<p>Now run /admin/reload_questions (EN) or /admin/load_data (KR) to import 2236-2250.</p>'
+        body += '<p><a href="/dashboard">Dashboard</a> &middot; <a href="/admin">Admin</a></p>'
+        return body
+    except Exception as e:
+        db.session.rollback()
+        import traceback, html
+        return ('<h2 style="color:#b91c1c">cleanup_old_seed error</h2>'
+                '<pre style="background:#fef2f2;padding:14px;border-radius:8px;'
+                'color:#7f1d1d;white-space:pre-wrap">' + html.escape(traceback.format_exc()) +
+                '</pre><p><a href="/admin">Admin</a></p>'), 500
 
