@@ -1358,44 +1358,34 @@ def api_daily_trend():
 @app.route('/admin')
 @admin_required
 def admin_panel():
-    try:
-        sort = request.args.get('sort', 'last_login')
-        order = request.args.get('order', 'desc')
-        filter_grade = request.args.get('grade', 'all')  # all / premium / free
+    sort = request.args.get('sort', 'last_login')
+    order = request.args.get('order', 'desc')
+    filter_grade = request.args.get('grade', 'all')  # all / premium / free
 
-        q = User.query
-        if filter_grade == 'premium':
-            q = q.filter_by(is_premium=True)
-        elif filter_grade == 'free':
-            q = q.filter_by(is_premium=False)
+    q = User.query
+    if filter_grade == 'premium':
+        q = q.filter_by(is_premium=True)
+    elif filter_grade == 'free':
+        q = q.filter_by(is_premium=False)
 
-        sort_map = {
-            'email':        (User.email,        'asc'),
-            'grade':        (User.is_premium,   'desc'),
-            'validity':     (User.validity_end, 'desc'),
-            'last_login':   (User.last_login,   'desc'),
-        }
-        col, default_order = sort_map.get(sort, (User.last_login, 'desc'))
-        actual_order = order if order in ('asc', 'desc') else default_order
-        users = q.order_by(col.asc() if actual_order == 'asc' else col.desc()).all()
+    sort_map = {
+        'email':        (User.email,        'asc'),
+        'grade':        (User.is_premium,   'desc'),
+        'validity':     (User.validity_end, 'desc'),
+        'last_login':   (User.last_login,   'desc'),
+    }
+    col, default_order = sort_map.get(sort, (User.last_login, 'desc'))
+    actual_order = order if order in ('asc', 'desc') else default_order
+    users = q.order_by(col.asc() if actual_order == 'asc' else col.desc()).all()
 
-        total_questions = Question.query.count()
-        pending_report_count = QuestionReport.query.filter_by(status='pending').count()
-        return render_template('admin.html',
-                               users=users,
-                               total_questions=total_questions,
-                               sort=sort, order=order, filter_grade=filter_grade,
-                               pending_report_count=pending_report_count,
-                               payment_enabled=app.config.get('PAYMENT_ENABLED', False))
-    except Exception as _e:
-        # TEMP DEBUG: surface real traceback inline (remove after diagnosis)
-        import traceback, html
-        tb = traceback.format_exc()
-        return ('<h2 style="font-family:monospace;color:#b91c1c">admin_panel 500 traceback</h2>'
-                '<pre style="font-family:monospace;font-size:12px;background:#fef2f2;'
-                'padding:18px;border-radius:8px;border:1px solid #fecaca;'
-                'white-space:pre-wrap;color:#7f1d1d">' + html.escape(tb) + '</pre>'
-                '<p style="font-family:sans-serif"><a href="/dashboard">&larr; Dashboard</a></p>'), 500
+    total_questions = Question.query.count()
+    pending_report_count = QuestionReport.query.filter_by(status='pending').count()
+    return render_template('admin.html',
+                           users=users,
+                           total_questions=total_questions,
+                           sort=sort, order=order, filter_grade=filter_grade,
+                           pending_report_count=pending_report_count,
+                           payment_enabled=app.config.get('PAYMENT_ENABLED', False))
 
 @app.route('/admin/import_translations', methods=['GET', 'POST'])
 @admin_required

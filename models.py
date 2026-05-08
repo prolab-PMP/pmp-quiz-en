@@ -269,4 +269,11 @@ class QuestionReport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     question_no = db.Column(db.Integer, db.ForeignKey('questions.no'), nullable=False)
-    reason = db.Column(db.String(50), nullable=False)   # typo / wrong_a
+    reason = db.Column(db.String(50), nullable=False)   # typo / wrong_answer / translation / other
+    detail = db.Column(db.Text)
+    status = db.Column(db.String(20), default='pending')  # pending / resolved / dismissed
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    resolved_at = db.Column(db.DateTime)
+
+    user = db.relationship('User', backref='reports')
+    question = db.relationship('Question', backref='reports')
