@@ -1997,3 +1997,50 @@ def admin_resync_kr_translations():
     body += '<p><a href="/dashboard">Dashboard</a></p>'
     return body
 
+
+@app.route('/admin/apply_kr_translation_fixes')
+@admin_required
+def admin_apply_kr_translation_fixes():
+    """Apply 84 Korean translation fixes from kr_translation_fixes.py BATCH dict."""
+    from kr_translation_fixes import BATCH
+    results = {'updated': 0, 'unchanged': 0, 'not_found': 0, 'fields_changed': 0}
+    not_found = []
+    samples = []
+    for no, fields in BATCH.items():
+        q = Question.query.filter_by(no=no).first()
+        if not q:
+            results['not_found'] += 1
+            not_found.append(no)
+            continue
+        any_change = False
+        for field, val in fields.items():
+            if not hasattr(q, field):
+                continue
+            cur = getattr(q, field)
+            cur_s = (cur or '').strip() if isinstance(cur, str) else cur
+            new_s = (val or '').strip() if isinstance(val, str) else val
+            if cur_s != new_s:
+                setattr(q, field, val)
+                results['fields_changed'] += 1
+                any_change = True
+                if len(samples) < 30:
+                    samples.append(f'Q{no} {field}: {len(cur_s) if cur_s else 0} -> {len(new_s)} chars')
+        if any_change:
+            results['updated'] += 1
+        else:
+            results['unchanged'] += 1
+    db.session.commit()
+
+    body = '<h2>KR Translation Fixes Applied (Batches 1+2+3)</h2>'
+    body += '<ul>'
+    body += f'<li>Total in BATCH dict: <b>{len(BATCH)}</b> questions</li>'
+    body += f'<li>Updated: <b>{results["updated"]}</b></li>'
+    body += f'<li>Unchanged (already current): {results["unchanged"]}</li>'
+    body += f'<li>Total fields changed: <b>{results["fields_changed"]}</b></li>'
+    body += f'<li>Not found in DB: {results["not_found"]} {not_found if not_found else ""}</li>'
+    body += '</ul>'
+    if samples:
+        body += '<h3>Sample changes (first 30 fields):</h3><pre style="font-size:12px;background:#f5f5f5;padding:10px;border-radius:6px">' + '\n'.join(samples) + '</pre>'
+    body += '<p><a href="/dashboard">Dashboard</a> &middot; <a href="/admin">Admin</a></p>'
+    return body
+
