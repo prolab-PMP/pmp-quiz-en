@@ -15,8 +15,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
-    {# Google AdSense — load only for non-paid users; skipped entirely if env var unset. #}
-    {% if config.get('ADSENSE_PUBLISHER_ID') and not (current_user.is_authenticated and current_user.is_paid_premium()) %}
+    {# Google AdSense — load ONLY on quiz/result pages (which contain real content)
+       to comply with the "ads on screens without publisher content" policy.
+       Also skipped for paid users and when env var is unset. #}
+    {% if config.get('ADSENSE_PUBLISHER_ID')
+          and request.path.startswith(('/quiz/question', '/quiz/grade', '/quiz/result', '/free/quiz', '/free/result'))
+          and not (current_user.is_authenticated and current_user.is_paid_premium()) %}
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ config['ADSENSE_PUBLISHER_ID'] }}"
             crossorigin="anonymous"></script>
     {% endif %}
