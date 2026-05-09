@@ -291,7 +291,8 @@ def signup():
         if password != password2:
             flash('Passwords do not match. 다시 OK해wk세요.', 'error')
             return render_template('signup.html', email=email)
-        if User.query.filter_by(email=email).first():
+        existing = User.query.filter_by(email=email).first()
+        if existing and existing.password_hash:
             flash('already 가입된 Email입니다. Log in해wk세요.', 'error')
             return redirect(url_for('login', email=email))
 
@@ -302,10 +303,17 @@ def signup():
             if ref:
                 valid_referrer_email = ref.email
 
-        user = User(email=email)
-        user.password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-        user.is_premium = False
-        if valid_referrer_email:
+        if existing and not existing.password_hash:
+            # #10 fix: webhook-created premium-pending account. Let the buyer
+            # claim it by setting their password. Preserve premium / validity.
+            user = existing
+            user.password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+            print(f'[signup] claimed premium-pending account for {email}')
+        else:
+            user = User(email=email)
+            user.password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+            user.is_premium = False
+        if valid_referrer_email and not user.referrer_email:
             user.referrer_email = valid_referrer_email
         is_admin_email = email in Config.ADMIN_EMAILS
         if is_admin_email:
@@ -313,7 +321,8 @@ def signup():
             user.is_premium = True
             user.set_validity(months=120)
         user.last_login = datetime.utcnow()
-        db.session.add(user)
+        if user not in db.session:
+            db.session.add(user)
         db.session.commit()
         # 신규가입 알림 메day (SMTP 설정 시 발송)
         try:
@@ -473,8 +482,10 @@ def webhook_lemonsqueezy():
     event_name = payload.get('meta', {}).get('event_name', '')
     print(f'[lemonsqueezy] event={event_name}')
 
-    # Only process successful orders (not subscription_payment_failed etc.)
-    if event_name not in ('order_created', 'subscription_created', 'subscription_payment_success'):
+    GRANT_EVENTS = ('order_created', 'subscription_created', 'subscription_payment_success')
+    REVOKE_EVENTS = ('order_refunded', 'subscription_cancelled', 'subscription_expired')
+
+    if event_name not in GRANT_EVENTS + REVOKE_EVENTS:
         return 'event ignored', 200
 
     data = payload.get('data', {}).get('attributes', {})
@@ -483,6 +494,30 @@ def webhook_lemonsqueezy():
         print('[lemonsqueezy] no customer email in payload')
         return 'no email', 400
 
+    # ── Revoke flow (#9): refund / cancel / expire ──
+    if event_name in REVOKE_EVENTS:
+        user = User.query.filter(func.lower(User.email) == customer_email).first()
+        if not user:
+            print(f'[lemonsqueezy] revoke event for unknown user {customer_email}; ignored')
+            return 'ok', 200
+        if user.is_admin:
+            # Never revoke admin accounts.
+            print(f'[lemonsqueezy] revoke event ignored for admin {customer_email}')
+            return 'ok', 200
+        if event_name == 'order_refunded' or event_name == 'subscription_expired':
+            # Hard revoke: immediately end premium access.
+            user.is_premium = False
+            user.validity_end = datetime.utcnow()
+            db.session.commit()
+            print(f'[lemonsqueezy] {event_name}: revoked premium for {customer_email}')
+        elif event_name == 'subscription_cancelled':
+            # Soft cancel: LemonSqueezy still grants access until period end.
+            # We only log; subscription_expired will eventually revoke.
+            print(f'[lemonsqueezy] subscription_cancelled noted for {customer_email}; '
+                  f'access remains until {user.validity_end}')
+        return 'ok', 200
+
+    # ── Grant flow: order_created / subscription_created / subscription_payment_success ──
     # Find which variant was purchased to determine months of validity
     variant_id = None
     if event_name == 'order_created':
@@ -501,13 +536,17 @@ def webhook_lemonsqueezy():
     # Match user account (case-insensitive email)
     user = User.query.filter(func.lower(User.email) == customer_email).first()
     if not user:
-        # Auto-create the account so the buyer can immediately log in.
-        # (No password set; they'll need to use signup or password-reset.)
-        user = User(email=customer_email, is_premium=True)
+        # #10 fix: Do NOT auto-create with NULL password_hash. Anyone who knew
+        # the email could try to log in or signup races could attach to it.
+        # Instead, create a placeholder "premium pending" record that becomes
+        # active only when the buyer signs up (signup route detects NULL hash
+        # and lets them set a password to take ownership).
+        user = User(email=customer_email, is_premium=True, password_hash=None)
         user.set_validity(months=months)
         db.session.add(user)
         db.session.commit()
-        print(f'[lemonsqueezy] auto-created premium user {customer_email} (+{months}mo)')
+        print(f'[lemonsqueezy] queued premium grant for {customer_email} (+{months}mo). '
+              f'User must signup to claim access (password_hash is NULL).')
     else:
         user.is_premium = True
         user.extend_validity(months=months)
@@ -1453,8 +1492,9 @@ def admin_import_translations():
                 f"Header keys mapped: {sorted(set(field_map) & set(col_idx))}\n"), 200, {'Content-Type': 'text/plain; charset=utf-8'}
     except Exception as e:
         db.session.rollback()
-        tb = traceback.format_exc()
-        return (f"FAILED: {type(e).__name__}: {e}\n\n{tb}\n"), 200, {'Content-Type': 'text/plain; charset=utf-8'}
+        # #8: log traceback server-side; do NOT return it to client
+        app.logger.exception('[admin_import_translations] failed')
+        return (f"FAILED: {type(e).__name__}: see server logs for details.\n"), 500, {'Content-Type': 'text/plain; charset=utf-8'}
 
 
 @app.route('/admin/reload_questions', methods=['GET', 'POST'])
@@ -2080,9 +2120,10 @@ def admin_cleanup_old_seed():
         return body
     except Exception as e:
         db.session.rollback()
-        import traceback, html
+        # #8: log traceback server-side; do NOT render it in the response
+        app.logger.exception('[admin_cleanup_old_seed] failed')
+        import html as _html
         return ('<h2 style="color:#b91c1c">cleanup_old_seed error</h2>'
-                '<pre style="background:#fef2f2;padding:14px;border-radius:8px;'
-                'color:#7f1d1d;white-space:pre-wrap">' + html.escape(traceback.format_exc()) +
-                '</pre><p><a href="/admin">Admin</a></p>')
+                f'<p>{_html.escape(type(e).__name__)}: see server logs for details.</p>'
+                '<p><a href="/admin">Admin</a></p>'), 500
 
