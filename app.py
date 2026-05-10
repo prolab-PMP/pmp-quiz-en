@@ -1206,13 +1206,19 @@ def my_status():
      .order_by(func.date(QuizSession.completed_at)).all()
     daily_stats = [{'date': str(s.date), 'avg_accuracy': round(float(s.avg_accuracy), 1)} for s in daily_stats_raw]
 
-    # ── Study Grass (GitHub-style heatmap) — last 365 days, count of questions answered ──
+    # ── Practice Heatmap (GitHub-style) ──
+    # Length: paid premium uses validity span (3/6/12 mo plan); others use 90 days default.
     from datetime import timedelta as _td
+    if current_user.is_paid_premium() and current_user.validity_start and current_user.validity_end:
+        total_validity_days = (current_user.validity_end - current_user.validity_start).days
+        grass_days = max(90, min(370, total_validity_days))
+    else:
+        grass_days = 90
     activity_rows = db.session.query(
         func.date(QuizSession.completed_at).label('date'),
         func.sum(QuizSession.total_questions).label('cnt'),
     ).filter_by(user_id=uid, is_completed=True)\
-     .filter(QuizSession.completed_at >= datetime.utcnow() - _td(days=365))\
+     .filter(QuizSession.completed_at >= datetime.utcnow() - _td(days=grass_days))\
      .group_by(func.date(QuizSession.completed_at)).all()
     daily_activity = {str(r.date): int(r.cnt or 0) for r in activity_rows}
 
@@ -1262,6 +1268,7 @@ def my_status():
         streak_days = sample['streak_days']
         weak_domains = sample['weak_domains']
         daily_activity = sample.get('daily_activity', {})
+        grass_days = 90
         sample_mode = True
     else:
         sample_mode = False
@@ -1270,6 +1277,7 @@ def my_status():
                            validity_remaining=validity_remaining,
                            sessions=sessions,
                            daily_activity=daily_activity,
+                           grass_days=grass_days,
                            daily_stats=daily_stats,
                            cat_stats=cat_stats,
                            wrong_count=wrong_count,

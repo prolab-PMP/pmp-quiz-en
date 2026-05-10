@@ -99,16 +99,18 @@
 <!-- ── Trend ── -->
 <div id="tab-trend" class="tab-content active">
 
-    <!-- Study Grass (GitHub-style heatmap) -->
+    <!-- Practice Heatmap (GitHub-style) -->
     <div class="card">
         <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-            <span><i class="fas fa-seedling" style="color:#22c55e"></i> Study Grass — Last 365 days</span>
+            <span><i class="fas fa-table-cells" style="color:#22c55e"></i> Practice Heatmap
+              <small style="font-weight:400;color:var(--text-muted);margin-left:6px">last {{ ((grass_days or 90) / 30)|round(0,'floor')|int }} months</small>
+            </span>
             {% if streak_days %}
             <span style="font-size:0.85rem;background:#fef3c7;color:#b45309;padding:4px 10px;border-radius:999px;font-weight:600">🔥 {{ streak_days }}-day streak</span>
             {% endif %}
         </div>
         <div id="grass-wrap" style="overflow-x:auto;padding:10px 4px 4px;">
-            <svg id="grassHeatmap" style="display:block;min-width:760px"></svg>
+            <svg id="grassHeatmap" style="display:block"></svg>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:var(--text-muted);margin-top:8px;flex-wrap:wrap;gap:8px;">
             <span id="grassSummary">0 active days · 0 questions</span>
@@ -475,12 +477,15 @@ if (dailyData && dailyData.length > 0) {
 </script>
 
 <script>
-// ── Study Grass (GitHub-style heatmap) ──
+// ── Practice Heatmap (GitHub-style) ──
 (function buildGrassHeatmap(){
     const svg = document.getElementById('grassHeatmap');
     if (!svg) return;
     const activity = {{ daily_activity | tojson if daily_activity is defined else '{}' }};
-    const CELL = 12, GAP = 3, WEEKS = 53;
+    const grassDays = {{ grass_days if grass_days is defined else 90 }};
+    const CELL = 12, GAP = 3;
+    // WEEKS = ceil(grassDays/7) + 1 buffer. 90→14, 180→27, 365→53.
+    const WEEKS = Math.ceil(grassDays / 7) + 1;
     const LEFT_PAD = 28, TOP_PAD = 18;
     const total = (CELL + GAP);
     const W = LEFT_PAD + WEEKS * total + 4;
