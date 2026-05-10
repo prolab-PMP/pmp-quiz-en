@@ -6,13 +6,13 @@
 
 <!-- Top tabs -->
 <div class="tabs">
-    <button class="tab active" onclick="switchTab('pmbok7', this)">📘 PMBOK 7edition basis</button>
-    <button class="tab" onclick="switchTab('pmbok8', this)">📗 PMBOK 8edition basis</button>
+    <button class="tab active" onclick="switchTab('pmbok8', this)">📗 PMBOK 8th edition</button>
+    <button class="tab" onclick="switchTab('pmbok7', this)">📘 PMBOK 7th edition</button>
     <button class="tab" onclick="switchTab('special', this)">⚡ Special mode</button>
 </div>
 
 <!-- ══════════ 7edition tabs ══════════ -->
-<div id="tab-pmbok7" class="tab-content active">
+<div id="tab-pmbok7" class="tab-content">
 <form method="POST" action="{{ url_for('quiz_begin') }}" id="form-pmbok7" onsubmit="return prepareSubmit('pmbok7')">
     <input type="hidden" name="mode" value="slicer">
     <input type="hidden" name="filter_json" id="filter_json_pmbok7" value="{}">
@@ -200,7 +200,7 @@
 </div>
 
 <!-- ══════════ 8edition tabs ══════════ -->
-<div id="tab-pmbok8" class="tab-content">
+<div id="tab-pmbok8" class="tab-content active">
 <form method="POST" action="{{ url_for('quiz_begin') }}" id="form-pmbok8" onsubmit="return prepareSubmit('pmbok8')">
     <input type="hidden" name="mode" value="slicer">
     <input type="hidden" name="filter_json" id="filter_json_pmbok8" value="{}">

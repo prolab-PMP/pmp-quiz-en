@@ -26,7 +26,7 @@
 <!-- Hero Banner -->
 <section class="hero">
     <h1>PMP Exam Practice</h1>
-    <p>Full coverage of PMBOK 7 &amp; 8 + Agile/Hybrid 25%+. Study 2,250 questions by category, difficulty, and mode. Your progress auto-saves, and you can review wrong-answer notes and performance analytics anytime.</p>
+    <p>Full coverage of PMBOK 8 &amp; 7 + Agile/Hybrid 25%+. Study 2,250 questions by category, difficulty, and mode. Your progress auto-saves, and you can review wrong-answer notes and performance analytics anytime.</p>
     <div class="badges">
         <span>📂 Total {{ total_questions }} questions</span>
         <span>📊 {{ total_sessions }} attempts</span>
@@ -294,8 +294,8 @@ body.dark .random-quick-btn { background: linear-gradient(135deg, rgba(124,58,23
                     <td>{{ s.completed_at.strftime('%Y-%m-%d %H:%M') if s.completed_at else '-' }}</td>
                     <td>
                         {% if s.mode == 'random' %}Random
-                        {% elif s.mode == 'pmbok7_exam' %}PMP Exam (7th)
                         {% elif s.mode == 'pmbok8_exam' %}PMP Exam (8th)
+                        {% elif s.mode == 'pmbok7_exam' %}PMP Exam (7th)
                         {% elif s.mode == 'wrong_answers' %}Wrong-answer practice
                         {% elif s.mode == 'category' %}{{ s.filter_value or 'Category' }}
                         {% else %}{{ s.mode }}{% endif %}
