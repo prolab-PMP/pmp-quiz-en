@@ -91,13 +91,39 @@
 <!-- Tabs -->
 <div class="tabs">
     <button class="tab active" onclick="switchStatusTab('trend', this)">Accuracy trend</button>
-    <button class="tab" onclick="switchStatusTab('pmbok7', this)">PMBOK 7th Edition</button>
     <button class="tab" onclick="switchStatusTab('pmbok8', this)">PMBOK 8th Edition</button>
+    <button class="tab" onclick="switchStatusTab('pmbok7', this)">PMBOK 7th Edition</button>
     <button class="tab" onclick="switchStatusTab('history', this)">Practice history</button>
 </div>
 
 <!-- ── Trend ── -->
 <div id="tab-trend" class="tab-content active">
+
+    <!-- Study Grass (GitHub-style heatmap) -->
+    <div class="card">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <span><i class="fas fa-seedling" style="color:#22c55e"></i> Study Grass — Last 365 days</span>
+            {% if streak_days %}
+            <span style="font-size:0.85rem;background:#fef3c7;color:#b45309;padding:4px 10px;border-radius:999px;font-weight:600">🔥 {{ streak_days }}-day streak</span>
+            {% endif %}
+        </div>
+        <div id="grass-wrap" style="overflow-x:auto;padding:10px 4px 4px;">
+            <svg id="grassHeatmap" style="display:block;min-width:760px"></svg>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:var(--text-muted);margin-top:8px;flex-wrap:wrap;gap:8px;">
+            <span id="grassSummary">0 active days · 0 questions</span>
+            <span style="display:flex;align-items:center;gap:6px;">
+                Less
+                <span style="display:inline-block;width:11px;height:11px;background:#ebedf0;border-radius:2px"></span>
+                <span style="display:inline-block;width:11px;height:11px;background:#9be9a8;border-radius:2px"></span>
+                <span style="display:inline-block;width:11px;height:11px;background:#40c463;border-radius:2px"></span>
+                <span style="display:inline-block;width:11px;height:11px;background:#30a14e;border-radius:2px"></span>
+                <span style="display:inline-block;width:11px;height:11px;background:#216e39;border-radius:2px"></span>
+                More
+            </span>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header"><i class="fas fa-chart-line"></i> Daily accuracy trend</div>
         {% if daily_stats %}
@@ -110,7 +136,7 @@
     <!-- Main domain accuracy comparison chart -->
     {% if cat_stats and (cat_stats.pmbok7.eco2021_domain or cat_stats.pmbok8.eco2026_domain) %}
     <div class="card">
-        <div class="card-header"><i class="fas fa-chart-column"></i> Main domain accuracy comparison (PMBOK 7th / 8th Edition)</div>
+        <div class="card-header"><i class="fas fa-chart-column"></i> Main domain accuracy comparison (PMBOK 8th / 7th Edition)</div>
         <div class="chart-container" style="position:relative;height:340px;">
             <canvas id="domainChart"></canvas>
         </div>
@@ -124,7 +150,7 @@
         <!-- Performance Domain (7th Edition vs 8th Edition) — Radar -->
         {% if cat_stats and (cat_stats.pmbok7.pmbok7_domain or cat_stats.pmbok8.pmbok8_domain) %}
         <div class="card">
-            <div class="card-header"><i class="fas fa-radar" style="color:#8b5cf6"></i> Performance Domain — 7th Edition vs 8th Edition (Radar)</div>
+            <div class="card-header"><i class="fas fa-radar" style="color:#8b5cf6"></i> Performance Domain — 8th Edition vs 7th Edition (Radar)</div>
             <div class="chart-container" style="position:relative;height:320px;">
                 <canvas id="performanceRadar"></canvas>
             </div>
@@ -164,6 +190,31 @@
             <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">Click a bar to start 30 questions in that focus area</p>
         </div>
         {% endif %}
+
+        <!-- ECO 2021 Domain — Your Accuracy vs PMI Exam Weight (Combo) -->
+        {% if cat_stats and cat_stats.pmbok7.eco2021_domain %}
+        <div class="card">
+            <div class="card-header"><i class="fas fa-scale-balanced" style="color:#0ea5e9"></i> ECO 2021 — Your Accuracy vs PMI Exam Weight</div>
+            <div class="chart-container" style="position:relative;height:320px;">
+                <canvas id="ecoVsExamCombo"></canvas>
+            </div>
+            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">
+              PMI official weights: People 42% · Process 50% · Business Env 8%.
+              High weight + low accuracy = top study priority.
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Weak Tasks Top 10 — Horizontal Bar -->
+        <div class="card">
+            <div class="card-header"><i class="fas fa-triangle-exclamation" style="color:#dc2626"></i> Weak Tasks Top 10 (Study Priority)</div>
+            <div class="chart-container" style="position:relative;height:320px;">
+                <canvas id="weakTaskBar"></canvas>
+            </div>
+            <p style="margin:6px 0 0;font-size:0.78rem;color:var(--text-muted);">
+              Tasks with ≥3 attempts ranked by lowest accuracy. Click a bar to start 30 questions for that task.
+            </p>
+        </div>
 
     </div>
 </div>
@@ -400,8 +451,8 @@ if (dailyData && dailyData.length > 0) {
         data: {
             labels: labels,
             datasets: [
-                {label: 'PMBOK 7th Edition (2021 ECO)', data: acc7, backgroundColor: acc7.map(colorBy), borderRadius: 4},
-                {label: 'PMBOK 8th Edition (2026 ECO)', data: acc8, backgroundColor: acc8.map(v=> v==null ? '#cbd5e1' : (v >= 70 ? '#059669' : v >= 50 ? '#d97706' : '#dc2626')), borderRadius: 4}
+                {label: 'PMBOK 8th Edition (2026 ECO)', data: acc8, backgroundColor: acc8.map(v=> v==null ? '#cbd5e1' : (v >= 70 ? '#059669' : v >= 50 ? '#d97706' : '#dc2626')), borderRadius: 4},
+                {label: 'PMBOK 7th Edition (2021 ECO)', data: acc7, backgroundColor: acc7.map(colorBy), borderRadius: 4}
             ]
         },
         options: {
@@ -414,7 +465,7 @@ if (dailyData && dailyData.length > 0) {
                 const i = els[0].index;
                 const ds = els[0].datasetIndex;
                 const dom = labels[i];
-                const key = ds === 0 ? 'eco2021_domain' : 'eco2026_domain';
+                const key = ds === 0 ? 'eco2026_domain' : 'eco2021_domain';
                 document.getElementById('chart-filter-json').value = JSON.stringify({[key]: [dom]});
                 document.getElementById('chart-quick-form').submit();
             }
@@ -424,6 +475,74 @@ if (dailyData && dailyData.length > 0) {
 </script>
 
 <script>
+// ── Study Grass (GitHub-style heatmap) ──
+(function buildGrassHeatmap(){
+    const svg = document.getElementById('grassHeatmap');
+    if (!svg) return;
+    const activity = {{ daily_activity | tojson if daily_activity is defined else '{}' }};
+    const CELL = 12, GAP = 3, WEEKS = 53;
+    const LEFT_PAD = 28, TOP_PAD = 18;
+    const total = (CELL + GAP);
+    const W = LEFT_PAD + WEEKS * total + 4;
+    const H = TOP_PAD + 7 * total + 4;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('width', W); svg.setAttribute('height', H);
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const lastCol = WEEKS - 1;
+    const todayDow = today.getDay();
+    const start = new Date(today);
+    start.setDate(today.getDate() - (lastCol * 7 + todayDow));
+
+    const colorOf = (n) => {
+        if (!n) return '#ebedf0';
+        if (n < 10) return '#9be9a8';
+        if (n < 30) return '#40c463';
+        if (n < 50) return '#30a14e';
+        return '#216e39';
+    };
+    const fmt = (d) => {
+        const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+        return `${y}-${m}-${dd}`;
+    };
+
+    const dowLabels = ['','Mon','','Wed','','Fri',''];
+    let svgInner = '';
+    dowLabels.forEach((l, i) => {
+        if (!l) return;
+        svgInner += `<text x="0" y="${TOP_PAD + i*total + 9}" font-size="9" fill="#888">${l}</text>`;
+    });
+
+    let lastMonth = -1;
+    for (let w = 0; w < WEEKS; w++) {
+        const d = new Date(start); d.setDate(start.getDate() + w * 7);
+        if (d.getMonth() !== lastMonth && d.getDate() <= 7) {
+            const monthName = d.toLocaleDateString('en-US', {month: 'short'});
+            svgInner += `<text x="${LEFT_PAD + w*total}" y="12" font-size="9" fill="#888">${monthName}</text>`;
+            lastMonth = d.getMonth();
+        }
+    }
+
+    let totalDays = 0, totalQ = 0;
+    for (let w = 0; w < WEEKS; w++) {
+        for (let dow = 0; dow < 7; dow++) {
+            const d = new Date(start); d.setDate(start.getDate() + w*7 + dow);
+            if (d > today) continue;
+            const ds = fmt(d);
+            const cnt = activity[ds] || 0;
+            if (cnt > 0) { totalDays++; totalQ += cnt; }
+            const x = LEFT_PAD + w * total;
+            const y = TOP_PAD + dow * total;
+            const c = colorOf(cnt);
+            svgInner += `<rect x="${x}" y="${y}" width="${CELL}" height="${CELL}" rx="2" ry="2" fill="${c}" data-d="${ds}" data-c="${cnt}"><title>${ds} · ${cnt} questions</title></rect>`;
+        }
+    }
+    svg.innerHTML = svgInner;
+    const summary = document.getElementById('grassSummary');
+    if (summary) summary.textContent = `${totalDays} active days · ${totalQ.toLocaleString()} questions`;
+})();
+
 // ── Performance Domain Radar (7th Edition vs 8th Edition) ──
 (function buildPerformanceRadar(){
     const canvas = document.getElementById('performanceRadar');
@@ -438,8 +557,8 @@ if (dailyData && dailyData.length > 0) {
         data: {
             labels: labels,
             datasets: [
-                {label: '7th Edition', data: v7, backgroundColor: 'rgba(139,92,246,.2)', borderColor: '#8b5cf6', pointBackgroundColor: '#8b5cf6', pointRadius: 5, pointHoverRadius: 8},
-                {label: '8th Edition', data: v8, backgroundColor: 'rgba(16,185,129,.2)', borderColor: '#10b981', pointBackgroundColor: '#10b981', pointRadius: 5, pointHoverRadius: 8}
+                {label: '8th Edition', data: v8, backgroundColor: 'rgba(16,185,129,.2)', borderColor: '#10b981', pointBackgroundColor: '#10b981', pointRadius: 5, pointHoverRadius: 8},
+                {label: '7th Edition', data: v7, backgroundColor: 'rgba(139,92,246,.2)', borderColor: '#8b5cf6', pointBackgroundColor: '#8b5cf6', pointRadius: 5, pointHoverRadius: 8}
             ]
         },
         options: {
@@ -451,7 +570,7 @@ if (dailyData && dailyData.length > 0) {
                 const i = els[0].index;
                 const ds = els[0].datasetIndex;
                 const dom = labels[i];
-                const key = ds === 0 ? 'pmbok7_domain' : 'pmbok8_domain';
+                const key = ds === 0 ? 'pmbok8_domain' : 'pmbok7_domain';
                 document.getElementById('chart-filter-json').value = JSON.stringify({[key]: [dom]});
                 document.getElementById('chart-quick-form').submit();
             }
@@ -465,10 +584,10 @@ if (dailyData && dailyData.length > 0) {
     if (!canvas || typeof Chart === 'undefined') return;
     const data7 = {{ cat_stats.pmbok7.pmbok7_principle | tojson if cat_stats and cat_stats.pmbok7 else '[]' }};
     const data8 = {{ cat_stats.pmbok8.pmbok8_principle | tojson if cat_stats and cat_stats.pmbok8 else '[]' }};
-    // Combine 7/8 with source prefix on labels
+    // Combine 8/7 with source prefix on labels — 8th first
     const merged = [
-        ...data7.map(d => ({...d, src: '7', key: 'pmbok7_principle'})),
-        ...data8.map(d => ({...d, src: '8', key: 'pmbok8_principle'}))
+        ...data8.map(d => ({...d, src: '8', key: 'pmbok8_principle'})),
+        ...data7.map(d => ({...d, src: '7', key: 'pmbok7_principle'}))
     ];
     if (!merged.length) return;
     const PASTEL = ['#dbeafe','#fce7f3','#dcfce7','#fef3c7','#e0e7ff','#ffedd5','#fee2e2','#cffafe','#fef9c3','#fae8ff'];
@@ -542,6 +661,120 @@ if (dailyData && dailyData.length > 0) {
                 const i = els[0].index;
                 const name = data[i].name;
                 document.getElementById('chart-filter-json').value = JSON.stringify({pmbok8_focus_area: [name]});
+                document.getElementById('chart-quick-form').submit();
+            }
+        }
+    });
+})();
+
+// ── ECO 2021 Domain — Your Accuracy vs PMI Exam Weight (Combo) ──
+// PMI official PMP exam weights: People 42% · Process 50% · Business Environment 8%.
+// Most-emphasized analysis in PMP prep schools: high weight + low accuracy = top study priority.
+(function buildEcoVsExamCombo(){
+    const canvas = document.getElementById('ecoVsExamCombo');
+    if (!canvas || typeof Chart === 'undefined') return;
+    const data = {{ cat_stats.pmbok7.eco2021_domain | tojson if cat_stats and cat_stats.pmbok7 else '[]' }};
+    if (!data.length) return;
+    const PMI_WEIGHT = {
+        'People': 42, 'Process': 50,
+        'Business Environment': 8, 'Business Env': 8,
+    };
+    const labels = data.map(d => d.name);
+    const myAcc  = data.map(d => d.accuracy);
+    const examPct = data.map(d => PMI_WEIGHT[d.name] != null ? PMI_WEIGHT[d.name] : null);
+    const accColor = v => v >= 70 ? '#10b981' : v >= 50 ? '#f59e0b' : '#ef4444';
+    new Chart(canvas, {
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    type: 'bar', label: 'Your Accuracy (%)',
+                    data: myAcc,
+                    backgroundColor: myAcc.map(v => accColor(v)),
+                    borderRadius: 4, order: 2
+                },
+                {
+                    type: 'line', label: 'PMI Exam Weight (%)',
+                    data: examPct,
+                    borderColor: '#0ea5e9', backgroundColor: 'rgba(14,165,233,.15)',
+                    borderWidth: 3, pointRadius: 6, pointHoverRadius: 9,
+                    pointBackgroundColor: '#0ea5e9', tension: 0.2, order: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {y: {min: 0, max: 100, ticks: {callback: v => v + '%'}}},
+            plugins: {
+                legend: {position: 'top', labels: {boxWidth: 14, font: {size: 11}}},
+                tooltip: {callbacks: {label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}%`}}
+            },
+            onClick: (evt, els) => {
+                if (!els || !els.length) return;
+                const i = els[0].index;
+                const name = labels[i];
+                document.getElementById('chart-filter-json').value = JSON.stringify({eco2021_domain: [name]});
+                document.getElementById('chart-quick-form').submit();
+            }
+        }
+    });
+})();
+
+// ── Weak Tasks Top 10 (Horizontal Bar) ──
+// PMBOK 7 eco2021_task + PMBOK 8 eco2026_task combined, attempts ≥ 3, lowest accuracy first.
+// Visualizes learning priority — click to start 30 questions in that task.
+(function buildWeakTaskBar(){
+    const canvas = document.getElementById('weakTaskBar');
+    if (!canvas || typeof Chart === 'undefined') return;
+    const t7 = {{ cat_stats.pmbok7.eco2021_task | tojson if cat_stats and cat_stats.pmbok7 else '[]' }};
+    const t8 = {{ cat_stats.pmbok8.eco2026_task | tojson if cat_stats and cat_stats.pmbok8 else '[]' }};
+    const merged = [
+        ...t8.map(d => ({...d, src: '8th', key: 'eco2026_task'})),
+        ...t7.map(d => ({...d, src: '7th', key: 'eco2021_task'})),
+    ].filter(d => (d.total || 0) >= 3 && d.name);
+    if (!merged.length) {
+        const ctx = canvas.getContext('2d');
+        ctx.font = '14px sans-serif'; ctx.fillStyle = '#888'; ctx.textAlign = 'center';
+        ctx.fillText('Will appear once you have ≥3 attempts per task', canvas.width/2, canvas.height/2);
+        return;
+    }
+    merged.sort((a, b) => a.accuracy - b.accuracy);
+    const top = merged.slice(0, 10);
+    const trunc = s => (s && s.length > 38) ? s.slice(0, 36) + '…' : s;
+    const labels = top.map(d => `[${d.src}] ${trunc(d.name)}`);
+    const accColor = v => v >= 70 ? '#10b981' : v >= 50 ? '#f59e0b' : '#dc2626';
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Accuracy',
+                data: top.map(d => d.accuracy),
+                backgroundColor: top.map(d => accColor(d.accuracy)),
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: {min: 0, max: 100, ticks: {callback: v => v + '%'}},
+                y: {ticks: {font: {size: 10.5}}}
+            },
+            plugins: {
+                legend: {display: false},
+                tooltip: {callbacks: {
+                    label: (ctx) => {
+                        const d = top[ctx.dataIndex];
+                        return `${d.accuracy}% (${d.total} attempts · ${d.correct} correct)`;
+                    }
+                }}
+            },
+            onClick: (evt, els) => {
+                if (!els || !els.length) return;
+                const i = els[0].index;
+                const d = top[i];
+                document.getElementById('chart-filter-json').value = JSON.stringify({[d.key]: [d.name]});
                 document.getElementById('chart-quick-form').submit();
             }
         }

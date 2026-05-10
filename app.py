@@ -1127,6 +1127,16 @@ def _sample_my_status_data():
             'methodology': cat([('Agile', 18, 22), ('Waterfall', 12, 18)], 'methodology'),
         },
     }
+    # Study grass sample — last 365 days, ~60% study days, 5~70 questions/day
+    daily_activity = {}
+    for i in range(365):
+        d = today - timedelta(days=i)
+        recent_factor = 0.85 if i < 30 else (0.7 if i < 90 else 0.45)
+        if random.random() < recent_factor:
+            base = 8 if i < 30 else (5 if i < 180 else 3)
+            cnt = base + int(random.expovariate(1.0 / 12))
+            daily_activity[str(d)] = min(cnt, 80)
+
     return {
         'daily_stats': daily,
         'cat_stats': cat_stats,
@@ -1136,6 +1146,7 @@ def _sample_my_status_data():
         'overall_accuracy': 73.4,
         'sessions_count': 9,
         'streak_days': 5,
+        'daily_activity': daily_activity,
         'weak_domains': [
             {'name': 'AI/Automation', 'accuracy': 62.5, 'category': 'pmbok8_focus_area', 'filter_json': '{"pmbok8_focus_area": ["AI/Automation"]}'},
             {'name': 'Business Environment', 'accuracy': 68.0, 'category': 'eco2021_domain', 'filter_json': '{"eco2021_domain": ["Business Environment"]}'},
@@ -1195,6 +1206,16 @@ def my_status():
      .order_by(func.date(QuizSession.completed_at)).all()
     daily_stats = [{'date': str(s.date), 'avg_accuracy': round(float(s.avg_accuracy), 1)} for s in daily_stats_raw]
 
+    # ── Study Grass (GitHub-style heatmap) — last 365 days, count of questions answered ──
+    from datetime import timedelta as _td
+    activity_rows = db.session.query(
+        func.date(QuizSession.completed_at).label('date'),
+        func.sum(QuizSession.total_questions).label('cnt'),
+    ).filter_by(user_id=uid, is_completed=True)\
+     .filter(QuizSession.completed_at >= datetime.utcnow() - _td(days=365))\
+     .group_by(func.date(QuizSession.completed_at)).all()
+    daily_activity = {str(r.date): int(r.cnt or 0) for r in activity_rows}
+
     # All By category Accuracy
     cat_stats = {
         'pmbok7': {
@@ -1240,6 +1261,7 @@ def my_status():
         sessions_count = sample['sessions_count']
         streak_days = sample['streak_days']
         weak_domains = sample['weak_domains']
+        daily_activity = sample.get('daily_activity', {})
         sample_mode = True
     else:
         sample_mode = False
@@ -1247,6 +1269,7 @@ def my_status():
     return render_template('my_status.html',
                            validity_remaining=validity_remaining,
                            sessions=sessions,
+                           daily_activity=daily_activity,
                            daily_stats=daily_stats,
                            cat_stats=cat_stats,
                            wrong_count=wrong_count,

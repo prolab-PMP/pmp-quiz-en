@@ -187,10 +187,10 @@ body.dark .random-quick-btn { background: linear-gradient(135deg, rgba(124,58,23
 </style>
 
 <div class="fw-toolbar">
-  <button class="fw-tab active" data-view="pmbok7"><i class="fas fa-book"></i> PMBOK 7</button>
-  <button class="fw-tab" data-view="pmbok8"><i class="fas fa-book-open"></i> PMBOK 8</button>
-  <button class="fw-tab" data-view="eco2021"><i class="fas fa-list-check"></i> 2021 ECO</button>
+  <button class="fw-tab active" data-view="pmbok8"><i class="fas fa-book-open"></i> PMBOK 8</button>
+  <button class="fw-tab" data-view="pmbok7"><i class="fas fa-book"></i> PMBOK 7</button>
   <button class="fw-tab" data-view="eco2026"><i class="fas fa-list-check"></i> 2026 ECO</button>
+  <button class="fw-tab" data-view="eco2021"><i class="fas fa-list-check"></i> 2021 ECO</button>
   <button class="fw-tab" data-view="methodology"><i class="fas fa-sitemap"></i> Methodology</button>
 </div>
 
@@ -228,15 +228,15 @@ body.dark .random-quick-btn { background: linear-gradient(135deg, rgba(124,58,23
         <div class="card-header"><i class="fas fa-clipboard-check" style="color:#10b981"></i> Mock Exam Mode</div>
         <p class="recommend-desc">Mock exam: random questions like the real PMP exam, graded all at once.</p>
         <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin-bottom:10px;">
-            <input type="hidden" name="mode" value="pmbok7_exam">
-            <button class="btn btn-success btn-block">
-                <i class="fas fa-file-alt"></i> Start 7th Edition Exam (180 questions)
-            </button>
-        </form>
-        <form method="POST" action="{{ url_for('quiz_begin') }}">
             <input type="hidden" name="mode" value="pmbok8_exam">
             <button class="btn btn-success btn-block">
                 <i class="fas fa-file-alt"></i> Start 8th Edition Exam (185 questions)
+            </button>
+        </form>
+        <form method="POST" action="{{ url_for('quiz_begin') }}">
+            <input type="hidden" name="mode" value="pmbok7_exam">
+            <button class="btn btn-success btn-block">
+                <i class="fas fa-file-alt"></i> Start 7th Edition Exam (180 questions)
             </button>
         </form>
     </div>
@@ -424,7 +424,7 @@ const VIEWS = {
 };
 
 let currentStats = {};
-let currentView = 'pmbok7';
+let currentView = 'pmbok8';
 
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
