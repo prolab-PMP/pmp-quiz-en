@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Comment Moderation{% endblock %}
+{% block content %}
+<h2><i class="fas fa-shield-halved"></i> Comment Moderation</h2>
+
+<style>
+  .qcm-card { background:#fff; border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:12px; }
+  .qcm-meta { font-size:0.8rem; color:var(--text-muted); margin-bottom:6px; }
+  .qcm-body { font-size:0.92rem; line-height:1.55; white-space:pre-wrap; padding:8px 12px; background:#f8fafc; border-radius:6px; border-left:3px solid #94a3b8; margin:6px 0; }
+  .qcm-actions { margin-top:8px; display:flex; gap:8px; }
+  .qcm-btn { padding:6px 14px; border-radius:6px; border:1px solid var(--border); background:#fff; cursor:pointer; font-size:0.85rem; }
+  .qcm-btn.hide { background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
+  .qcm-btn.restore { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
+  .qcm-hidden { background:#fef2f2; }
+</style>
+
+<h3 style="margin-top:24px;">📌 Pending Reports ({{ pending_reports|length }})</h3>
+{% if not pending_reports %}
+<p style="color:var(--text-muted);">No pending reports.</p>
+{% endif %}
+{% for r in pending_reports %}
+{% set c = r.comment if r.comment else None %}
+<div class="qcm-card {% if c and c.is_hidden %}qcm-hidden{% endif %}">
+  <div class="qcm-meta">
+    🚩 Report #{{ r.id }} · reason: <strong>{{ r.reason }}</strong>
+    · reporter user_id={{ r.reporter_id }}
+    · {{ r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else '' }}
+    {% if r.detail %}<br>Detail: {{ r.detail }}{% endif %}
+  </div>
+  {% set comment = pending_reports|selectattr('id', 'equalto', r.id)|list|first %}
+  {# pending_reports[].comment 직접 접근 — relationship 미정의면 query 필요. #}
+  {% set c = (recent_comments|selectattr('id', 'equalto', r.comment_id)|list|first) %}
+  {% if c %}
+  <div class="qcm-meta">
+    🆔 comment_id={{ c.id }} · Q{{ c.question_no }} · author_id={{ c.user_id }}
+    · 👍 {{ c.upvotes }} · reports {{ c.report_count }}회
+    {% if c.is_hidden %}<span style="color:#b91c1c;font-weight:600;">[hidden]</span>{% endif %}
+  </div>
+  <div class="qcm-body">{{ c.body }}</div>
+  <div class="qcm-actions">
+    {% if c.is_hidden %}
+    <button class="qcm-btn restore" onclick="actCmt({{ c.id }}, 'restore')">Restore</button>
+    {% else %}
+    <button class="qcm-btn hide" onclick="actCmt({{ c.id }}, 'hide')">Hide</button>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="qcm-meta">⚠ comment_id={{ r.comment_id }} (recent 100건에 없음 — 직접 DB 조 필요)</div>
+  {% endif %}
+</div>
+{% endfor %}
+
+<h3 style="margin-top:32px;">🕐 Recent 100 comments</h3>
+{% for c in recent_comments %}
+<div class="qcm-card {% if c.is_hidden %}qcm-hidden{% endif %}">
+  <div class="qcm-meta">
+    🆔 #{{ c.id }} · Q{{ c.question_no }} · author user_id={{ c.user_id }}
+    · 👍 {{ c.upvotes }} · reports {{ c.report_count }}회
+    · {{ c.created_at.strftime('%Y-%m-%d %H:%M') if c.created_at else '' }}
+    {% if c.parent_id %} · ↳ reply(parent={{ c.parent_id }}){% endif %}
+    {% if c.is_hidden %}<span style="color:#b91c1c;font-weight:600;">[hidden]</span>{% endif %}
+  </div>
+  <div class="qcm-body">{{ c.body }}</div>
+  <div class="qcm-actions">
+    {% if c.is_hidden %}
+    <button class="qcm-btn restore" onclick="actCmt({{ c.id }}, 'restore')">Restore</button>
+    {% else %}
+    <button class="qcm-btn hide" onclick="actCmt({{ c.id }}, 'hide')">Hide</button>
+    {% endif %}
+  </div>
+</div>
+{% endfor %}
+
+<script>
+async function actCmt(cid, act){
+  if (!confirm(act === 'hide' ? '이 댓글을 Hide합니까?' : 'Restore합니까?')) return;
+  try {
+    const res = await fetch(`/admin/comments/${cid}/${act}`, {method:'POST'});
+    if (res.ok) location.reload();
+    else alert('Failed');
+  } catch (e) { alert('Error: ' + e.message); }
+}
+</script>
+{% endblock %}

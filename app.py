@@ -13,7 +13,9 @@ from markupsafe import Markup, escape
 from sqlalchemy import func, desc, and_, text
 
 from config import Config
-from models import db, User, Question, QuizSession, QuizAnswer, WrongAnswer, UserAnswerStat, QuestionGlobalStat, Bookmark, QuestionReport
+from models import (db, User, Question, QuizSession, QuizAnswer, WrongAnswer,
+                    UserAnswerStat, QuestionGlobalStat, Bookmark, QuestionReport,
+                    QuestionComment, QuestionCommentVote, QuestionCommentReport)
 from migrate import auto_migrate  # DB schema auto-sync (additive)
 
 app = Flask(__name__)
@@ -1837,6 +1839,173 @@ def admin_report_dismiss(report_id):
     db.session.commit()
     flash('Report가 무시됐습니다.', 'info')
     return redirect(url_for('admin_reports'))
+
+# ══════════════════════════════════════════════════════
+# Per-question discussion comments (Premium-only, post-grading)
+# ══════════════════════════════════════════════════════
+
+COMMENT_MAX_LEN = 1500
+
+def _comment_to_json(c, current_uid=None, voted_ids=None):
+    voted_ids = voted_ids or set()
+    email = (c.user.email if c.user else '') or ''
+    masked = (email.split('@')[0][:3] + '***@' + email.split('@')[1]) if ('@' in email) else 'anonymous'
+    return {
+        'id': c.id, 'question_no': c.question_no, 'parent_id': c.parent_id,
+        'body': c.body, 'upvotes': c.upvotes or 0, 'is_hidden': c.is_hidden,
+        'created_at': c.created_at.isoformat() if c.created_at else None,
+        'edited_at': c.edited_at.isoformat() if c.edited_at else None,
+        'author_email': email, 'author_masked': masked,
+        'is_admin': bool(c.user and c.user.is_admin),
+        'is_mine': (current_uid is not None and c.user_id == current_uid),
+        'has_voted': (c.id in voted_ids),
+    }
+
+
+@app.route('/api/comments/<int:question_no>', methods=['GET'])
+@login_required
+def api_comments_list(question_no):
+    """List comments for a question — Premium only.
+    Free/Trial returns premium_required=True so the UI can show the upsell."""
+    if not current_user.is_paid_premium():
+        return {'comments': [], 'total': 0, 'premium_required': True}, 200
+    rows = (QuestionComment.query
+            .filter_by(question_no=question_no, is_hidden=False)
+            .order_by(QuestionComment.upvotes.desc(), QuestionComment.created_at.desc())
+            .limit(200).all())
+    voted_ids = set()
+    if rows:
+        voted_ids = set(r.comment_id for r in
+                        QuestionCommentVote.query
+                        .filter_by(user_id=current_user.id)
+                        .filter(QuestionCommentVote.comment_id.in_([c.id for c in rows]))
+                        .all())
+    return {
+        'comments': [_comment_to_json(c, current_user.id, voted_ids) for c in rows],
+        'total': len(rows), 'premium_required': False,
+    }, 200
+
+
+@app.route('/api/comments/<int:question_no>', methods=['POST'])
+@login_required
+def api_comments_create(question_no):
+    if not current_user.is_paid_premium():
+        return {'error': 'Premium members only.'}, 403
+    if not Question.query.filter_by(no=question_no).first():
+        return {'error': 'Question not found'}, 404
+    data = request.get_json(silent=True) or {}
+    body = (data.get('body') or '').strip()
+    if not body:
+        return {'error': 'Body is required.'}, 400
+    if len(body) > COMMENT_MAX_LEN:
+        return {'error': f'Max {COMMENT_MAX_LEN} characters.'}, 400
+    parent_id = data.get('parent_id')
+    if parent_id is not None:
+        parent = QuestionComment.query.get(parent_id)
+        if not parent or parent.question_no != question_no or parent.parent_id is not None:
+            return {'error': 'Invalid parent_id.'}, 400
+    c = QuestionComment(question_no=question_no, user_id=current_user.id,
+                        parent_id=parent_id, body=body)
+    db.session.add(c)
+    db.session.commit()
+    return {'comment': _comment_to_json(c, current_user.id)}, 201
+
+
+@app.route('/api/comments/<int:comment_id>', methods=['DELETE'])
+@login_required
+def api_comments_delete(comment_id):
+    c = QuestionComment.query.get_or_404(comment_id)
+    if c.user_id != current_user.id and not current_user.is_admin:
+        return {'error': 'forbidden'}, 403
+    has_children = QuestionComment.query.filter_by(parent_id=c.id).first() is not None
+    if has_children:
+        c.body = '[deleted]'
+        c.is_hidden = False
+        c.edited_at = datetime.utcnow()
+    else:
+        QuestionCommentVote.query.filter_by(comment_id=c.id).delete()
+        QuestionCommentReport.query.filter_by(comment_id=c.id).delete()
+        db.session.delete(c)
+    db.session.commit()
+    return {'ok': True}, 200
+
+
+@app.route('/api/comments/<int:comment_id>/vote', methods=['POST'])
+@login_required
+def api_comments_vote(comment_id):
+    if not current_user.is_paid_premium():
+        return {'error': 'Premium members only.'}, 403
+    c = QuestionComment.query.get_or_404(comment_id)
+    if c.user_id == current_user.id:
+        return {'error': 'Cannot vote on your own comment.'}, 400
+    existing = QuestionCommentVote.query.filter_by(comment_id=c.id, user_id=current_user.id).first()
+    if existing:
+        db.session.delete(existing)
+        c.upvotes = max(0, (c.upvotes or 0) - 1)
+        voted = False
+    else:
+        db.session.add(QuestionCommentVote(comment_id=c.id, user_id=current_user.id))
+        c.upvotes = (c.upvotes or 0) + 1
+        voted = True
+    db.session.commit()
+    return {'voted': voted, 'upvotes': c.upvotes}, 200
+
+
+@app.route('/api/comments/<int:comment_id>/report', methods=['POST'])
+@login_required
+def api_comments_report(comment_id):
+    c = QuestionComment.query.get_or_404(comment_id)
+    data = request.get_json(silent=True) or {}
+    reason = (data.get('reason') or 'other').strip()[:50]
+    detail = (data.get('detail') or '').strip()[:500]
+    existing = QuestionCommentReport.query.filter_by(comment_id=c.id, reporter_id=current_user.id).first()
+    if existing:
+        return {'error': 'Already reported.'}, 400
+    rep = QuestionCommentReport(comment_id=c.id, reporter_id=current_user.id,
+                                reason=reason, detail=detail)
+    db.session.add(rep)
+    c.report_count = (c.report_count or 0) + 1
+    if (c.report_count or 0) >= 3 and not c.is_hidden:
+        c.is_hidden = True
+    db.session.commit()
+    return {'ok': True}, 200
+
+
+@app.route('/admin/comments')
+@login_required
+@admin_required
+def admin_comments():
+    pending_reports = (QuestionCommentReport.query.filter_by(status='pending')
+                       .order_by(QuestionCommentReport.created_at.desc()).limit(100).all())
+    recent_comments = (QuestionComment.query
+                       .order_by(QuestionComment.created_at.desc()).limit(100).all())
+    return render_template('admin_comments.html',
+                           pending_reports=pending_reports,
+                           recent_comments=recent_comments)
+
+
+@app.route('/admin/comments/<int:comment_id>/hide', methods=['POST'])
+@login_required
+@admin_required
+def admin_comment_hide(comment_id):
+    c = QuestionComment.query.get_or_404(comment_id)
+    c.is_hidden = True
+    QuestionCommentReport.query.filter_by(comment_id=c.id, status='pending')\
+        .update({'status': 'actioned'})
+    db.session.commit()
+    return {'ok': True}, 200
+
+
+@app.route('/admin/comments/<int:comment_id>/restore', methods=['POST'])
+@login_required
+@admin_required
+def admin_comment_restore(comment_id):
+    c = QuestionComment.query.get_or_404(comment_id)
+    c.is_hidden = False
+    QuestionCommentReport.query.filter_by(comment_id=c.id, status='pending')\
+        .update({'status': 'dismissed'})
+    db.session.commit()
+    return {'ok': True}, 200
 
 # ══════════════════════════════════════════════════════
 # ERROR HANDLERS

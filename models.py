@@ -277,3 +277,54 @@ class QuestionReport(db.Model):
 
     user = db.relationship('User', backref='reports')
     question = db.relationship('Question', backref='reports')
+
+
+class QuestionComment(db.Model):
+    """Per-question discussion comment.
+    - Visible only after grading (prevents answer spoilers)
+    - Premium-only write
+    - upvote / report / 1-level reply (parent_id)
+    """
+    __tablename__ = 'question_comments'
+    id = db.Column(db.Integer, primary_key=True)
+    question_no = db.Column(db.Integer, db.ForeignKey('questions.no'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey('question_comments.id'), nullable=True, index=True)
+    body = db.Column(db.Text, nullable=False)  # max 1500 chars
+    upvotes = db.Column(db.Integer, default=0)
+    report_count = db.Column(db.Integer, default=0)
+    is_hidden = db.Column(db.Boolean, default=False, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    edited_at = db.Column(db.DateTime, nullable=True)
+
+    user = db.relationship('User', backref='question_comments')
+    question = db.relationship('Question', backref='question_comments')
+
+
+class QuestionCommentVote(db.Model):
+    """1 upvote per user per comment"""
+    __tablename__ = 'question_comment_votes'
+    id = db.Column(db.Integer, primary_key=True)
+    comment_id = db.Column(db.Integer, db.ForeignKey('question_comments.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('comment_id', 'user_id', name='uix_comment_user_vote'),
+    )
+
+
+class QuestionCommentReport(db.Model):
+    """Comment report (spam/offensive) — moderation queue"""
+    __tablename__ = 'question_comment_reports'
+    id = db.Column(db.Integer, primary_key=True)
+    comment_id = db.Column(db.Integer, db.ForeignKey('question_comments.id'), nullable=False, index=True)
+    reporter_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    reason = db.Column(db.String(50), nullable=False)  # spam / offensive / spoiler / other
+    detail = db.Column(db.Text)
+    status = db.Column(db.String(20), default='pending')  # pending / actioned / dismissed
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('comment_id', 'reporter_id', name='uix_comment_reporter'),
+    )

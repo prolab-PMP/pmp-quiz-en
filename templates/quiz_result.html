@@ -161,6 +161,9 @@
         </div>
     </div>
 
+    {# Per-question discussion (Premium-only, lazy load) #}
+    {% with question_no = r.question.no %}{% include "_comments.html" %}{% endwith %}
+
     <!-- Detailed Classification -->
     <details style="margin-top:12px;">
         <summary style="cursor:pointer;color:var(--text-muted);font-size:0.85rem;">
@@ -197,6 +200,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/comments.js') }}"></script>
 <script>
 function toggleAllTranslations(btn) {
     btn.classList.toggle('active');

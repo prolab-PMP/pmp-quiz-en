@@ -53,6 +53,9 @@
             <span style="position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border-radius:50%;width:18px;height:18px;font-size:0.7rem;display:flex;align-items:center;justify-content:center;">{{ pending_report_count }}</span>
             {% endif %}
         </a>
+        <a href="{{ url_for('admin_comments') }}" class="btn btn-outline">
+            <i class="fas fa-comments"></i> Comment moderation
+        </a>
     </div>
 </div>
 
