@@ -26,17 +26,17 @@
         ? `<span style="color:var(--text-muted);font-size:0.8rem;">👍 ${c.upvotes}</span>`
         : `<button type="button" class="qc-vote" data-cid="${c.id}" style="background:${c.has_voted?'#dbeafe':'#fff'};border:1px solid ${c.has_voted?'#2563eb':'var(--border)'};border-radius:6px;padding:3px 9px;cursor:pointer;font-size:0.8rem;color:${c.has_voted?'#1e40af':'#374151'};">👍 ${c.upvotes}</button>`;
     const reportBtn = c.is_mine ? '' :
-        `<button type="button" class="qc-report" data-cid="${c.id}" style="background:none;border:none;color:var(--text-muted);font-size:0.78rem;cursor:pointer;">신고</button>`;
+        `<button type="button" class="qc-report" data-cid="${c.id}" style="background:none;border:none;color:var(--text-muted);font-size:0.78rem;cursor:pointer;">Report</button>`;
     const deleteBtn = c.is_mine ?
-        `<button type="button" class="qc-delete" data-cid="${c.id}" style="background:none;border:none;color:#dc2626;font-size:0.78rem;cursor:pointer;">삭제</button>` : '';
+        `<button type="button" class="qc-delete" data-cid="${c.id}" style="background:none;border:none;color:#dc2626;font-size:0.78rem;cursor:pointer;">Delete</button>` : '';
     const replyBtn = isReply ? '' :
-        `<button type="button" class="qc-reply" data-cid="${c.id}" style="background:none;border:none;color:var(--primary);font-size:0.78rem;cursor:pointer;">답글</button>`;
+        `<button type="button" class="qc-reply" data-cid="${c.id}" style="background:none;border:none;color:var(--primary);font-size:0.78rem;cursor:pointer;">Reply</button>`;
     return `
       <div class="qc-row" data-cid="${c.id}" style="padding:10px 0;border-bottom:1px solid #eef0f2;${isReply?'margin-left:24px;border-left:3px solid #e5e7eb;padding-left:12px;':''}">
         <div style="display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--text-muted);margin-bottom:4px;">
           <strong style="color:#374151;">${escapeHtml(c.author_masked)}</strong>${adminBadge}${meBadge}
           <span>· ${timeAgo(c.created_at)}</span>
-          ${c.edited_at ? '<span>· 수정됨</span>' : ''}
+          ${c.edited_at ? '<span>· edited</span>' : ''}
         </div>
         <div style="font-size:0.92rem;line-height:1.55;color:#1f2937;white-space:pre-wrap;">${nl2br(c.body)}</div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
@@ -53,7 +53,7 @@
   function premiumGateHtml(){
     return `
       <div style="padding:14px;background:#fef9c3;border:1px solid #facc15;border-radius:8px;font-size:0.88rem;color:#854d0e;line-height:1.6;">
-        💬 <strong>Premium members</strong>은 can read and join the discussion.<br>
+        💬 <strong>Premium members</strong> can read and join the discussion.<br>
         <a href="/upgrade" style="color:#1e40af;text-decoration:underline;font-weight:600;">→ Upgrade to Premium</a>
       </div>`;
   }
@@ -68,7 +68,7 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
           <span style="font-size:0.75rem;color:var(--text-muted);">Max 1500 chars · inappropriate posts will be reported/hidden</span>
           <div>
-            ${parentId ? `<button type="button" class="qc-cancel-reply" style="background:none;border:none;color:var(--text-muted);font-size:0.85rem;cursor:pointer;">취소</button>` : ''}
+            ${parentId ? `<button type="button" class="qc-cancel-reply" style="background:none;border:none;color:var(--text-muted);font-size:0.85rem;cursor:pointer;">Cancel</button>` : ''}
             <button type="submit" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:0.85rem;cursor:pointer;font-weight:600;">${parentId?'Post reply':'Post'}</button>
           </div>
         </div>
@@ -90,7 +90,7 @@
     const roots = byParent.root;
     let html = '';
     if (!roots.length) {
-      html = '<div style="padding:12px 0;color:var(--text-muted);font-size:0.88rem;text-align:center;">아직 의견이 없습니다. 첫 댓글을 남겨보세요!</div>';
+      html = '<div style="padding:12px 0;color:var(--text-muted);font-size:0.88rem;text-align:center;">No comments yet. Be the first to share!</div>';
     } else {
       roots.forEach(c => {
         html += commentRowHtml(c, false);
@@ -194,7 +194,7 @@
 
   async function reload(box){
     const qno = box.closest('.qcomments').dataset.qno;
-    box.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">불러오는 중…</div>';
+    box.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">Loading…</div>';
     try {
       const res = await fetch(`/api/comments/${qno}`);
       const j = await res.json();
@@ -203,7 +203,7 @@
       const countEl = box.closest('.qcomments').querySelector('.qcomments-count');
       if (countEl) countEl.textContent = j.total ? `${j.total}` : '';
     } catch(e) {
-      box.innerHTML = '<div style="color:#dc2626;font-size:0.85rem;">불러오기 실패</div>';
+      box.innerHTML = '<div style="color:#dc2626;font-size:0.85rem;">Failed to load</div>';
     }
   }
 

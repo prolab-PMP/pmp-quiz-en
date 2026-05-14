@@ -33,7 +33,7 @@
   {% if c %}
   <div class="qcm-meta">
     🆔 comment_id={{ c.id }} · Q{{ c.question_no }} · author_id={{ c.user_id }}
-    · 👍 {{ c.upvotes }} · reports {{ c.report_count }}회
+    · 👍 {{ c.upvotes }} · reports: {{ c.report_count }}
     {% if c.is_hidden %}<span style="color:#b91c1c;font-weight:600;">[hidden]</span>{% endif %}
   </div>
   <div class="qcm-body">{{ c.body }}</div>
@@ -45,7 +45,7 @@
     {% endif %}
   </div>
   {% else %}
-  <div class="qcm-meta">⚠ comment_id={{ r.comment_id }} (recent 100건에 없음 — 직접 DB 조 필요)</div>
+  <div class="qcm-meta">⚠ comment_id={{ r.comment_id }} (not in recent 100 — DB lookup required)</div>
   {% endif %}
 </div>
 {% endfor %}
@@ -55,7 +55,7 @@
 <div class="qcm-card {% if c.is_hidden %}qcm-hidden{% endif %}">
   <div class="qcm-meta">
     🆔 #{{ c.id }} · Q{{ c.question_no }} · author user_id={{ c.user_id }}
-    · 👍 {{ c.upvotes }} · reports {{ c.report_count }}회
+    · 👍 {{ c.upvotes }} · reports: {{ c.report_count }}
     · {{ c.created_at.strftime('%Y-%m-%d %H:%M') if c.created_at else '' }}
     {% if c.parent_id %} · ↳ reply(parent={{ c.parent_id }}){% endif %}
     {% if c.is_hidden %}<span style="color:#b91c1c;font-weight:600;">[hidden]</span>{% endif %}
@@ -73,7 +73,7 @@
 
 <script>
 async function actCmt(cid, act){
-  if (!confirm(act === 'hide' ? '이 댓글을 Hide합니까?' : 'Restore합니까?')) return;
+  if (!confirm(act === 'hide' ? 'Hide this comment?' : 'Restore this comment?')) return;
   try {
     const res = await fetch(`/admin/comments/${cid}/${act}`, {method:'POST'});
     if (res.ok) location.reload();
