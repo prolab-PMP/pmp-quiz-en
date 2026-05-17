@@ -1614,9 +1614,43 @@ def admin_update_user(user_id):
             flash(f'{user.email}의 Admin 상태를 변경했습니다.', 'success')
 
     elif action == 'delete':
-        if user.id != current_user.id:
-            db.session.delete(user)
-            flash(f'{user.email} 계정을 Delete했습니다.', 'success')
+        if user.id == current_user.id:
+            flash('Cannot delete your own account.', 'error')
+        else:
+            # FK constraints: explicitly delete all child rows before user delete
+            try:
+                deleted_email = user.email
+                session_ids = [s.id for s in QuizSession.query.filter_by(user_id=user.id).all()]
+                if session_ids:
+                    QuizAnswer.query.filter(QuizAnswer.session_id.in_(session_ids)).delete(synchronize_session=False)
+                QuizSession.query.filter_by(user_id=user.id).delete()
+                WrongAnswer.query.filter_by(user_id=user.id).delete()
+                UserAnswerStat.query.filter_by(user_id=user.id).delete()
+                Bookmark.query.filter_by(user_id=user.id).delete()
+                QuestionReport.query.filter_by(user_id=user.id).delete()
+                QuestionCommentVote.query.filter_by(user_id=user.id).delete()
+                QuestionCommentReport.query.filter_by(reporter_id=user.id).delete()
+                my_comment_ids = [c.id for c in QuestionComment.query.filter_by(user_id=user.id).all()]
+                if my_comment_ids:
+                    QuestionCommentVote.query.filter(QuestionCommentVote.comment_id.in_(my_comment_ids)).delete(synchronize_session=False)
+                    QuestionCommentReport.query.filter(QuestionCommentReport.comment_id.in_(my_comment_ids)).delete(synchronize_session=False)
+                    for cid in my_comment_ids:
+                        has_children = QuestionComment.query.filter_by(parent_id=cid).first() is not None
+                        c = QuestionComment.query.get(cid)
+                        if has_children:
+                            c.body = '[deleted account]'
+                            c.is_hidden = False
+                        else:
+                            db.session.delete(c)
+                db.session.delete(user)
+                db.session.commit()
+                flash(f'{deleted_email} account and related data deleted.', 'success')
+                return redirect(url_for('admin_panel'))
+            except Exception as e:
+                db.session.rollback()
+                app.logger.exception('[admin_delete_user] failed')
+                flash(f'Delete failed: {type(e).__name__} — check server logs.', 'error')
+                return redirect(url_for('admin_panel'))
 
     db.session.commit()
     return redirect(url_for('admin_panel'))
