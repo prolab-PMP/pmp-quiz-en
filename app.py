@@ -326,11 +326,8 @@ def signup():
         if user not in db.session:
             db.session.add(user)
         db.session.commit()
-        # 신규가입 알림 메day (SMTP 설정 시 발송)
-        try:
-            _notify_signup(email)
-        except Exception as e:
-            app.logger.warning(f'[MAIL] signup notification failed: {e}')
+        # Signup notification — background thread (SMTP delay must not block redirect)
+        _async_mail(_notify_signup, email)
         login_user(user, remember=True)
         flash('✅ 가입 Completed! 바로 Log in되었습니다.', 'success')
         return redirect(url_for('dashboard'))
@@ -343,8 +340,23 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+def _async_mail(fn, *args):
+    """Run a mail-sending function in a background thread so SMTP latency
+    never blocks the HTTP response."""
+    import threading
+    def _runner():
+        try:
+            fn(*args)
+        except Exception as e:
+            try:
+                app.logger.warning(f'[MAIL][async] {fn.__name__} failed: {e}')
+            except Exception:
+                print(f'[MAIL][async] {fn.__name__} failed: {e}')
+    threading.Thread(target=_runner, daemon=True).start()
+
+
 def _notify_signup(email):
-    """신규가입 알림 메day 발송 (SMTP_* 환경변수 설정 시 동작)."""
+    """Signup notification email (SMTP_* env vars required)."""
     import os, smtplib
     from email.mime.text import MIMEText
     host = os.getenv('SMTP_HOST')
@@ -352,20 +364,22 @@ def _notify_signup(email):
     pw = os.getenv('SMTP_PASS')
     if not (host and user and pw):
         now = datetime.utcnow()
-        print(f'[MAIL][stub] PMP Quiz 아이디 {email} {now.month} mo{now.day}day 가입')
+        print(f'[MAIL][stub] PMP Quiz signup {email} {now.month}/{now.day}')
         return
     port = int(os.getenv('SMTP_PORT', '587'))
     to_addr = os.getenv('NOTIFY_EMAIL', 'songdoinfo@naver.com')
     now = datetime.utcnow()
-    body = f'PMP Quiz 사이트 아이디 {email} {now.month} mo{now.day}day 가입'
+    body = f'PMP Quiz site signup {email} on {now.month}/{now.day}'
     msg = MIMEText(body)
-    msg['Subject'] = f'[PMP Quiz] 신규 가입: {email}'
+    msg['Subject'] = f'[PMP Quiz] New signup: {email}'
     msg['From'] = os.getenv('SMTP_FROM', user)
     msg['To'] = to_addr
-    with smtplib.SMTP(host, port) as s:
+    # timeout=10s prevents unbounded blocking when SMTP is slow/refused
+    with smtplib.SMTP(host, port, timeout=10) as s:
         s.starttls()
         s.login(user, pw)
         s.send_message(msg)
+    print(f'[MAIL] signup notify sent to {to_addr} for {email}')
 
 # ══════════════════════════════════════════════════════
 # FREE VERSION (no login required)
