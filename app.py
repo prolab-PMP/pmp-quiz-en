@@ -22,13 +22,20 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # ══════════════════════════════════════════════════════
-# 커스텀 도메인 redirect: *.up.railway.app → pmp.wayexam.com (301)
+# 커스텀 도메인 redirect: *.up.railway.app → PRIMARY_HOST (301)
+# ──────────────────────────────────────────────────────
+# PRIMARY_HOST 환경변수가 비어있거나 미설정이면 redirect 자체를 끔.
+# (여러 커스텀 도메인이 동시에 같은 서비스에 attach 되어 있고,
+#  각 도메인을 그대로 노출하고 싶을 때 — 예: AdSense 승인용 도메인 등)
 # ══════════════════════════════════════════════════════
-PRIMARY_HOST = os.environ.get('PRIMARY_HOST', 'pmp.wayexam.com')
+PRIMARY_HOST = (os.environ.get('PRIMARY_HOST') or '').strip()
 
 
 @app.before_request
 def _redirect_to_primary_host():
+    # PRIMARY_HOST 미설정 시 redirect 안 함 (모든 도메인 그대로 서빙)
+    if not PRIMARY_HOST:
+        return None
     # Skip Railway healthcheck — it hits us on the internal hostname and
     # expects a 200, not a 301.
     if request.path == '/healthz':
