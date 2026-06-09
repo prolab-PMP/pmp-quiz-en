@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} — pmp.wayexam.com{% endblock %}
+{% block head %}
+<meta name="description" content="{{ meta.summary or meta.title }}">
+{% if meta.keywords %}<meta name="keywords" content="{{ meta.keywords }}">{% endif %}
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://pmp.wayexam.com/blog/{{ post.slug }}">
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{ meta.title }}">
+<meta property="og:description" content="{{ meta.summary or meta.title }}">
+<style>
+.post-wrap{max-width:760px;margin:0 auto;padding:24px 20px 60px}
+.post-back{display:inline-block;color:var(--text-muted,#6b7280);font-size:0.9rem;margin-bottom:20px}
+.post-back:hover{color:var(--text,#111827)}
+.post-header{margin-bottom:32px}
+.post-header h1{font-size:1.9rem;margin:0 0 12px;letter-spacing:-0.03em;line-height:1.35}
+.post-header .meta{color:var(--text-muted,#6b7280);font-size:0.9rem}
+.post-body{font-size:1rem;line-height:1.85;color:var(--text,#111827)}
+.post-body h2{font-size:1.4rem;margin:36px 0 14px;letter-spacing:-0.02em}
+.post-body h3{font-size:1.15rem;margin:26px 0 10px}
+.post-body p{margin:0 0 16px}
+.post-body ul,.post-body ol{margin:0 0 16px;padding-left:24px}
+.post-body li{margin-bottom:6px}
+.post-body table{width:100%;border-collapse:collapse;margin:14px 0 24px;font-size:0.94rem;background:var(--card-bg,#fff);border-radius:8px;overflow:hidden}
+.post-body th,.post-body td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border,#e5e7eb)}
+.post-body th{background:#f9fafb;font-weight:600}
+.post-body blockquote{margin:20px 0;padding:12px 18px;border-left:4px solid var(--primary,#4f46e5);background:#f5f6fa;color:var(--text-muted,#6b7280)}
+.post-related{margin-top:56px;padding-top:24px;border-top:1px solid var(--border,#e5e7eb)}
+.post-related h3{font-size:1.05rem;margin:0 0 12px;color:var(--text-muted,#6b7280);font-weight:600}
+.post-related ul{list-style:none;padding:0;margin:0}
+.post-related li{margin-bottom:8px}
+.post-related a{color:var(--primary,#4f46e5);text-decoration:none}
+.post-cta{margin-top:36px;padding:22px 24px;background:linear-gradient(135deg,#eef2ff,#f5f3ff);border:1px solid #e0e7ff;border-radius:12px;text-align:center}
+.post-cta h3{margin:0 0 6px;font-size:1.1rem;color:var(--primary,#4f46e5)}
+.post-cta p{margin:0 0 12px;color:var(--text,#111827);font-size:0.95rem}
+.post-cta a{display:inline-block;padding:9px 18px;background:var(--primary,#4f46e5);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.92rem}
+</style>
+{% endblock %}
+{% block content %}
+<article class="post-wrap">
+  <a href="{{ url_for('blog_index') }}" class="post-back">← All articles</a>
+  <header class="post-header">
+    <h1>{{ meta.title }}</h1>
+    <p class="meta">{{ meta.date or '' }}{% if meta.read_time %} · {{ meta.read_time }}{% endif %}</p>
+  </header>
+  <div class="post-body">{{ body_html|safe }}</div>
+  <div class="post-cta">
+    <h3>Practice PMP questions now</h3>
+    <p>pmp.wayexam.com offers 2,250+ PMP questions aligned to PMBOK 7 and 8, in EN / KO / ZH / ES / JA.</p>
+    <a href="{{ url_for('login') if not current_user.is_authenticated else url_for('dashboard') }}">{{ 'Start free →' if not current_user.is_authenticated else 'Open dashboard' }}</a>
+  </div>
+  {% if related %}
+  <div class="post-related">
+    <h3>Related</h3>
+    <ul>
+      {% for r in related %}<li><a href="{{ url_for('blog_post', slug=r.slug) }}">{{ r.title }}</a></li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</article>
+{% endblock %}

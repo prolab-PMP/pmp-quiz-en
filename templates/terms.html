@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Terms of Use - PMP Quiz{% endblock %}
+{% block head %}
+<meta name="description" content="Terms of use for PMP Quiz, including account use, study content, Premium access, and service limitations.">
+<meta name="robots" content="index, follow">
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Terms of Use</h1>
+  <p>By using PMP Quiz, you agree to use the service for personal exam preparation and to respect the site, accounts, and content.</p>
+</section>
+
+<div class="card">
+  <h2>Use of the service</h2>
+  <p>You may use PMP Quiz for personal study. Do not scrape, redistribute, resell, or copy the question bank or explanations without permission.</p>
+  <h2>Accounts and access</h2>
+  <p>You are responsible for your account email and password. Premium access is provided according to the payment or trial terms shown at signup or purchase.</p>
+  <h2>Exam disclaimer</h2>
+  <p>This service is an independent preparation tool. It does not guarantee exam results and is not affiliated with PMI.</p>
+  <h2>Contact</h2>
+  <p>For questions about these terms, contact <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+</div>
+{% endblock %}

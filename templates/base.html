@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="{{ current_lang|default('en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +11,8 @@
     <meta property="og:url" content="{{ _canonical }}">
     <meta property="og:site_name" content="PMP Quiz">
     <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}PMP Quiz{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Practice PMP exam questions for PMBOK 8, PMBOK 7, Agile, Hybrid, and ECO topics.{% endblock %}">
     <meta name="twitter:card" content="summary">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -35,7 +37,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('login') }}" class="navbar-brand">
+        <a href="{{ url_for('dashboard') }}" class="navbar-brand">
             <i class="fas fa-graduation-cap"></i> PMP Exam
         </a>
         <button class="hamburger" onclick="document.querySelector('.navbar-nav').classList.toggle('open')">
@@ -56,6 +58,7 @@
             {% else %}
                             <li><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Log in</a></li>
             {% endif %}
+            <li><a href="{{ url_for('blog_index') }}" class="{% if request.endpoint and request.endpoint.startswith('blog') %}active{% endif %}"><i class="fas fa-book-open"></i> Blog</a></li>
             <li>
                 <button class="dark-toggle" id="darkToggleBtn" onclick="toggleDarkMode()">
                     <i class="fas fa-moon"></i> Dark
@@ -93,6 +96,7 @@
         {% if payment_enabled %}
         <p><a href="#payment">Payment info</a></p>
         {% endif %}
+        <p class="footer-legal" style="margin-top:14px;font-size:13px;opacity:.85;"><a href="{{ url_for('about') }}" style="color:inherit;margin:0 8px;">About</a>·<a href="{{ url_for('blog_index') }}" style="color:inherit;margin:0 8px;">Blog</a>·<a href="{{ url_for('privacy') }}" style="color:inherit;margin:0 8px;">Privacy</a>·<a href="{{ url_for('terms') }}" style="color:inherit;margin:0 8px;">Terms</a></p>
     </footer>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>

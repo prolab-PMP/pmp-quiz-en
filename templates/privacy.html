@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy - PMP Quiz{% endblock %}
+{% block head %}
+<meta name="description" content="Privacy policy for PMP Quiz. Learn what account, study, payment, and analytics data may be processed.">
+<meta name="robots" content="index, follow">
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Privacy Policy</h1>
+  <p>We keep the information needed to operate accounts, study progress, payments, and site security.</p>
+</section>
+
+<div class="card">
+  <h2>Information we collect</h2>
+  <p>We may store your email address, password hash, login/session data, study answers, wrong-answer notes, bookmarks, payment status, referral email, and support messages you send to us.</p>
+  <h2>How we use it</h2>
+  <p>We use this data to provide the quiz service, save progress, manage Premium access, improve reliability, respond to support requests, and prevent abuse.</p>
+  <h2>Third-party services</h2>
+  <p>The site may use hosting, database, email, payment, analytics, and advertising providers such as Railway, payment providers, and Google AdSense where configured.</p>
+  <h2>Contact</h2>
+  <p>For privacy questions, contact <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+</div>
+{% endblock %}

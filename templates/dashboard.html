@@ -1,5 +1,11 @@
 {% extends "base.html" %}
-{% block title %}PMP Quiz - Dashboard{% endblock %}
+{% block title %}PMP Exam Practice Questions - Free PMP Quiz{% endblock %}
+{% block head %}
+<meta name="description" content="Practice PMP exam questions for free. Study PMBOK 8, PMBOK 7, Agile, Hybrid, and ECO topics with 2,250 PMP practice questions.">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="PMP Exam Practice Questions">
+<meta property="og:description" content="Try free PMP practice questions and upgrade for the full 2,250-question PMP quiz bank, analytics, and mock exams.">
+{% endblock %}
 
 {% block content %}
 
@@ -29,14 +35,39 @@
     <p>Full coverage of PMBOK 8 &amp; 7 + Agile/Hybrid 25%+. Study 2,250 questions by category, difficulty, and mode. Your progress auto-saves, and you can review wrong-answer notes and performance analytics anytime.</p>
     <div class="badges">
         <span>📂 Total {{ total_questions }} questions</span>
+        {% if current_user.is_authenticated %}
         <span>📊 {{ total_sessions }} attempts</span>
         <span>🎯 Avg {{ "%.1f"|format(avg_accuracy) }}%</span>
         <span>👤 {{ current_user.email }}{% if current_user.is_admin %} · Admin{% endif %}{% if current_user.is_premium %} · Premium{% endif %}</span>
+        {% else %}
+        <span>Free 30-question trial</span>
+        <span>No account required to start</span>
+        {% endif %}
     </div>
 </section>
 
+{% if not current_user.is_authenticated %}
+<section class="guest-cta" style="margin:0 0 24px;padding:24px 28px;border-radius:14px;background:linear-gradient(135deg,#eef2ff 0%,#f5f3ff 100%);border:1px solid #c7d2fe;box-shadow:0 1px 3px rgba(0,0,0,0.04),0 8px 24px rgba(99,102,241,0.08);">
+  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:20px;justify-content:space-between;">
+    <div style="flex:1;min-width:240px;">
+      <div style="font-size:0.85rem;color:#5b21b6;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">Free trial</div>
+      <h2 style="margin:0 0 6px;font-size:1.35rem;letter-spacing:-0.02em;color:#1e293b;">Try 30 PMP questions now</h2>
+      <p style="margin:0;color:#475569;font-size:0.95rem;line-height:1.6;">Start a free PMP practice set with explanations. Sign up to save progress, unlock all 2,250 questions, review wrong answers, and track analytics.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;min-width:190px;">
+      <form method="POST" action="{{ url_for('free_start') }}" style="margin:0;">
+        <input type="hidden" name="count" value="30">
+        <button type="submit" style="width:100%;padding:13px 22px;background:#4f46e5;color:#fff;border:0;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 2px 6px rgba(79,70,229,0.30);">Start free 30 questions</button>
+      </form>
+      <a href="{{ url_for('signup') }}" style="display:block;text-align:center;padding:10px 22px;background:#fff;color:#4f46e5;border:1.5px solid #c7d2fe;border-radius:10px;font-weight:600;font-size:0.95rem;text-decoration:none;">Sign up - 7-day Premium trial</a>
+      <a href="{{ url_for('login') }}" style="display:block;text-align:center;font-size:0.85rem;color:#64748b;text-decoration:none;">Already a member? Log in</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
 {# ── Subscription / Validity status — single compact bar with one CTA ── #}
-{% if not current_user.is_admin %}
+{% if current_user.is_authenticated and not current_user.is_admin %}
 {% set remaining = (current_user.validity_end - now()).days if (current_user.validity_end and now is defined) else 0 %}
 <div class="card" style="margin-bottom:16px;padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
     {% if current_user.is_paid_premium() %}
@@ -92,6 +123,7 @@
 </div>
 {% endif %}
 
+{% if current_user.is_authenticated %}
 <div class="section-title"><span class="tag">My Status</span> Quick progress summary</div>
 
 <!-- Stats Grid -->
@@ -119,17 +151,22 @@
         <div class="stat-label">Wrong answers</div>
     </div>
 </div>
+{% endif %}
 
 
+{% if current_user.is_authenticated %}
 <div class="section-title"><span class="tag purple">Quick start</span> Click a domain for instant 20-question practice</div>
+{% endif %}
 
 
 <div class="section-title"><span class="tag" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:0">🎲 Quick start</span> Random pickup</div>
 <p style="color:var(--text-muted);font-size:0.85rem;margin:-8px 0 14px">Start instantly with random questions (free members can use)</p>
 <div class="random-quick-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px;">
 
-  <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin:0;">
+  <form method="POST" action="{{ url_for('quiz_begin') if current_user.is_authenticated else url_for('free_start') }}" style="margin:0;">
+    {% if current_user.is_authenticated %}
     <input type="hidden" name="mode" value="random">
+    {% endif %}
     <input type="hidden" name="count" value="30">
     <button type="submit" class="random-quick-btn"
             style="width:100%;padding:18px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);
@@ -141,8 +178,10 @@
       <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">30 questions · ~15 min</div>
     </button>
   </form>
-  <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin:0;">
+  <form method="POST" action="{{ url_for('quiz_begin') if current_user.is_authenticated else url_for('free_start') }}" style="margin:0;">
+    {% if current_user.is_authenticated %}
     <input type="hidden" name="mode" value="random">
+    {% endif %}
     <input type="hidden" name="count" value="50">
     <button type="submit" class="random-quick-btn"
             style="width:100%;padding:18px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);
@@ -154,8 +193,10 @@
       <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">50 questions · ~25 min</div>
     </button>
   </form>
-  <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin:0;">
+  <form method="POST" action="{{ url_for('quiz_begin') if current_user.is_authenticated else url_for('free_start') }}" style="margin:0;">
+    {% if current_user.is_authenticated %}
     <input type="hidden" name="mode" value="random">
+    {% endif %}
     <input type="hidden" name="count" value="100">
     <button type="submit" class="random-quick-btn"
             style="width:100%;padding:18px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);
@@ -167,8 +208,10 @@
       <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">100 questions · ~50 min</div>
     </button>
   </form>
-  <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin:0;">
+  <form method="POST" action="{{ url_for('quiz_begin') if current_user.is_authenticated else url_for('free_start') }}" style="margin:0;">
+    {% if current_user.is_authenticated %}
     <input type="hidden" name="mode" value="random">
+    {% endif %}
     <input type="hidden" name="count" value="200">
     <button type="submit" class="random-quick-btn"
             style="width:100%;padding:18px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);
@@ -186,6 +229,7 @@
 body.dark .random-quick-btn { background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(91,33,182,0.30)) !important; color: #ddd6fe !important; border-color: rgba(167,139,250,0.4) !important; }
 </style>
 
+{% if current_user.is_authenticated %}
 <div class="fw-toolbar">
   <button class="fw-tab active" data-view="pmbok8"><i class="fas fa-book-open"></i> PMBOK 8</button>
   <button class="fw-tab" data-view="pmbok7"><i class="fas fa-book"></i> PMBOK 7</button>
@@ -313,6 +357,7 @@ body.dark .random-quick-btn { background: linear-gradient(135deg, rgba(124,58,23
     </div>
 </div>
 {% endif %}
+{% endif %}
 
 
 {% endblock %}
@@ -431,6 +476,7 @@ function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;'
 // startQuiz now opens a count-picker modal instead of submitting immediately.
 // User picks 10/30/50/All -> form submits with chosen count.
 function startQuiz(filterType, filterValue, availableCount) {
+  if (!document.getElementById('fw-quiz-form')) return;
   document.getElementById('fw-filter-type').value = filterType;
   document.getElementById('fw-filter-value').value = filterValue;
   // Update modal subtitle with the picked category + total questions in it
@@ -453,10 +499,12 @@ document.querySelectorAll('.fw-count-btn').forEach(btn => {
     document.getElementById('fw-quiz-form').submit();
   });
 });
-document.getElementById('fw-count-cancel').addEventListener('click', () => {
+const fwCountCancel = document.getElementById('fw-count-cancel');
+if (fwCountCancel) fwCountCancel.addEventListener('click', () => {
   document.getElementById('fw-count-modal').style.display = 'none';
 });
-document.getElementById('fw-count-modal').addEventListener('click', (e) => {
+const fwCountModal = document.getElementById('fw-count-modal');
+if (fwCountModal) fwCountModal.addEventListener('click', (e) => {
   // close when clicking the dim backdrop (not the inner card)
   if (e.target.id === 'fw-count-modal') {
     document.getElementById('fw-count-modal').style.display = 'none';
@@ -466,6 +514,7 @@ document.getElementById('fw-count-modal').addEventListener('click', (e) => {
 function renderView(viewKey) {
   const sections = VIEWS[viewKey];
   const container = document.getElementById('fw-views');
+  if (!container) return;
   container.innerHTML = sections.map(section => {
     let items = currentStats[section.filterType] || [];
     // (KO had a 'split.length >= 2' filter for number-prefixed principles;
@@ -520,6 +569,7 @@ document.querySelectorAll('.fw-tab').forEach(btn => {
 });
 
 async function loadStats() {
+  if (!document.getElementById('fw-views')) return;
   try {
     const res = await fetch('/api/framework_stats');
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -551,8 +601,8 @@ loadStats();
 
 <script>
 // Premium gating helpers
-window.IS_PAID_PREMIUM = {{ current_user.is_paid_premium() |tojson }};
-window.IS_ADMIN = {{ current_user.is_admin |tojson }};
+window.IS_PAID_PREMIUM = {{ (current_user.is_authenticated and current_user.is_paid_premium()) |tojson }};
+window.IS_ADMIN = {{ (current_user.is_authenticated and current_user.is_admin) |tojson }};
 function showPremiumGate() {
   document.getElementById('premium-gate-modal').style.display = 'flex';
 }

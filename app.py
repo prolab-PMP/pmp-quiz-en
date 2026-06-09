@@ -237,7 +237,7 @@ def healthz():
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    return redirect(url_for('dashboard'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -721,8 +721,18 @@ def free_result():
 # ══════════════════════════════════════════════════════
 
 @app.route('/dashboard')
-@login_required
 def dashboard():
+    if not current_user.is_authenticated:
+        total_questions = Question.query.count()
+        categories = get_category_options()
+        return render_template('dashboard.html',
+                             recent=[],
+                             total_sessions=0,
+                             avg_accuracy=0,
+                             wrong_count=0,
+                             total_questions=total_questions,
+                             categories=categories)
+
     # Recent sessions
     recent = QuizSession.query.filter_by(user_id=current_user.id, is_completed=True)\
         .order_by(desc(QuizSession.completed_at)).limit(5).all()
@@ -2078,29 +2088,206 @@ def not_found(e):
 def server_error(e):
     return render_template('error.html', code=500, message='서버 An error occurred.'), 500
 
+
+# ══════════════════════════════════════════════════════
+# BLOG (PMP study guides — public content for AdSense)
+# ══════════════════════════════════════════════════════
+_BLOG_CACHE = {}
+_BLOG_INDEX_CACHE = []
+
+
+def _parse_frontmatter(text):
+    meta = {}
+    body = text
+    if text.startswith('---'):
+        end = text.find('\n---', 3)
+        if end != -1:
+            block = text[3:end].strip()
+            body = text[end + 4:].lstrip('\n')
+            for line in block.split('\n'):
+                if ':' in line:
+                    k, v = line.split(':', 1)
+                    meta[k.strip()] = v.strip().strip('"').strip("'")
+    return meta, body
+
+
+def _md_to_html(md):
+    import html as _html
+    lines = md.split('\n')
+    out = []
+    i = 0
+    n = len(lines)
+
+    def inline(text):
+        text = _html.escape(text)
+        text = re.sub(r'\*\*([^\*\n]+)\*\*', r'<strong>\1</strong>', text)
+        text = re.sub(r'(?<!\*)\*([^\*\n]+)\*(?!\*)', r'<em>\1</em>', text)
+        text = re.sub(r'`([^`\n]+)`', r'<code>\1</code>', text)
+        text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)',
+                      lambda m: f'<a href="{m.group(2)}">{m.group(1)}</a>', text)
+        return text
+
+    while i < n:
+        line = lines[i]
+        s = line.rstrip()
+        if not s.strip():
+            i += 1
+            continue
+        m = re.match(r'^(#{1,6})\s+(.*)$', s)
+        if m:
+            level = len(m.group(1))
+            out.append(f'<h{level}>{inline(m.group(2))}</h{level}>')
+            i += 1
+            continue
+        if s.lstrip().startswith('> '):
+            block = []
+            while i < n and lines[i].lstrip().startswith('> '):
+                block.append(lines[i].lstrip()[2:])
+                i += 1
+            out.append('<blockquote>' + inline(' '.join(block)) + '</blockquote>')
+            continue
+        if s.lstrip().startswith('|') and i + 1 < n and re.match(r'^\s*\|[\s\-:|]+\|\s*$', lines[i + 1]):
+            header_cells = [c.strip() for c in s.strip().strip('|').split('|')]
+            i += 2
+            rows = []
+            while i < n and lines[i].lstrip().startswith('|'):
+                rows.append([c.strip() for c in lines[i].strip().strip('|').split('|')])
+                i += 1
+            tbl = ['<table>']
+            tbl.append('<tr>' + ''.join(f'<th>{inline(c)}</th>' for c in header_cells) + '</tr>')
+            for r in rows:
+                tbl.append('<tr>' + ''.join(f'<td>{inline(c)}</td>' for c in r) + '</tr>')
+            tbl.append('</table>')
+            out.append('\n'.join(tbl))
+            continue
+        if re.match(r'^\s*[-*]\s+', s):
+            items = []
+            while i < n and re.match(r'^\s*[-*]\s+', lines[i]):
+                items.append(re.sub(r'^\s*[-*]\s+', '', lines[i]).rstrip())
+                i += 1
+            out.append('<ul>' + ''.join(f'<li>{inline(it)}</li>' for it in items) + '</ul>')
+            continue
+        if re.match(r'^\s*\d+\.\s+', s):
+            items = []
+            while i < n and re.match(r'^\s*\d+\.\s+', lines[i]):
+                items.append(re.sub(r'^\s*\d+\.\s+', '', lines[i]).rstrip())
+                i += 1
+            out.append('<ol>' + ''.join(f'<li>{inline(it)}</li>' for it in items) + '</ol>')
+            continue
+        para = [s]
+        i += 1
+        while i < n and lines[i].strip() and not re.match(
+            r'^(#{1,6}\s|\s*[-*]\s+|\s*\d+\.\s+|\||>\s)', lines[i]
+        ):
+            para.append(lines[i].rstrip())
+            i += 1
+        out.append('<p>' + inline(' '.join(para)) + '</p>')
+    return '\n'.join(out)
+
+
+def _load_blog():
+    global _BLOG_CACHE, _BLOG_INDEX_CACHE
+    _BLOG_CACHE = {}
+    blog_dir = os.path.join(app.root_path, 'templates', 'blog')
+    if not os.path.isdir(blog_dir):
+        _BLOG_INDEX_CACHE = []
+        return
+    posts = []
+    for fname in os.listdir(blog_dir):
+        if not fname.endswith('.md'):
+            continue
+        slug = fname[:-3]
+        try:
+            with open(os.path.join(blog_dir, fname), 'r', encoding='utf-8') as f:
+                meta, body = _parse_frontmatter(f.read())
+            html_body = _md_to_html(body)
+            _BLOG_CACHE[slug] = {'slug': slug, 'meta': meta, 'html': html_body}
+            posts.append({
+                'slug': slug,
+                'title': meta.get('title', slug),
+                'summary': meta.get('summary', ''),
+                'date': meta.get('date', ''),
+            })
+        except Exception as e:
+            try: app.logger.warning(f'[BLOG] failed to load {fname}: {e}')
+            except Exception: print(f'[BLOG] failed to load {fname}: {e}')
+    posts.sort(key=lambda p: p['date'], reverse=True)
+    _BLOG_INDEX_CACHE = posts
+
+
+_load_blog()
+
+
+@app.route('/blog')
+def blog_index():
+    if app.config.get('DEBUG'):
+        _load_blog()
+    return render_template('blog_index.html', posts=_BLOG_INDEX_CACHE)
+
+
+@app.route('/blog/<slug>')
+def blog_post(slug):
+    if app.config.get('DEBUG'):
+        _load_blog()
+    entry = _BLOG_CACHE.get(slug)
+    if not entry:
+        abort(404)
+    related = [p for p in _BLOG_INDEX_CACHE if p['slug'] != slug][:3]
+    return render_template('blog_post.html',
+        post=entry, meta=entry['meta'], body_html=entry['html'], related=related)
+
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+
 # ══════════════════════════════════════════════════════
 # SEO ROUTES
 # ══════════════════════════════════════════════════════
 
 @app.route('/robots.txt')
 def robots_txt():
-    """Serve robots.txt for SEO"""
-    try:
-        with open(os.path.join(app.static_folder, 'robots.txt'), 'r') as f:
-            content = f.read()
-        return content, 200, {'Content-Type': 'text/plain'}
-    except FileNotFoundError:
-        abort(404)
+    body = ('User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /admin/\n'
+            'Disallow: /api/\n\nSitemap: https://pmp.wayexam.com/sitemap.xml\n')
+    return body, 200, {'Content-Type': 'text/plain'}
+
 
 @app.route('/sitemap.xml')
 def sitemap_xml():
-    """Serve sitemap.xml for SEO"""
+    """Dynamic sitemap including blog URLs."""
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    base = 'https://pmp.wayexam.com'
+    urls = [
+        ('/', '1.0', 'weekly'),
+        ('/free', '0.9', 'weekly'),
+        ('/blog', '0.9', 'weekly'),
+        ('/signup', '0.5', 'monthly'),
+        ('/about', '0.6', 'monthly'),
+        ('/privacy', '0.3', 'yearly'),
+        ('/terms', '0.3', 'yearly'),
+    ]
     try:
-        with open(os.path.join(app.static_folder, 'sitemap.xml'), 'r') as f:
-            content = f.read()
-        return content, 200, {'Content-Type': 'application/xml'}
-    except FileNotFoundError:
-        abort(404)
+        for p in _BLOG_INDEX_CACHE:
+            urls.append((f"/blog/{p['slug']}", '0.7', 'monthly'))
+    except NameError:
+        pass
+    body = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    body += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    for loc, pri, cf in urls:
+        body += f'  <url><loc>{base}{loc}</loc><lastmod>{today}</lastmod><changefreq>{cf}</changefreq><priority>{pri}</priority></url>\n'
+    body += '</urlset>\n'
+    return body, 200, {'Content-Type': 'application/xml'}
 
 @app.route('/llms.txt')
 def llms_txt():
@@ -2381,4 +2568,3 @@ def admin_cleanup_old_seed():
         return ('<h2 style="color:#b91c1c">cleanup_old_seed error</h2>'
                 f'<p>{_html.escape(type(e).__name__)}: see server logs for details.</p>'
                 '<p><a href="/admin">Admin</a></p>'), 500
-
