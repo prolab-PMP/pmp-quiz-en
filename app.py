@@ -28,7 +28,14 @@ app.config.from_object(Config)
 # (여러 커스텀 도메인이 동시에 같은 서비스에 attach 되어 있고,
 #  각 도메인을 그대로 노출하고 싶을 때 — 예: AdSense 승인용 도메인 등)
 # ══════════════════════════════════════════════════════
-PRIMARY_HOST = (os.environ.get('PRIMARY_HOST') or '').strip()
+PRIMARY_HOST = (os.environ.get('PRIMARY_HOST') or 'wayexam.com').strip().lower()
+PUBLIC_HOSTS = {
+    h.strip().lower()
+    for h in (os.environ.get('PUBLIC_HOSTS') or 'wayexam.com,www.wayexam.com,pmp.wayexam.com').split(',')
+    if h.strip()
+}
+if PRIMARY_HOST:
+    PUBLIC_HOSTS.add(PRIMARY_HOST)
 
 
 @app.before_request
@@ -43,7 +50,7 @@ def _redirect_to_primary_host():
     host = (request.host or '').lower()
     if (
         host
-        and host != PRIMARY_HOST.lower()
+        and host not in PUBLIC_HOSTS
         and not host.startswith('localhost')
         and not host.startswith('127.')
         and not host.endswith('.railway.internal')   # internal Railway routing
@@ -2258,8 +2265,9 @@ def terms():
 
 @app.route('/robots.txt')
 def robots_txt():
+    base = app.config.get('PRIMARY_HOST', PRIMARY_HOST or 'wayexam.com')
     body = ('User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /admin/\n'
-            'Disallow: /api/\n\nSitemap: https://pmp.wayexam.com/sitemap.xml\n')
+            f'Disallow: /api/\n\nSitemap: https://{base}/sitemap.xml\n')
     return body, 200, {'Content-Type': 'text/plain'}
 
 
@@ -2267,7 +2275,7 @@ def robots_txt():
 def sitemap_xml():
     """Dynamic sitemap including blog URLs."""
     today = datetime.utcnow().strftime('%Y-%m-%d')
-    base = 'https://pmp.wayexam.com'
+    base = 'https://' + app.config.get('PRIMARY_HOST', PRIMARY_HOST or 'wayexam.com')
     urls = [
         ('/', '1.0', 'weekly'),
         ('/free', '0.9', 'weekly'),

@@ -37,7 +37,8 @@ class Config:
     PERMANENT_SESSION_LIFETIME = 60 * 60 * 24 * 30  # 30 days
 
     # ── Custom domain (used for canonical URL + redirect target) ──
-    PRIMARY_HOST = os.environ.get('PRIMARY_HOST', 'pmp.wayexam.com')
+    PRIMARY_HOST = os.environ.get('PRIMARY_HOST', 'wayexam.com')
+    PUBLIC_HOSTS = os.environ.get('PUBLIC_HOSTS', 'wayexam.com,www.wayexam.com,pmp.wayexam.com')
 
     # ── Google AdSense (set in Railway env vars when ready) ──
     # ADSENSE_PUBLISHER_ID: 'ca-pub-1234567890' (account-wide)
