@@ -1771,6 +1771,26 @@ def admin_question_edit(q_no):
     return render_template('admin_question_edit.html', q=q, categories=categories, back=back)
 
 
+@app.route('/admin/questions/export.json')
+@admin_required
+def admin_questions_export_json():
+    """Export current question rows for syncing admin DB edits back to source files."""
+    fields = [
+        'no',
+        'question', 'opt_a', 'opt_b', 'opt_c', 'opt_d', 'opt_e', 'answer', 'explanation',
+        'eco2021_domain', 'eco2021_task', 'pmbok7_domain', 'pmbok7_principle',
+        'methodology', 'methodology_detail',
+        'eco2026_domain', 'eco2026_task', 'pmbok8_domain', 'pmbok8_focus_area',
+        'pmbok8_principle', 'pmbok8_process', 'pmbok8_new_topics',
+        'question_kr', 'opt_a_kr', 'opt_b_kr', 'opt_c_kr', 'opt_d_kr', 'opt_e_kr',
+        'explanation_kr',
+    ]
+    rows = []
+    for q in Question.query.order_by(Question.no).all():
+        rows.append({field: getattr(q, field) for field in fields})
+    return jsonify(rows)
+
+
 @app.route('/admin/question_stats')
 @admin_required
 def admin_question_stats():
