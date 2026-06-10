@@ -4,23 +4,23 @@
 {% block content %}
 <section class="hero" style="text-align:center;">
     <h1>Upgrade to Premium</h1>
-    <p>Unlock all 2,234 PMBOK 8 &amp; 7 questions, real-time analytics, wrong-answer notes, and PMP-style mock exams.</p>
+    <p>Unlock all 2,250 PMBOK 8 &amp; 7 questions, real-time analytics, wrong-answer notes, and PMP-style mock exams.</p>
 </section>
 
-<div class="card" style="padding:18px 22px; margin:0 0 20px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1px solid #f59e0b; text-align:center;">
-    <div style="font-size:1.05rem; font-weight:700; color:#92400e; margin-bottom:4px;">
-        🎁 Refer a friend — both get +1 month free
+<div class="card" style="padding:18px 22px; margin:0 0 20px; background:#fff7ed; border:1px solid #fed7aa; text-align:center;">
+    <div style="font-size:1.05rem; font-weight:700; color:#9a3412; margin-bottom:4px;">
+        Refer a friend and both get +1 month free
     </div>
-    <div style="font-size:0.9rem; color:#78350f;">
+    <div style="font-size:0.9rem; color:#7c2d12;">
         Tell a friend to enter your email when they sign up. When they upgrade to Premium, you both get an extra month added automatically.
     </div>
 </div>
 
 {% if not configured %}
 <div class="card" style="text-align:center; padding:32px;">
-    <h2 style="margin-bottom:12px;"><i class="fas fa-clock"></i> Coming Soon</h2>
+    <h2 style="margin-bottom:12px;"><i class="fas fa-clock"></i> Checkout Coming Soon</h2>
     <p style="color:var(--text-muted); margin-bottom:24px;">
-        Online checkout is being set up. For now, contact
+        PayPal checkout is being configured. For now, contact
         <a href="mailto:songdoinfo@naver.com">songdoinfo@naver.com</a>
         to upgrade your account manually.
     </p>
@@ -30,16 +30,16 @@
 </div>
 {% else %}
 
-<div class="card" style="padding:24px; margin-bottom:24px; background:linear-gradient(135deg,#eff6ff,#dbeafe);">
+<div class="card" style="padding:24px; margin-bottom:24px; background:#eff6ff;">
     <div class="card-header" style="border-bottom:none; padding-bottom:8px;">
         <i class="fas fa-star" style="color:#f59e0b;"></i> Premium Benefits
     </div>
     <ul style="list-style:none; padding:0; line-height:2; font-size:0.95rem;">
-        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Unlimited access to all <strong>2,234 questions</strong></li>
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Unlimited access to all <strong>2,250 questions</strong></li>
         <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> PMBOK 8 &amp; 7 per-category practice</li>
         <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Automated wrong-answer note management</li>
         <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Daily and per-category accuracy analytics</li>
-        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Mock exam (180 / 185 questions)</li>
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Mock exam practice</li>
         <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Multilingual translation toggle (KO / ZH / ES / JA)</li>
     </ul>
 </div>
@@ -53,31 +53,84 @@
         </div>
         {% endif %}
         <h3 style="font-size:1.1rem; margin-bottom:8px; color:var(--text-muted); font-weight:600;">{{ plan.label }}</h3>
-        <div style="font-size:2.4rem; font-weight:800; color:var(--text); letter-spacing:-0.025em; margin:8px 0;">
+        <div style="font-size:2.4rem; font-weight:800; color:var(--text); letter-spacing:0; margin:8px 0;">
             ${{ plan.price }}
         </div>
         <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:18px;">
-            ≈ ${{ "%.2f"|format(plan.price / plan.months) }} / month
+            ${{ "%.2f"|format((plan.price|float) / plan.months) }} / month
         </div>
-        <a href="{{ plan.checkout_url }}" class="btn btn-primary btn-block" style="display:block; padding:12px;">
-            <i class="fas fa-credit-card"></i> Buy Now
-        </a>
+        <div id="paypal-button-{{ plan.key }}" class="paypal-button-wrap" data-plan="{{ plan.key }}"></div>
+        <div id="paypal-status-{{ plan.key }}" style="min-height:20px;margin-top:8px;font-size:0.82rem;color:var(--text-muted);"></div>
     </div>
     {% endfor %}
 </div>
 
 <div class="card" style="margin-top:24px; padding:20px; font-size:0.88rem; color:var(--text-muted); line-height:1.7;">
     <strong style="color:var(--text);">How it works:</strong><br>
-    1. Click <strong>Buy Now</strong> on a plan above.<br>
-    2. Complete payment on Lemon Squeezy (cards, Apple Pay, Google Pay supported).<br>
-    3. Your account is automatically upgraded — usually within seconds.<br>
-    4. Refresh the dashboard to see your new validity period.
+    1. Choose a plan and click the PayPal button.<br>
+    2. Complete payment securely with PayPal.<br>
+    3. Your account is upgraded immediately after PayPal confirms the payment.<br>
+    4. Return to the dashboard to see your new validity period.
 </div>
 
 <div style="text-align:center; margin-top:20px; font-size:0.85rem; color:var(--text-muted);">
     Questions? <a href="mailto:songdoinfo@naver.com">songdoinfo@naver.com</a>
-    &nbsp;·&nbsp;
-    Secure checkout by <a href="https://www.lemonsqueezy.com" target="_blank" rel="noopener">Lemon Squeezy</a>
+    &nbsp;&middot;&nbsp;
+    Secure checkout by <a href="https://www.paypal.com" target="_blank" rel="noopener">PayPal</a>
 </div>
+
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id|urlencode }}&currency=USD&intent=capture&components=buttons"></script>
+<script>
+document.querySelectorAll('.paypal-button-wrap').forEach(function(container) {
+    const plan = container.dataset.plan;
+    const status = document.getElementById('paypal-status-' + plan);
+    paypal.Buttons({
+        style: {
+            layout: 'vertical',
+            color: 'gold',
+            shape: 'rect',
+            label: 'paypal'
+        },
+        createOrder: function() {
+            status.textContent = 'Creating secure PayPal order...';
+            return fetch('{{ url_for("paypal_create_order") }}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({plan: plan})
+            }).then(function(res) {
+                if (!res.ok) throw new Error('Could not create PayPal order.');
+                return res.json();
+            }).then(function(data) {
+                if (!data.id) throw new Error(data.error || 'PayPal order ID missing.');
+                status.textContent = '';
+                return data.id;
+            });
+        },
+        onApprove: function(data) {
+            status.textContent = 'Confirming payment...';
+            return fetch('{{ url_for("paypal_capture_order", order_id="ORDER_ID") }}'.replace('ORDER_ID', data.orderID), {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({plan: plan})
+            }).then(function(res) {
+                return res.json().then(function(body) {
+                    if (!res.ok) throw new Error(body.error || 'Payment capture failed.');
+                    return body;
+                });
+            }).then(function(body) {
+                status.textContent = 'Payment confirmed. Redirecting...';
+                window.location.href = body.redirect || '{{ url_for("payment_success") }}';
+            });
+        },
+        onCancel: function() {
+            status.textContent = 'Payment canceled. You can try again anytime.';
+        },
+        onError: function(err) {
+            console.error(err);
+            status.textContent = 'Payment could not be completed. Please try again or contact support.';
+        }
+    }).render('#paypal-button-' + plan);
+});
+</script>
 {% endif %}
 {% endblock %}

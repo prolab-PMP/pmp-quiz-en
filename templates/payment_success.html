@@ -8,14 +8,14 @@
     </div>
     <h1 style="margin-bottom:12px;">Payment Successful!</h1>
     <p style="color:var(--text-muted); font-size:1rem; line-height:1.7; margin-bottom:24px;">
-        Thank you for upgrading to Premium. Your account is being activated automatically — this usually takes a few seconds.
+        Thank you for upgrading to Premium. PayPal confirmed your payment and your account has been updated.
     </p>
 
     <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:16px; margin-bottom:24px; font-size:0.9rem; line-height:1.7;">
         <strong style="color:#166534;">What happens next:</strong><br>
         <span style="color:#14532d;">
-            Within a few seconds, your access expires date will update.<br>
-            If it doesn't show within 5 minutes, please refresh the page or
+            Your Premium validity should now be visible on the dashboard.<br>
+            If it does not show immediately, please refresh the page or
             email <a href="mailto:songdoinfo@naver.com">songdoinfo@naver.com</a>.
         </span>
     </div>
@@ -26,11 +26,8 @@
     </a>
     {% else %}
     <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
-        <i class="fas fa-sign-in-alt"></i> Log In to Activate
+        <i class="fas fa-sign-in-alt"></i> Log In
     </a>
-    <p style="margin-top:14px; font-size:0.85rem; color:var(--text-muted);">
-        Use the same email you entered during checkout.
-    </p>
     {% endif %}
 </div>
 {% endblock %}

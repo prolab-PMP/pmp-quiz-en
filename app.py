@@ -410,36 +410,101 @@ def free_upgrade():
 
 
 # ══════════════════════════════════════════════════════
-# LEMON SQUEEZY PAYMENT INTEGRATION
+# PAYPAL PAYMENT INTEGRATION
 # ──────────────────────────────────────────────────────
 # Flow:
 #   1. User clicks "Buy Premium" -> /upgrade page (renders pricing).
-#   2. User clicks a plan -> redirected to Lemon Squeezy hosted checkout.
-#   3. User pays on Lemon Squeezy (cards / Apple Pay / etc.).
-#   4. Lemon Squeezy fires order_created webhook to /webhook/lemonsqueezy.
-#   5. Webhook handler verifies HMAC signature, looks up user by email,
-#      sets premium validity, returns 200.
-#   6. User is redirected to /payment/success with confirmation.
+#   2. PayPal JS SDK renders checkout buttons for each plan.
+#   3. Browser calls /api/paypal/create-order to create an order server-side.
+#   4. Buyer approves payment in PayPal.
+#   5. Browser calls /api/paypal/capture-order/<order_id>.
+#   6. Server verifies captured amount/plan and extends Premium validity.
 #
 # Required env vars (set in Railway Variables when ready):
-#   - LEMONSQUEEZY_STORE_SLUG       (e.g. 'pmp-quiz')
-#   - LEMONSQUEEZY_WEBHOOK_SECRET   (used to verify signature)
-#   - LEMONSQUEEZY_VARIANT_3MO      (variant ID for 3-month plan)
-#   - LEMONSQUEEZY_VARIANT_6MO      (variant ID for 6-month plan, optional)
-#   - LEMONSQUEEZY_VARIANT_12MO     (variant ID for 12-month plan, optional)
+#   - PAYPAL_CLIENT_ID
+#   - PAYPAL_CLIENT_SECRET
+#   - PAYPAL_MODE                   ('sandbox' default, 'live' for production)
 #
-# Until env vars are set, /upgrade renders a "coming soon" notice and
-# /webhook/lemonsqueezy returns 503. Site continues to work normally.
+# Until env vars are set, /upgrade renders a "checkout coming soon" notice.
 # ══════════════════════════════════════════════════════
 import hmac
 import hashlib
+import base64
+import urllib.request
+import urllib.error
+
+PAYPAL_PLANS = [
+    # (plan key, label, price USD, months of validity)
+    ('3mo',  '3 Months Premium',  '19.00', 3),
+    ('6mo',  '6 Months Premium',  '29.00', 6),
+    ('12mo', '12 Months Premium', '49.00', 12),
+]
 
 LEMONSQUEEZY_PLANS = [
-    # (variant env var name, label, price USD, months of validity)
+    # Legacy webhook compatibility only. New checkout uses PayPal.
     ('LEMONSQUEEZY_VARIANT_3MO',  '3 Months Premium',  19, 3),
     ('LEMONSQUEEZY_VARIANT_6MO',  '6 Months Premium',  29, 6),
     ('LEMONSQUEEZY_VARIANT_12MO', '12 Months Premium', 49, 12),
 ]
+
+
+def _paypal_mode():
+    return os.environ.get('PAYPAL_MODE', 'sandbox').strip().lower()
+
+
+def _paypal_api_base():
+    return 'https://api-m.paypal.com' if _paypal_mode() == 'live' else 'https://api-m.sandbox.paypal.com'
+
+
+def _paypal_configured():
+    return bool(os.environ.get('PAYPAL_CLIENT_ID') and os.environ.get('PAYPAL_CLIENT_SECRET'))
+
+
+def _paypal_access_token():
+    client_id = os.environ.get('PAYPAL_CLIENT_ID', '')
+    client_secret = os.environ.get('PAYPAL_CLIENT_SECRET', '')
+    auth = base64.b64encode(f'{client_id}:{client_secret}'.encode('utf-8')).decode('ascii')
+    req = urllib.request.Request(
+        f'{_paypal_api_base()}/v1/oauth2/token',
+        data=b'grant_type=client_credentials',
+        method='POST',
+        headers={
+            'Authorization': f'Basic {auth}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    )
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        payload = json.loads(resp.read().decode('utf-8'))
+    return payload['access_token']
+
+
+def _paypal_request(method, path, payload=None):
+    token = _paypal_access_token()
+    body = json.dumps(payload or {}).encode('utf-8') if payload is not None else None
+    req = urllib.request.Request(
+        f'{_paypal_api_base()}{path}',
+        data=body,
+        method=method,
+        headers={
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json',
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            text = resp.read().decode('utf-8')
+            return json.loads(text) if text else {}
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode('utf-8', errors='replace')
+        print(f'[paypal] HTTP {e.code}: {detail[:500]}')
+        raise
+
+
+def _paypal_plan(plan_key):
+    for key, label, price, months in PAYPAL_PLANS:
+        if key == plan_key:
+            return {'key': key, 'label': label, 'price': price, 'months': months}
+    return None
 
 
 def _lemonsqueezy_configured():
@@ -467,21 +532,115 @@ def _build_checkout_url(variant_id, email):
 def upgrade():
     """Render premium plans + checkout buttons."""
     plans = []
-    for env_var, label, price, months in LEMONSQUEEZY_PLANS:
-        variant_id = os.environ.get(env_var)
-        if not variant_id:
-            continue
+    for key, label, price, months in PAYPAL_PLANS:
         plans.append({
+            'key': key,
             'label': label,
             'price': price,
             'months': months,
-            'checkout_url': _build_checkout_url(variant_id, current_user.email),
         })
     return render_template(
         'upgrade.html',
         plans=plans,
-        configured=_lemonsqueezy_configured(),
+        configured=_paypal_configured(),
+        paypal_client_id=os.environ.get('PAYPAL_CLIENT_ID', ''),
+        paypal_mode=_paypal_mode(),
     )
+
+
+@app.route('/api/paypal/create-order', methods=['POST'])
+@login_required
+def paypal_create_order():
+    if not _paypal_configured():
+        return jsonify({'error': 'paypal not configured'}), 503
+
+    data = request.get_json(silent=True) or {}
+    plan = _paypal_plan(data.get('plan'))
+    if not plan:
+        return jsonify({'error': 'invalid plan'}), 400
+
+    try:
+        order = _paypal_request('POST', '/v2/checkout/orders', {
+            'intent': 'CAPTURE',
+            'purchase_units': [{
+                'reference_id': plan['key'],
+                'description': f"PMP Quiz {plan['label']} for {current_user.email}",
+                'custom_id': f"{current_user.id}:{plan['key']}",
+                'amount': {
+                    'currency_code': 'USD',
+                    'value': plan['price'],
+                },
+            }],
+            'application_context': {
+                'brand_name': 'PMP Quiz',
+                'shipping_preference': 'NO_SHIPPING',
+                'user_action': 'PAY_NOW',
+                'return_url': url_for('payment_success', _external=True),
+                'cancel_url': url_for('payment_cancel', _external=True),
+            },
+        })
+    except Exception as exc:
+        print(f'[paypal] create-order failed: {exc}')
+        return jsonify({'error': 'could not create paypal order'}), 502
+
+    if not order.get('id'):
+        print(f'[paypal] create-order response missing id: {order}')
+        return jsonify({'error': 'paypal order id missing'}), 502
+    return jsonify({'id': order['id']})
+
+
+@app.route('/api/paypal/capture-order/<order_id>', methods=['POST'])
+@login_required
+def paypal_capture_order(order_id):
+    if not _paypal_configured():
+        return jsonify({'error': 'paypal not configured'}), 503
+
+    data = request.get_json(silent=True) or {}
+    plan = _paypal_plan(data.get('plan'))
+    if not plan:
+        return jsonify({'error': 'invalid plan'}), 400
+
+    try:
+        capture = _paypal_request('POST', f'/v2/checkout/orders/{order_id}/capture', {})
+    except Exception as exc:
+        print(f'[paypal] capture failed order={order_id}: {exc}')
+        return jsonify({'error': 'could not capture paypal payment'}), 502
+    if capture.get('status') != 'COMPLETED':
+        return jsonify({'error': 'payment not completed', 'status': capture.get('status')}), 400
+
+    units = capture.get('purchase_units') or []
+    first_unit = units[0] if units else {}
+    payments = (first_unit.get('payments') or {}).get('captures') or []
+    first_capture = payments[0] if payments else {}
+    amount = first_capture.get('amount') or {}
+    captured_value = amount.get('value')
+    captured_currency = amount.get('currency_code')
+    reference_id = first_unit.get('reference_id')
+
+    if reference_id != plan['key'] or captured_currency != 'USD' or captured_value != plan['price']:
+        print(f"[paypal] capture mismatch order={order_id} ref={reference_id} "
+              f"amount={captured_value} {captured_currency} expected={plan}")
+        return jsonify({'error': 'payment verification failed'}), 400
+
+    current_user.is_premium = True
+    current_user.extend_validity(months=plan['months'])
+    db.session.commit()
+    print(f'[paypal] extended {current_user.email} by {plan["months"]} months '
+          f'(new end: {current_user.validity_end})')
+
+    if current_user.referrer_email and not current_user.referrer_bonus_applied:
+        ref = User.query.filter(func.lower(User.email) == current_user.referrer_email.lower()).first()
+        if ref and ref.is_paid_premium():
+            current_user.extend_validity(months=1)
+            ref.extend_validity(months=1)
+            current_user.referrer_bonus_applied = True
+            db.session.commit()
+            print(f'[referral] +1mo bonus granted to {current_user.email} and referrer {ref.email}')
+
+    return jsonify({
+        'status': 'COMPLETED',
+        'redirect': url_for('payment_success'),
+    })
 
 
 @app.route('/webhook/lemonsqueezy', methods=['POST'])
@@ -609,7 +768,7 @@ def payment_success():
 @app.route('/payment/cancel')
 def payment_cancel():
     flash('Payment was canceled. You can try again anytime.', 'info')
-    return redirect(url_for('upgrade') if _lemonsqueezy_configured() else url_for('dashboard'))
+    return redirect(url_for('upgrade') if _paypal_configured() else url_for('dashboard'))
 
 @app.route('/free/start', methods=['POST'])
 def free_start():
