@@ -79,7 +79,7 @@
     Secure checkout by <a href="https://www.paypal.com" target="_blank" rel="noopener">PayPal</a>
 </div>
 
-<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id|urlencode }}&currency=USD&intent=capture&components=buttons"></script>
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id|urlencode }}&currency=USD&intent=capture&components=buttons&locale=en_US"></script>
 <script>
 document.querySelectorAll('.paypal-button-wrap').forEach(function(container) {
     const plan = container.dataset.plan;
