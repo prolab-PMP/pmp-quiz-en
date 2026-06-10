@@ -17,11 +17,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
-    {# Google AdSense — load ONLY on quiz/result pages (which contain real content)
-       to comply with the "ads on screens without publisher content" policy.
-       Also skipped for paid users and when env var is unset. #}
+    {# Google AdSense site connection script.
+       Keep actual ad units limited to quiz/result templates via _ads.html,
+       but expose the publisher script on public content/legal pages so
+       AdSense can verify and review the site. Skip auth/admin/utility pages. #}
+    {% set _adsense_excluded_endpoints = ('login', 'signup', 'logout', 'admin_panel', 'admin_questions', 'admin_question_edit', 'admin_question_stats', 'admin_reports', 'admin_comments', 'payment_success') %}
     {% if config.get('ADSENSE_PUBLISHER_ID')
-          and request.path.startswith(('/quiz/question', '/quiz/grade', '/quiz/result', '/free/quiz', '/free/result'))
+          and request.endpoint not in _adsense_excluded_endpoints
+          and not (request.endpoint and request.endpoint.startswith('admin'))
           and not (current_user.is_authenticated and current_user.is_paid_premium()) %}
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ config['ADSENSE_PUBLISHER_ID'] }}"
             crossorigin="anonymous"></script>
