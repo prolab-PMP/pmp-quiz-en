@@ -381,7 +381,7 @@ def _notify_signup(email):
         print(f'[MAIL][stub] PMP Quiz signup {email} {now.month}/{now.day}')
         return
     port = int(os.getenv('SMTP_PORT', '587'))
-    to_addr = os.getenv('NOTIFY_EMAIL', 'songdoinfo@naver.com')
+    to_addr = os.getenv('NOTIFY_EMAIL', 'songodinfo1@gmail.com')
     now = datetime.utcnow()
     body = f'PMP Quiz site signup {email} on {now.month}/{now.day}'
     msg = MIMEText(body)
@@ -1991,7 +1991,7 @@ def admin_load_data():
 def inject_config():
     return {
         'payment_enabled': app.config.get('PAYMENT_ENABLED', False),
-        'contact_email': 'songdoinfo@naver.com',
+        'contact_email': 'songodinfo1@gmail.com',
     }
 
 # ══════════════════════════════════════════════════════
