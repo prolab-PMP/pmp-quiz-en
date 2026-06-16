@@ -1,10 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{{ meta.title }} — pmp.wayexam.com{% endblock %}
+{% block title %}{{ meta.title }} — wayexam.com{% endblock %}
 {% block head %}
 <meta name="description" content="{{ meta.summary or meta.title }}">
 {% if meta.keywords %}<meta name="keywords" content="{{ meta.keywords }}">{% endif %}
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://pmp.wayexam.com/blog/{{ post.slug }}">
 <meta property="og:type" content="article">
 <meta property="og:title" content="{{ meta.title }}">
 <meta property="og:description" content="{{ meta.summary or meta.title }}">
@@ -46,7 +45,7 @@
   <div class="post-body">{{ body_html|safe }}</div>
   <div class="post-cta">
     <h3>Practice PMP questions now</h3>
-    <p>pmp.wayexam.com offers 2,250+ PMP questions aligned to PMBOK 7 and 8, in EN / KO / ZH / ES / JA.</p>
+    <p>wayexam.com offers 2,250+ PMP questions aligned to PMBOK 7 and 8, in EN / KO / ZH / ES / JA.</p>
     <a href="{{ url_for('login') if not current_user.is_authenticated else url_for('dashboard') }}">{{ 'Start free →' if not current_user.is_authenticated else 'Open dashboard' }}</a>
   </div>
   {% if related %}

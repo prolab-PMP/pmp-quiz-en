@@ -5,4 +5,4 @@ Disallow: /api/
 Disallow: /login
 Disallow: /logout
 
-Sitemap: https://pmpquiz.co.kr/sitemap.xml
+Sitemap: https://wayexam.com/sitemap.xml
