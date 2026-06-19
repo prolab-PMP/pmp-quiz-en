@@ -1414,3 +1414,91 @@ body.dark .modal-overlay { background: rgba(0, 0, 0, 0.65); }
 body.dark .modal-box { background: var(--surface); border-color: var(--border); }
 
 body.dark ::selection { background: var(--primary-soft); color: #93C5FD; }
+
+/* Compact first screen: keep practice entry visible without scrolling */
+.main-content {
+    padding-top: 18px;
+}
+
+.hero {
+    padding: 24px 30px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+}
+
+.hero::after {
+    width: 150px;
+    height: 150px;
+    right: -38px;
+    bottom: -38px;
+}
+
+.hero h1 {
+    font-size: 26px;
+    margin-bottom: 4px;
+}
+
+.hero p {
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.hero .badges {
+    margin-top: 10px;
+    gap: 8px;
+}
+
+.hero .badges span {
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 8px;
+}
+
+.guest-cta {
+    margin-bottom: 16px !important;
+    padding: 16px 20px !important;
+}
+
+.section-title {
+    margin: 18px 0 10px;
+}
+
+.stats-grid {
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.stat-card {
+    padding: 14px 16px;
+}
+
+.random-quick-grid {
+    margin-bottom: 18px !important;
+}
+
+.random-quick-btn {
+    padding: 13px 12px !important;
+}
+
+@media (max-width: 640px) {
+    .main-content {
+        padding-top: 14px;
+    }
+
+    .hero {
+        padding: 22px 18px;
+        margin-bottom: 14px;
+    }
+
+    .hero h1 {
+        font-size: 22px;
+    }
+
+    .hero p {
+        font-size: 13px;
+    }
+
+    .guest-cta {
+        padding: 16px !important;
+    }
+}
