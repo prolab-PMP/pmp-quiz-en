@@ -66,6 +66,38 @@
 </section>
 {% endif %}
 
+{% if not current_user.is_authenticated %}
+<section class="content-hub" aria-labelledby="pmp-study-hub-title">
+  <div class="content-hub-head">
+    <span class="tag">PMP Study Guide</span>
+    <h2 id="pmp-study-hub-title">Learn the PMP exam before you start practicing</h2>
+    <p>
+      This site is more than a question bank. Use the public guides below to review PMP domains,
+      PMBOK 7 and PMBOK 8 concepts, agile and hybrid clues, earned value formulas, change control,
+      stakeholder engagement, and mock-exam review methods.
+    </p>
+  </div>
+  <div class="study-card-grid">
+    <a class="study-card" href="{{ url_for('learn_index') }}">
+      <strong>PMP Learning Hub</strong>
+      <span>Start with a structured overview of exam domains, study rhythm, and practice strategy.</span>
+    </a>
+    <a class="study-card" href="{{ url_for('blog_post', slug='pmp-exam-overview-2026') }}">
+      <strong>PMP Exam Overview 2026</strong>
+      <span>Understand format, domain weighting, question types, and where to spend study time.</span>
+    </a>
+    <a class="study-card" href="{{ url_for('blog_post', slug='pmp-90-day-study-plan') }}">
+      <strong>90-Day PMP Study Plan</strong>
+      <span>A practical schedule for busy professionals balancing PMBOK review and mock exams.</span>
+    </a>
+    <a class="study-card" href="{{ url_for('blog_post', slug='pmp-formulas-cheat-sheet') }}">
+      <strong>PMP Formula Cheat Sheet</strong>
+      <span>Review earned value, communication channels, estimation, and formula-style traps.</span>
+    </a>
+  </div>
+</section>
+{% endif %}
+
 {# ── Subscription / Validity status — single compact bar with one CTA ── #}
 {% if current_user.is_authenticated and not current_user.is_admin %}
 {% set remaining = (current_user.validity_end - now()).days if (current_user.validity_end and now is defined) else 0 %}

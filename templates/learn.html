@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}PMP Learning Hub - Study PMBOK, Agile, and Exam Strategy{% endblock %}
+{% block og_title %}PMP Learning Hub{% endblock %}
+{% block og_description %}Free PMP study guides for PMBOK 8, PMBOK 7, Agile, Hybrid, ECO, formulas, change control, and mock-exam review.{% endblock %}
+{% block head %}
+<meta name="description" content="Free PMP learning hub with study guides for PMBOK 8, PMBOK 7, Agile, Hybrid, ECO, formulas, change control, stakeholder engagement, and mock exam review.">
+<meta name="keywords" content="PMP learning hub, PMP study guide, PMBOK 8, PMBOK 7, Agile PMP, PMP formulas, PMP mock exam">
+<meta name="robots" content="index, follow">
+<style>
+.learn-wrap{max-width:980px;margin:0 auto;padding:26px 20px 64px}
+.learn-hero{background:var(--surface,#fff);border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:34px 36px;margin-bottom:22px;box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.05))}
+.learn-hero h1{margin:0 0 10px;font-size:2rem;letter-spacing:0;color:var(--text,#111827)}
+.learn-hero p{margin:0;color:var(--text-muted,#6b7280);line-height:1.75;font-size:1rem;max-width:760px}
+.learn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:20px 0 28px}
+.learn-card{display:block;background:var(--surface,#fff);border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:18px;text-decoration:none;color:inherit;box-shadow:var(--shadow-xs,0 1px 2px rgba(0,0,0,.04))}
+.learn-card:hover{border-color:var(--primary,#4f46e5);text-decoration:none}
+.learn-card strong{display:block;font-size:1rem;margin-bottom:7px;color:var(--text,#111827)}
+.learn-card span{display:block;color:var(--text-muted,#6b7280);font-size:.92rem;line-height:1.6}
+.learn-section{background:var(--surface,#fff);border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:24px;margin:18px 0}
+.learn-section h2{margin:0 0 12px;font-size:1.35rem;letter-spacing:0}
+.learn-section p,.learn-section li{color:var(--text,#111827);line-height:1.75}
+.learn-section ul{margin:10px 0 0;padding-left:22px}
+.learn-posts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.learn-post{background:var(--surface,#fff);border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:16px;text-decoration:none;color:inherit}
+.learn-post strong{display:block;margin-bottom:6px}
+.learn-post span{display:block;color:var(--text-muted,#6b7280);font-size:.9rem;line-height:1.55}
+.learn-cta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:20px;margin-top:20px}
+.learn-cta p{margin:0;color:#1e3a8a;line-height:1.55}
+@media(max-width:640px){.learn-wrap{padding:18px 14px 48px}.learn-hero{padding:24px 18px}.learn-hero h1{font-size:1.55rem}.learn-section{padding:18px}}
+</style>
+{% endblock %}
+{% block content %}
+<main class="learn-wrap">
+  <section class="learn-hero">
+    <h1>PMP Learning Hub</h1>
+    <p>
+      Use this free learning hub to understand how PMP questions are built before you practice.
+      The exam rewards judgment: reading the scenario, identifying the delivery approach, and
+      choosing the action a project manager should take next.
+    </p>
+  </section>
+
+  <div class="learn-grid">
+    <a class="learn-card" href="{{ url_for('blog_post', slug='pmp-exam-overview-2026') }}">
+      <strong>Exam Format and Domains</strong>
+      <span>Review the PMP structure, domain weighting, question styles, and current study priorities.</span>
+    </a>
+    <a class="learn-card" href="{{ url_for('blog_post', slug='agile-vs-predictive-pmp-questions') }}">
+      <strong>Agile vs Predictive Clues</strong>
+      <span>Learn how to spot agile, predictive, and hybrid signals inside scenario questions.</span>
+    </a>
+    <a class="learn-card" href="{{ url_for('blog_post', slug='pmp-change-control-guide') }}">
+      <strong>Change Control Decisions</strong>
+      <span>Know when to submit a change request, analyze impact, consult the team, or update the backlog.</span>
+    </a>
+    <a class="learn-card" href="{{ url_for('blog_post', slug='pmp-mock-exam-review-method') }}">
+      <strong>Mock Exam Review</strong>
+      <span>Turn every missed answer into a study signal instead of just chasing a score.</span>
+    </a>
+  </div>
+
+  <section class="learn-section">
+    <h2>How to Use PMP Practice Questions</h2>
+    <p>
+      Do not start by memorizing answer letters. Start by naming the situation:
+      is the project predictive, agile, or hybrid? Is the question asking about people,
+      process, or business environment? Then identify whether the project manager should
+      analyze, communicate, escalate, update a plan, or facilitate a team decision.
+    </p>
+    <ul>
+      <li>Use short sets of 20 to 30 questions to find weak areas.</li>
+      <li>Review explanations immediately after each set.</li>
+      <li>Keep a wrong-answer note for repeated traps.</li>
+      <li>Move to longer mock exams only after your category accuracy is stable.</li>
+    </ul>
+  </section>
+
+  <section class="learn-section">
+    <h2>Core PMP Topics to Review</h2>
+    <p>
+      PMP candidates should be comfortable with stakeholder engagement, team conflict,
+      servant leadership, risk responses, issue management, scope and schedule changes,
+      quality decisions, procurement contracts, earned value, and benefits realization.
+      The exam often hides the topic inside a business scenario, so practice should connect
+      concepts to action.
+    </p>
+  </section>
+
+  <section class="learn-section">
+    <h2>Recommended Reading Path</h2>
+    <div class="learn-posts">
+      {% for p in posts %}
+      <a class="learn-post" href="{{ url_for('blog_post', slug=p.slug) }}">
+        <strong>{{ p.title }}</strong>
+        {% if p.summary %}<span>{{ p.summary }}</span>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="learn-cta">
+    <p><strong>Ready to practice?</strong><br>Try a free 30-question PMP set, then review your weak areas with the guides above.</p>
+    <form method="POST" action="{{ url_for('free_start') }}" style="margin:0;">
+      <input type="hidden" name="count" value="30">
+      <button type="submit" class="btn btn-primary">Start Free Practice</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

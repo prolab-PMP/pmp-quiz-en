@@ -2278,6 +2278,14 @@ def server_error(e):
 # ══════════════════════════════════════════════════════
 # BLOG (PMP study guides — public content for AdSense)
 # ══════════════════════════════════════════════════════
+@app.route('/learn')
+def learn_index():
+    """Public PMP learning hub for AdSense review and search visitors."""
+    if not _BLOG_INDEX_CACHE:
+        _load_blog()
+    return render_template('learn.html', posts=_BLOG_INDEX_CACHE[:8])
+
+
 _BLOG_CACHE = {}
 _BLOG_INDEX_CACHE = []
 
@@ -2458,6 +2466,7 @@ def sitemap_xml():
     urls = [
         ('/', '1.0', 'weekly'),
         ('/free', '0.9', 'weekly'),
+        ('/learn', '0.9', 'weekly'),
         ('/blog', '0.9', 'weekly'),
         ('/signup', '0.5', 'monthly'),
         ('/about', '0.6', 'monthly'),
