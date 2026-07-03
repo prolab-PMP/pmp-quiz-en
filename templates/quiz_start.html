@@ -6,9 +6,9 @@
 
 <!-- Top tabs -->
 <div class="tabs">
-    <button class="tab active" onclick="switchTab('pmbok8', this)">📗 PMBOK 8th edition</button>
-    <button class="tab" onclick="switchTab('pmbok7', this)">📘 PMBOK 7th edition</button>
-    <button class="tab" onclick="switchTab('special', this)">⚡ Special mode</button>
+    <button class="tab active" onclick="switchTab('pmbok8', this)">PMBOK 8th edition</button>
+    <button class="tab" onclick="switchTab('pmbok7', this)">PMBOK 7th edition</button>
+    <button class="tab" onclick="switchTab('special', this)">Special mode</button>
 </div>
 
 <!-- ══════════ 7edition tabs ══════════ -->
@@ -23,7 +23,6 @@
     <div class="slicer-card" id="sc-pmbok7-eco">
         <div class="sc-header" onclick="toggleCard('sc-pmbok7-eco')">
             <div class="sc-title">
-                <span class="sc-icon">🔷</span>
                 <strong>2021 ECO</strong>
                 <span class="sc-subtitle">Domain &rarr; Task</span>
                 <span class="sc-badge" id="badge-pmbok7-eco"></span>
@@ -66,7 +65,6 @@
     <div class="slicer-card" id="sc-pmbok7-dom">
         <div class="sc-header" onclick="toggleCard('sc-pmbok7-dom')">
             <div class="sc-title">
-                <span class="sc-icon">🔶</span>
                 <strong>Performance Domain</strong>
                 <span class="sc-badge" id="badge-pmbok7-pmbok7_domain"></span>
             </div>
@@ -91,7 +89,6 @@
     <div class="slicer-card" id="sc-pmbok7-prin">
         <div class="sc-header" onclick="toggleCard('sc-pmbok7-prin')">
             <div class="sc-title">
-                <span class="sc-icon">📐</span>
                 <strong>Principle</strong>
                 <span class="sc-badge" id="badge-pmbok7-pmbok7_principle"></span>
             </div>
@@ -116,7 +113,6 @@
     <div class="slicer-card" id="sc-pmbok7-meth">
         <div class="sc-header" onclick="toggleCard('sc-pmbok7-meth')">
             <div class="sc-title">
-                <span class="sc-icon">⚙️</span>
                 <strong>Methodology</strong>
                 <span class="sc-subtitle">Method &rarr; Detail</span>
                 <span class="sc-badge" id="badge-pmbok7-methodology"></span>
@@ -211,7 +207,6 @@
     <div class="slicer-card" id="sc-pmbok8-eco">
         <div class="sc-header" onclick="toggleCard('sc-pmbok8-eco')">
             <div class="sc-title">
-                <span class="sc-icon">🔷</span>
                 <strong>2026 ECO</strong>
                 <span class="sc-subtitle">Domain &rarr; Task</span>
                 <span class="sc-badge" id="badge-pmbok8-eco"></span>
@@ -252,7 +247,6 @@
     <div class="slicer-card" id="sc-pmbok8-dom">
         <div class="sc-header" onclick="toggleCard('sc-pmbok8-dom')">
             <div class="sc-title">
-                <span class="sc-icon">🔶</span>
                 <strong>Performance Domain</strong>
                 <span class="sc-badge" id="badge-pmbok8-pmbok8_domain"></span>
             </div>
@@ -277,7 +271,6 @@
     <div class="slicer-card" id="sc-pmbok8-prin">
         <div class="sc-header" onclick="toggleCard('sc-pmbok8-prin')">
             <div class="sc-title">
-                <span class="sc-icon">📐</span>
                 <strong>Principle</strong>
                 <span class="sc-badge" id="badge-pmbok8-pmbok8_principle"></span>
             </div>
@@ -302,7 +295,6 @@
     <div class="slicer-card" id="sc-pmbok8-fa">
         <div class="sc-header" onclick="toggleCard('sc-pmbok8-fa')">
             <div class="sc-title">
-                <span class="sc-icon">🎯</span>
                 <strong>Focus Area</strong>
                 <span class="sc-badge" id="badge-pmbok8-pmbok8_focus_area"></span>
             </div>
@@ -327,7 +319,6 @@
     <div class="slicer-card" id="sc-pmbok8-proc">
         <div class="sc-header" onclick="toggleCard('sc-pmbok8-proc')">
             <div class="sc-title">
-                <span class="sc-icon">🔁</span>
                 <strong>Process 40</strong>
                 <span class="sc-subtitle">Performance × Focus</span>
                 <span class="sc-badge" id="badge-pmbok8-pmbok8_process"></span>
@@ -353,7 +344,6 @@
     <div class="slicer-card" id="sc-pmbok8-meth">
         <div class="sc-header" onclick="toggleCard('sc-pmbok8-meth')">
             <div class="sc-title">
-                <span class="sc-icon">⚙️</span>
                 <strong>Methodology</strong>
                 <span class="sc-subtitle">Method &rarr; Detail</span>
                 <span class="sc-badge" id="badge-pmbok8-methodology"></span>
@@ -506,7 +496,6 @@
 }
 .sc-header:hover { background: var(--surface); }
 .sc-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.sc-icon { font-size: 1rem; }
 .sc-subtitle { font-size: 0.78rem; color: var(--text-muted); background: var(--surface); padding: 2px 8px; border-radius: 10px; }
 .sc-badge {
     background: var(--primary); color: #fff;
@@ -775,7 +764,7 @@ function updateSummary(tab) {
         el.innerHTML = '<span style="color:var(--text-muted);">No filter — Drawn from all questions.</span>';
         if (clearBtn) clearBtn.style.display = 'none';
     } else {
-        el.innerHTML = '📌 ' + parts.join(' &nbsp;<span style="color:var(--border)">|</span>&nbsp; ');
+        el.innerHTML = parts.join(' &nbsp;<span style="color:var(--border)">|</span>&nbsp; ');
         if (clearBtn) clearBtn.style.display = '';
     }
 }

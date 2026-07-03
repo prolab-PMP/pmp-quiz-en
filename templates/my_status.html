@@ -9,14 +9,14 @@
     <div style="flex:1;min-width:240px;">
         {% if current_user.is_authenticated and current_user.validity_end %}
             {% if current_user.is_valid() %}
-            <div style="font-weight:700;color:#78350f;font-size:0.95rem;">🎁 Trial active — analytics unlock after purchase</div>
+            <div style="font-weight:700;color:#78350f;font-size:0.95rem;">Trial active — analytics unlock after purchase</div>
             <div style="color:#92400e;font-size:0.85rem;margin-top:2px;">During the trial you can <strong>practice questions freely</strong>. Stats below are <strong>sample data</strong>; after upgrade your real learning analytics will appear here.</div>
             {% else %}
-            <div style="font-weight:700;color:#78350f;font-size:0.95rem;">🔒 Your access has expired</div>
+            <div style="font-weight:700;color:#78350f;font-size:0.95rem;">Your access has expired</div>
             <div style="color:#92400e;font-size:0.85rem;margin-top:2px;">Stats below are <strong>sample data</strong>. Upgrade to restore your real learning data and unlock all 2,234 questions.</div>
             {% endif %}
         {% else %}
-        <div style="font-weight:700;color:#78350f;font-size:0.95rem;">📊 Free user — sample data preview</div>
+        <div style="font-weight:700;color:#78350f;font-size:0.95rem;">Free user — sample data preview</div>
         <div style="color:#92400e;font-size:0.85rem;margin-top:2px;">All statistics below are <strong>sample data</strong>. After upgrading, your real learning data will be displayed in the same format.</div>
         {% endif %}
     </div>
@@ -48,7 +48,7 @@
         <div class="stat-label">Total Attempts</div>
     </div>
     <div class="stat-card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);">
-        <div class="stat-value" style="color:#92400e;">🔥 {{ streak_days|default(0) }}day</div>
+        <div class="stat-value" style="color:#92400e;">{{ streak_days|default(0) }}day</div>
         <div class="stat-label">Streak</div>
     </div>
     <div class="stat-card" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);">
@@ -83,7 +83,7 @@
     {% endfor %}
     </div>
     <p style="margin:10px 0 0;font-size:0.82rem;color:var(--text-muted);">
-        ⚡ Click a weak-domain card to jump straight to 30 questions in that area.
+        Click a weak-domain card to jump straight to 30 questions in that area.
     </p>
 </div>
 {% endif %}
@@ -106,7 +106,7 @@
               <small style="font-weight:400;color:var(--text-muted);margin-left:6px">last {{ ((grass_days or 90) / 30)|round(0,'floor')|int }} months</small>
             </span>
             {% if streak_days %}
-            <span style="font-size:0.85rem;background:#fef3c7;color:#b45309;padding:4px 10px;border-radius:999px;font-weight:600">🔥 {{ streak_days }}-day streak</span>
+            <span style="font-size:0.85rem;background:#fef3c7;color:#b45309;padding:4px 10px;border-radius:999px;font-weight:600">{{ streak_days }}-day streak</span>
             {% endif %}
         </div>
         <div id="grass-wrap" style="overflow-x:auto;padding:10px 4px 4px;">

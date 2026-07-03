@@ -34,11 +34,11 @@
     <h1>PMP Exam Practice</h1>
     <p>Full coverage of PMBOK 8 &amp; 7 + Agile/Hybrid 25%+. Study 2,250 questions by category, difficulty, and mode. Your progress auto-saves, and you can review wrong-answer notes and performance analytics anytime.</p>
     <div class="badges">
-        <span>📂 Total {{ total_questions }} questions</span>
+        <span>Total {{ total_questions }} questions</span>
         {% if current_user.is_authenticated %}
-        <span>📊 {{ total_sessions }} attempts</span>
-        <span>🎯 Avg {{ "%.1f"|format(avg_accuracy) }}%</span>
-        <span>👤 {{ current_user.email }}{% if current_user.is_admin %} · Admin{% endif %}{% if current_user.is_premium %} · Premium{% endif %}</span>
+        <span>{{ total_sessions }} attempts</span>
+        <span>Avg {{ "%.1f"|format(avg_accuracy) }}%</span>
+        <span>{{ current_user.email }}{% if current_user.is_admin %} - Admin{% endif %}{% if current_user.is_premium %} - Premium{% endif %}</span>
         {% else %}
         <span>Free 30-question trial</span>
         <span>No account required to start</span>
@@ -110,7 +110,7 @@
                 <span class="badge badge-success" style="margin-left:6px;">Active</span>
             </div>
             <div style="color:var(--text-muted);font-size:0.82rem;margin-top:3px;">
-                {% if current_user.validity_start %}Started {{ current_user.validity_start.strftime('%Y-%m-%d') }} · {% endif %}Expires {{ current_user.validity_end.strftime('%Y-%m-%d') }} · {{ remaining }} day{{ 's' if remaining != 1 else '' }} remaining
+                {% if current_user.validity_start %}Started {{ current_user.validity_start.strftime('%Y-%m-%d') }} - {% endif %}Expires {{ current_user.validity_end.strftime('%Y-%m-%d') }} - {{ remaining }} day{{ 's' if remaining != 1 else '' }} remaining
             </div>
         </div>
         {% if remaining <= 30 %}
@@ -122,11 +122,11 @@
         {# ── Trial (auto-granted on signup, valid but not paid) ── #}
         <div style="flex:1;min-width:240px;">
             <div style="font-weight:700;font-size:0.95rem;">
-                🎁 Trial Active
+                Trial Active
                 <span class="badge badge-info" style="margin-left:6px;">{{ remaining }} day{{ 's' if remaining != 1 else '' }} left</span>
             </div>
             <div style="color:var(--text-muted);font-size:0.82rem;margin-top:3px;">
-                {% if current_user.validity_start %}Started {{ current_user.validity_start.strftime('%Y-%m-%d') }} · {% endif %}Trial ends {{ current_user.validity_end.strftime('%Y-%m-%d') }} · Upgrade to keep practicing.
+                {% if current_user.validity_start %}Started {{ current_user.validity_start.strftime('%Y-%m-%d') }} - {% endif %}Trial ends {{ current_user.validity_end.strftime('%Y-%m-%d') }} - Upgrade to keep practicing.
             </div>
         </div>
         <a href="{{ url_for('upgrade') }}" class="btn btn-primary" style="white-space:nowrap;">
@@ -161,24 +161,24 @@
 <!-- Stats Grid -->
 <div class="stats-grid">
     <div class="stat-card">
-        <div class="icon-badge ib-blue">📘</div>
+        <div class="icon-badge ib-blue"></div>
         <div class="stat-value">{{ total_questions }}</div>
         <div class="stat-label">Total questions</div>
     </div>
     <div class="stat-card">
-        <div class="icon-badge ib-purple">✏️</div>
+        <div class="icon-badge ib-purple"></div>
         <div class="stat-value">{{ total_sessions }}</div>
         <div class="stat-label">Attempts</div>
     </div>
     <div class="stat-card">
-        <div class="icon-badge {% if avg_accuracy >= 70 %}ib-green{% elif avg_accuracy >= 50 %}ib-warn{% else %}ib-danger{% endif %}">🎯</div>
+        <div class="icon-badge {% if avg_accuracy >= 70 %}ib-green{% elif avg_accuracy >= 50 %}ib-warn{% else %}ib-danger{% endif %}"></div>
         <div class="stat-value" style="color:{% if avg_accuracy >= 70 %}var(--success){% elif avg_accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %}">
             {{ "%.1f"|format(avg_accuracy) }}%
         </div>
         <div class="stat-label">Avg accuracy</div>
     </div>
     <div class="stat-card">
-        <div class="icon-badge ib-danger">❌</div>
+        <div class="icon-badge ib-danger"></div>
         <div class="stat-value" style="color:var(--danger)">{{ wrong_count }}</div>
         <div class="stat-label">Wrong answers</div>
     </div>
@@ -191,7 +191,7 @@
 {% endif %}
 
 
-<div class="section-title"><span class="tag" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:0">🎲 Quick start</span> Random pickup</div>
+<div class="section-title"><span class="tag" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:0">Quick start</span> Random pickup</div>
 <p style="color:var(--text-muted);font-size:0.85rem;margin:-8px 0 14px">Start instantly with random questions (free members can use)</p>
 <div class="random-quick-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px;">
 
@@ -205,9 +205,8 @@
                    border:1.5px solid #c4b5fd;border-radius:12px;cursor:pointer;
                    transition:all 0.18s ease;text-align:center;font-weight:700;
                    color:#5b21b6;font-size:14px;">
-      <div style="font-size:1.6rem;margin-bottom:6px">⚡</div>
       <div style="font-size:1rem;font-weight:800">30</div>
-      <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">30 questions · ~15 min</div>
+      <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">30 questions - ~15 min</div>
     </button>
   </form>
   <form method="POST" action="{{ url_for('quiz_begin') if current_user.is_authenticated else url_for('free_start') }}" style="margin:0;">
@@ -220,9 +219,8 @@
                    border:1.5px solid #c4b5fd;border-radius:12px;cursor:pointer;
                    transition:all 0.18s ease;text-align:center;font-weight:700;
                    color:#5b21b6;font-size:14px;">
-      <div style="font-size:1.6rem;margin-bottom:6px">🎯</div>
       <div style="font-size:1rem;font-weight:800">50</div>
-      <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">50 questions · ~25 min</div>
+      <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">50 questions - ~25 min</div>
     </button>
   </form>
   <form method="POST" action="{{ url_for('quiz_begin') if current_user.is_authenticated else url_for('free_start') }}" style="margin:0;">
@@ -235,9 +233,8 @@
                    border:1.5px solid #c4b5fd;border-radius:12px;cursor:pointer;
                    transition:all 0.18s ease;text-align:center;font-weight:700;
                    color:#5b21b6;font-size:14px;">
-      <div style="font-size:1.6rem;margin-bottom:6px">📚</div>
       <div style="font-size:1rem;font-weight:800">100</div>
-      <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">100 questions · ~50 min</div>
+      <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">100 questions - ~50 min</div>
     </button>
   </form>
   <form method="POST" action="{{ url_for('quiz_begin') if current_user.is_authenticated else url_for('free_start') }}" style="margin:0;">
@@ -250,9 +247,8 @@
                    border:1.5px solid #c4b5fd;border-radius:12px;cursor:pointer;
                    transition:all 0.18s ease;text-align:center;font-weight:700;
                    color:#5b21b6;font-size:14px;">
-      <div style="font-size:1.6rem;margin-bottom:6px">🏆</div>
       <div style="font-size:1rem;font-weight:800">200</div>
-      <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">200 questions · mock exam</div>
+      <div style="font-size:11px;font-weight:500;color:#7c3aed;margin-top:3px">200 questions - mock exam</div>
     </button>
   </form>
 </div>
@@ -339,7 +335,7 @@ body.dark .random-quick-btn { background: linear-gradient(135deg, rgba(124,58,23
         {% else %}
         <div class="empty-state" style="padding:18px 0;">
             <div class="icon" style="font-size:2rem;"><i class="fas fa-check-circle" style="color:var(--success)"></i></div>
-            <p style="margin-top:8px;">No wrong answers!<br>Keep up the great work 💪</p>
+            <p style="margin-top:8px;">No wrong answers!<br>Keep up the great work.</p>
         </div>
         {% endif %}
     </div>
@@ -647,11 +643,10 @@ loadStats();
 <!-- Premium gate modal (shown when free/trial user clicks Premium-only feature) -->
 <div id="premium-gate-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;align-items:center;justify-content:center;padding:20px;">
   <div style="background:var(--surface);border-radius:16px;padding:32px 28px;max-width:480px;width:100%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.35);">
-    <div style="font-size:3.2rem;margin-bottom:8px">🔒</div>
-    <h3 style="margin:0 0 14px;font-size:1.25rem;color:var(--text)">🔒 Premium feature</h3>
+    <h3 style="margin:0 0 14px;font-size:1.25rem;color:var(--text)">Premium feature</h3>
     <p style="color:var(--text-muted);font-size:0.92rem;line-height:1.65;margin-bottom:22px"><strong>Principle-based practice</strong> and <strong>Detailed slicer</strong> are available to Premium members only.<br><br>Free/Trial members can use <strong>Domain selection</strong> and <strong>Random pickup</strong>.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-      <a href="{{ url_for('upgrade') }}" class="btn btn-warning" style="padding:10px 22px;font-weight:700;text-decoration:none;border-radius:8px;background:#f59e0b;color:#fff;">✨ Upgrade to Premium</a>
+      <a href="{{ url_for('upgrade') }}" class="btn btn-warning" style="padding:10px 22px;font-weight:700;text-decoration:none;border-radius:8px;background:#f59e0b;color:#fff;">Upgrade to Premium</a>
       <button type="button" onclick="document.getElementById('premium-gate-modal').style.display='none'"
               class="btn btn-outline" style="padding:10px 22px;">Close</button>
     </div>
@@ -696,7 +691,7 @@ function showPremiumGate() {
       if (ft.toLowerCase().indexOf('principle') >= 0 && !el.querySelector('.premium-lock-tag')) {
         var tag = document.createElement('span');
         tag.className = 'premium-lock-tag';
-        tag.textContent = '🔒';
+        tag.textContent = 'Premium';
         tag.style.cssText = 'position:absolute;top:6px;right:6px;font-size:14px;background:rgba(245,158,11,0.95);color:#fff;padding:2px 6px;border-radius:6px;line-height:1;font-weight:700;z-index:5';
         el.style.position = 'relative';
         el.appendChild(tag);
@@ -723,7 +718,7 @@ function showPremiumGate() {
     });
     if (!window.IS_ADMIN && !window.IS_PAID_PREMIUM) {
       // Visual hint
-      a.innerHTML = a.innerHTML + ' <span style="display:inline-block;margin-left:6px;font-size:11px;background:#f59e0b;color:#fff;padding:2px 7px;border-radius:6px;font-weight:700;vertical-align:middle">🔒 Premium</span>';
+      a.innerHTML = a.innerHTML + ' <span style="display:inline-block;margin-left:6px;font-size:11px;background:#f59e0b;color:#fff;padding:2px 7px;border-radius:6px;font-weight:700;vertical-align:middle">Premium</span>';
     }
   });
 })();
