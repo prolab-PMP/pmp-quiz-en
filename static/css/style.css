@@ -1578,3 +1578,234 @@ body.dark ::selection { background: var(--primary-soft); color: #93C5FD; }
         padding: 18px 16px;
     }
 }
+
+/* ══════════════════════════════════════════════════════════════
+ * PMI-inspired professional theme (2026 재디자인)
+ * ─────────────────────────────────────────────────────────────
+ * - PMI signature 딥 네이비 + 골드 액센트
+ * - 히어로: SVG 글로브/그리드 배경 (반응형, mobile-safe)
+ * - Corporate 신뢰감 강화
+ * ══════════════════════════════════════════════════════════════ */
+
+:root {
+    /* PMI 팔레트 오버라이드 */
+    --primary:        #0B3D91;   /* PMI deep navy */
+    --primary-dark:   #082C6C;
+    --primary-soft:   #E7EDF7;
+    --primary-line:   #C7D6EB;
+    --pmi-gold:       #F79319;
+    --pmi-gold-dark:  #E67A00;
+    --pmi-gold-soft:  #FFF3E0;
+    --accent:         #F79319;
+    --accent-soft:    #FFF3E0;
+
+    /* 히어로 그라디언트 재정의 — 딥 네이비 그라디언트 + 골드 스트라이프 */
+    --hero-gradient:  linear-gradient(135deg, #0B3D91 0%, #163E7A 50%, #0B3D91 100%);
+}
+
+/* ── Navbar: 딥 네이비 크게, 골드 언더라인 ─────────────────── */
+.navbar {
+    background: linear-gradient(180deg, #0B3D91 0%, #082C6C 100%);
+    border-bottom: 3px solid var(--pmi-gold);
+    box-shadow: 0 2px 10px rgba(11,61,145,0.14);
+}
+.navbar-brand,
+.navbar-brand:hover {
+    color: #FFFFFF !important;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+.navbar-brand i {
+    color: var(--pmi-gold) !important;
+}
+.navbar-nav a {
+    color: rgba(255,255,255,0.88) !important;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
+}
+.navbar-nav a:hover {
+    background: rgba(255,255,255,0.10) !important;
+    color: #FFFFFF !important;
+}
+.navbar-nav a.active {
+    background: transparent !important;
+    color: var(--pmi-gold) !important;
+    border-bottom: 2px solid var(--pmi-gold);
+    border-radius: 0;
+}
+.navbar-nav a.active i {
+    color: var(--pmi-gold) !important;
+}
+
+/* ── Hero: SVG 글로브 배경 + 골드 강조선 ───────────────────── */
+.hero {
+    display: block;
+    background:
+        url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20viewBox%3D'0%200%20200%20200'%3E%3Cdefs%3E%3CradialGradient%20id%3D'g'%20cx%3D'50%25'%20cy%3D'50%25'%20r%3D'50%25'%3E%3Cstop%20offset%3D'0%25'%20stop-color%3D'%23F79319'%20stop-opacity%3D'0.22'/%3E%3Cstop%20offset%3D'100%25'%20stop-color%3D'%23F79319'%20stop-opacity%3D'0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle%20cx%3D'100'%20cy%3D'100'%20r%3D'90'%20fill%3D'url(%23g)'/%3E%3Cg%20fill%3D'none'%20stroke%3D'%23FFFFFF'%20stroke-opacity%3D'0.16'%20stroke-width%3D'1'%3E%3Ccircle%20cx%3D'100'%20cy%3D'100'%20r%3D'85'/%3E%3Cellipse%20cx%3D'100'%20cy%3D'100'%20rx%3D'85'%20ry%3D'35'/%3E%3Cellipse%20cx%3D'100'%20cy%3D'100'%20rx%3D'85'%20ry%3D'55'/%3E%3Cellipse%20cx%3D'100'%20cy%3D'100'%20rx%3D'35'%20ry%3D'85'/%3E%3Cellipse%20cx%3D'100'%20cy%3D'100'%20rx%3D'55'%20ry%3D'85'/%3E%3Cline%20x1%3D'100'%20y1%3D'15'%20x2%3D'100'%20y2%3D'185'/%3E%3Cline%20x1%3D'15'%20y1%3D'100'%20x2%3D'185'%20y2%3D'100'/%3E%3C/g%3E%3C/svg%3E") no-repeat,
+        url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20viewBox%3D'0%200%2060%2060'%3E%3Cpath%20d%3D'M0%2015h60M0%2030h60M0%2045h60M15%200v60M30%200v60M45%200v60'%20stroke%3D'%23FFFFFF'%20stroke-opacity%3D'0.055'%20stroke-width%3D'1'%20fill%3D'none'/%3E%3C/svg%3E") repeat,
+        var(--hero-gradient);
+    background-size: 220px 220px, 60px 60px, cover;
+    background-position: right -30px top -20px, top left, center;
+    color: #fff;
+    border-radius: 20px;
+    padding: 44px 40px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 6px 24px rgba(11,61,145,0.20);
+}
+.hero::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--pmi-gold) 0%, #FFB358 45%, var(--pmi-gold) 100%);
+    z-index: 1;
+}
+.hero::after { display: none; }
+.hero h1 {
+    margin: 0 0 10px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #fff;
+    line-height: 1.2;
+}
+.hero h1::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 26px;
+    background: var(--pmi-gold);
+    margin-right: 12px;
+    vertical-align: -3px;
+    border-radius: 2px;
+}
+.hero p {
+    margin: 0;
+    opacity: 0.94;
+    font-size: 15.5px;
+    line-height: 1.7;
+    max-width: 680px;
+    color: rgba(255,255,255,0.94);
+}
+.hero .badges {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+.hero .badges span {
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.14);
+    backdrop-filter: blur(6px);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+}
+.hero .badges span:first-child {
+    background: rgba(247,147,25,0.20);
+    border-color: rgba(247,147,25,0.42);
+    color: #FFCA85;
+}
+.hero .kicker { display: none; }
+.hero .rule { display: none; }
+.hero-left { padding: 0; background: transparent; display: block; min-height: 0; }
+.hero-right { display: none; }
+
+@media (max-width: 640px) {
+    .hero {
+        padding: 30px 22px 32px;
+        border-radius: 14px;
+        background-size: 160px 160px, 40px 40px, cover;
+        background-position: right -14px top -14px, top left, center;
+    }
+    .hero h1 { font-size: 22px; }
+    .hero h1::before { height: 20px; width: 3px; margin-right: 8px; vertical-align: -2px; }
+    .hero p { font-size: 13.5px; line-height: 1.6; }
+    .hero .badges span { font-size: 12px; padding: 5px 11px; }
+}
+
+/* ── Section-title tag: 골드 액센트 ─────────────────────────── */
+.section-title .tag {
+    background: linear-gradient(180deg, var(--pmi-gold) 0%, #E67A00 100%) !important;
+    color: #fff !important;
+    border: 0 !important;
+    padding: 4px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* ── Guest CTA (dashboard): 네이비/골드로 재조정 ─────────── */
+.guest-cta {
+    background: linear-gradient(135deg, #F8FAFF 0%, #FFF7EC 100%) !important;
+    border: 1px solid #C7D6EB !important;
+    border-left: 5px solid var(--pmi-gold) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(11,61,145,0.06) !important;
+}
+.guest-cta > div > div:first-child > div:first-child {
+    color: var(--primary) !important;
+}
+.guest-cta button[type="submit"] {
+    background: linear-gradient(180deg, var(--pmi-gold) 0%, #E67A00 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 6px rgba(247,147,25,0.35) !important;
+}
+.guest-cta a[href*="signup"] {
+    background: #fff !important;
+    color: var(--primary) !important;
+    border-color: #C7D6EB !important;
+}
+
+/* ── 랜덤 빠른시작 버튼: 네이비 톤 ───────────────────────── */
+.random-quick-btn {
+    background: linear-gradient(135deg, #EEF2FB, #DDE6F5) !important;
+    border-color: #C7D6EB !important;
+    color: var(--primary) !important;
+}
+.random-quick-btn div[style*="color:#7c3aed"] {
+    color: var(--primary) !important;
+}
+.random-quick-btn:hover {
+    border-color: var(--primary) !important;
+    box-shadow: 0 6px 16px rgba(11,61,145,0.20) !important;
+}
+
+/* ── Stat cards: 살짝 corporate 톤 ────────────────────────── */
+.stat-card {
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(11,61,145,0.05);
+}
+.icon-badge.ib-blue { background: var(--primary-soft); color: var(--primary); }
+
+/* ── 다크모드 (기존 유지 + PMI 팔레트 정합) ─────────────── */
+body.dark .navbar {
+    background: linear-gradient(180deg, #0A2C6D 0%, #051E4E 100%);
+    border-bottom-color: var(--pmi-gold);
+}
+body.dark .hero {
+    background:
+        url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20viewBox%3D'0%200%20200%20200'%3E%3Cdefs%3E%3CradialGradient%20id%3D'g'%20cx%3D'50%25'%20cy%3D'50%25'%20r%3D'50%25'%3E%3Cstop%20offset%3D'0%25'%20stop-color%3D'%23F79319'%20stop-opacity%3D'0.28'/%3E%3Cstop%20offset%3D'100%25'%20stop-color%3D'%23F79319'%20stop-opacity%3D'0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle%20cx%3D'100'%20cy%3D'100'%20r%3D'90'%20fill%3D'url(%23g)'/%3E%3Cg%20fill%3D'none'%20stroke%3D'%23FFFFFF'%20stroke-opacity%3D'0.18'%20stroke-width%3D'1'%3E%3Ccircle%20cx%3D'100'%20cy%3D'100'%20r%3D'85'/%3E%3Cellipse%20cx%3D'100'%20cy%3D'100'%20rx%3D'85'%20ry%3D'35'/%3E%3Cellipse%20cx%3D'100'%20cy%3D'100'%20rx%3D'35'%20ry%3D'85'/%3E%3Cellipse%20cx%3D'100'%20cy%3D'100'%20rx%3D'55'%20ry%3D'85'/%3E%3C/g%3E%3C/svg%3E") no-repeat right -30px top -20px / 220px 220px,
+        linear-gradient(135deg, #06183D 0%, #0B2A5C 50%, #06183D 100%);
+    border-color: rgba(255,255,255,0.08);
+}
+
+/* ── 링크·버튼 primary 톤 조정 ────────────────────────────── */
+.btn-primary,
+button.btn-primary {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+}
+.btn-primary:hover {
+    background: var(--primary-dark) !important;
+    border-color: var(--primary-dark) !important;
+}
