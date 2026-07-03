@@ -8,9 +8,13 @@
         <span style="font-size:1rem;color:var(--text-muted);font-weight:400;">({{ bookmarks|length }} items)</span>
     </h2>
     {% if bookmarks %}
-    <a href="{{ url_for('quiz_start') }}?mode=bookmark" class="btn btn-primary btn-sm">
-        <i class="fas fa-play"></i> Practice bookmarked
-    </a>
+    <form method="POST" action="{{ url_for('quiz_begin') }}" style="margin:0;">
+        <input type="hidden" name="mode" value="bookmark">
+        <input type="hidden" name="count" value="{{ bookmarks|length }}">
+        <button class="btn btn-primary btn-sm" type="submit">
+            <i class="fas fa-play"></i> Practice bookmarked
+        </button>
+    </form>
     {% endif %}
 </div>
 

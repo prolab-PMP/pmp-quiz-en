@@ -343,6 +343,33 @@ body.dark .random-quick-btn { background: linear-gradient(135deg, rgba(124,58,23
         </div>
         {% endif %}
     </div>
+
+    <!-- Bookmarked Practice -->
+    <div class="card recommend-card">
+        <div class="card-header"><i class="fas fa-bookmark" style="color:#f59e0b"></i> Bookmarked Practice</div>
+        {% if bookmark_count > 0 %}
+        <p class="recommend-desc">You currently have <strong style="color:#f59e0b">{{ bookmark_count }}</strong> bookmarked questions.</p>
+        <form method="POST" action="{{ url_for('quiz_begin') }}">
+            <input type="hidden" name="mode" value="bookmark">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+                <select name="count" class="form-control" style="width:140px;">
+                    <option value="20">20 questions</option>
+                    <option value="30">30 questions</option>
+                    <option value="50">50 questions</option>
+                    <option value="{{ bookmark_count }}">All ({{ bookmark_count }})</option>
+                </select>
+            </div>
+            <button class="btn btn-primary btn-block">
+                <i class="fas fa-bookmark"></i> Practice bookmarked questions
+            </button>
+        </form>
+        {% else %}
+        <div class="empty-state" style="padding:18px 0;">
+            <div class="icon" style="font-size:2rem;"><i class="far fa-bookmark" style="color:#f59e0b"></i></div>
+            <p style="margin-top:8px;">No bookmarked questions yet.<br>Use the bookmark button while practicing to save questions.</p>
+        </div>
+        {% endif %}
+    </div>
 </div>
 
 
@@ -373,6 +400,7 @@ body.dark .random-quick-btn { background: linear-gradient(135deg, rgba(124,58,23
                         {% elif s.mode == 'pmbok8_exam' %}PMP Exam (8th)
                         {% elif s.mode == 'pmbok7_exam' %}PMP Exam (7th)
                         {% elif s.mode == 'wrong_answers' %}Wrong-answer practice
+                        {% elif s.mode == 'bookmark' %}Bookmarked practice
                         {% elif s.mode == 'category' %}{{ s.filter_value or 'Category' }}
                         {% else %}{{ s.mode }}{% endif %}
                     </td>

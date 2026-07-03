@@ -896,6 +896,7 @@ def dashboard():
                              total_sessions=0,
                              avg_accuracy=0,
                              wrong_count=0,
+                             bookmark_count=0,
                              total_questions=total_questions,
                              categories=categories)
 
@@ -909,6 +910,7 @@ def dashboard():
         .filter_by(user_id=current_user.id, is_completed=True).scalar() or 0
 
     wrong_count = WrongAnswer.query.filter_by(user_id=current_user.id).count()
+    bookmark_count = Bookmark.query.filter_by(user_id=current_user.id).count()
     total_questions = Question.query.count()
 
     # By category Select 섹션을 위한 categories context
@@ -919,6 +921,7 @@ def dashboard():
                          total_sessions=total_sessions,
                          avg_accuracy=avg_accuracy,
                          wrong_count=wrong_count,
+                         bookmark_count=bookmark_count,
                          total_questions=total_questions,
                          categories=categories)
 
@@ -1001,6 +1004,13 @@ def quiz_begin():
             flash('Incorrect 목록이 비어있습니다.', 'info')
             return redirect(url_for('quiz_start'))
         query = query.filter(Question.no.in_(wrong_nos))
+
+    elif mode == 'bookmark':
+        bookmark_nos = [b.question_no for b in Bookmark.query.filter_by(user_id=current_user.id).all()]
+        if not bookmark_nos:
+            flash('No bookmarked questions yet.', 'info')
+            return redirect(url_for('quiz_start'))
+        query = query.filter(Question.no.in_(bookmark_nos))
 
     elif mode == 'pmbok7_exam':
         count = 180
