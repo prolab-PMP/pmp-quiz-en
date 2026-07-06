@@ -187,12 +187,13 @@
 
 
 {% if current_user.is_authenticated %}
-<div class="section-title"><span class="tag purple">Quick start</span> Click a domain for instant 20-question practice</div>
+<div class="section-title"><span class="tag purple">By domain</span> Click a domain for instant 20-question practice</div>
 {% endif %}
 
 
-<div class="section-title"><span class="tag" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:0">Quick start</span> Random pickup</div>
-<p style="color:var(--text-muted);font-size:0.85rem;margin:-8px 0 14px">Start instantly with random questions (free members can use)</p>
+{% if current_user.is_authenticated %}
+<div class="section-title"><span class="tag" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:0">Random practice</span> Start instantly with random questions</div>
+<p style="color:var(--text-muted);font-size:0.85rem;margin:-8px 0 14px">Free-tier users can use this mode too</p>
 <div class="random-quick-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px;">
 
   <form method="POST" action="{{ url_for('quiz_begin') if current_user.is_authenticated else url_for('free_start') }}" style="margin:0;">
@@ -256,6 +257,7 @@
 .random-quick-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(124,58,237,0.20); border-color: #7c3aed; }
 body.dark .random-quick-btn { background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(91,33,182,0.30)) !important; color: #ddd6fe !important; border-color: rgba(167,139,250,0.4) !important; }
 </style>
+{% endif %}{# /random-practice (member only) #}
 
 {% if current_user.is_authenticated %}
 <div class="fw-toolbar">
