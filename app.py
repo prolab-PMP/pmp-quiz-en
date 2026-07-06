@@ -1387,7 +1387,7 @@ def _sample_my_status_data():
 
 
 def _cat_stats(col, uid, filter_key=None):
-    """min류 컬럼별 Accuracy 통계 helper. filter_key wk면 클릭용 filter_json도 동봉."""
+    """Per-category accuracy helper. Includes filter_json for clickable practice links."""
     import json as _json
     rows = db.session.query(
         col,
@@ -1945,7 +1945,7 @@ def admin_question_edit(q_no):
         q.opt_d_kr       = request.form.get('opt_d_kr', '').strip() or None
         q.opt_e_kr       = request.form.get('opt_e_kr', '').strip() or None
         q.explanation_kr = request.form.get('explanation_kr', '').strip() or None
-        # min류
+        # Category fields
         q.pmbok7_domain    = request.form.get('pmbok7_domain', '').strip() or None
         q.pmbok7_principle = request.form.get('pmbok7_principle', '').strip() or None
         q.pmbok8_domain    = request.form.get('pmbok8_domain', '').strip() or None
@@ -1964,7 +1964,7 @@ def admin_question_edit(q_no):
         next_page = request.form.get('next', '')
         return redirect(next_page if next_page else url_for('admin_questions'))
 
-    # GET: min류 드롭다운 옵션용
+    # GET: category dropdown options
     categories = get_category_options()
     back = request.args.get('back', url_for('admin_questions'))
     return render_template('admin_question_edit.html', q=q, categories=categories, back=back)
