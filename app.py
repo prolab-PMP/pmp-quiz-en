@@ -1815,6 +1815,14 @@ def admin_update_user(user_id):
             user.set_validity(months=Config.DEFAULT_VALIDITY_MONTHS)
         flash(f'{user.email}의 Premium 상태를 변경했습니다.', 'success')
 
+    elif action == 'set_admin_note':
+        # Admin-only memo for this account. Never shown to end user.
+        raw = (request.form.get('admin_note') or '').strip()
+        user.admin_note = raw[:1000]
+        db.session.commit()
+        flash(f'Saved admin note for {user.email}.', 'success')
+        return redirect(url_for('admin_panel'))
+
     elif action == 'toggle_admin':
         if user.id != current_user.id:
             user.is_admin = not user.is_admin

@@ -22,6 +22,10 @@ class User(UserMixin, db.Model):
     referrer_email = db.Column(db.String(255), nullable=True, index=True)
     referrer_bonus_applied = db.Column(db.Boolean, default=False)
 
+    # Admin-only private memo per user (why premium was granted, promo code notes, VIP flag, etc.).
+    # Never shown to end user. Only visible in /admin panel.
+    admin_note = db.Column(db.Text, nullable=True, default='')
+
     # Relationships
     quiz_sessions = db.relationship('QuizSession', backref='user', lazy='dynamic')
     wrong_answers = db.relationship('WrongAnswer', backref='user', lazy='dynamic')
