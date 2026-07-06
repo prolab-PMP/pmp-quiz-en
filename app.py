@@ -203,13 +203,6 @@ def _initialize_db_once():
         except Exception as _e:
             print(f'[INIT] Table Question seed failed: {_e}')
 
-        # Drag & Drop (match + order) 10 items seed (idempotent)
-        try:
-            from seed_dnd_questions import seed_dnd_questions
-            seed_dnd_questions(db, Question)
-        except Exception as _e:
-            print(f'[INIT] D&D question seed failed: {_e}')
-
         # Auto-load questions if DB is empty
         if Question.query.count() == 0:
             filepath = 'data/PMP_Raw.xlsx'
@@ -1121,7 +1114,6 @@ def quiz_question():
                          total=len(q_nos),
                          expected_count=expected_count,
                          saved_answer=saved_answer.split(',') if saved_answer else [],
-                         saved_answer_raw=saved_answer,  # D&D: JSON string
                          all_answers=session.get('quiz_answers', {}),
                          q_nos=q_nos,
                          is_bookmarked=is_bookmarked)
@@ -1130,13 +1122,9 @@ def quiz_question():
 @login_required
 def quiz_save_answer():
     q_no = request.form.get('question_no')
-    # D&D answers arrive as a JSON string via hidden input name="dnd_answer"
-    dnd_ans = request.form.get('dnd_answer')
     selected = request.form.getlist('selected')
     answers = session.get('quiz_answers', {})
-    if dnd_ans:
-        answers[q_no] = dnd_ans
-    elif selected:
+    if selected:
         answers[q_no] = ','.join(selected)
     session['quiz_answers'] = answers
 
@@ -1181,19 +1169,9 @@ def quiz_grade():
             continue
 
         user_ans_raw = user_answers.get(str(no), '')
-
-        # D&D branch: user_ans_raw is a JSON string; MCQ branch remains original.
-        if q.is_dnd():
-            is_correct = q.check_dnd_answer(user_ans_raw)
-            user_ans_display = user_ans_raw
-            correct_display = q.answer
-        else:
-            user_ans = sorted([a.strip() for a in user_ans_raw.split(',') if a.strip()])
-            correct_ans = sorted(q.get_answer_list())
-            is_correct = user_ans == correct_ans
-            user_ans_display = ','.join(user_ans) if user_ans else ''
-            correct_display = q.answer
-
+        user_ans = sorted([a.strip() for a in user_ans_raw.split(',') if a.strip()])
+        correct_ans = sorted(q.get_answer_list())
+        is_correct = user_ans == correct_ans
         if is_correct:
             correct_count += 1
 
@@ -1201,8 +1179,8 @@ def quiz_grade():
         qa = QuizAnswer(
             session_id=quiz_session_id,
             question_no=no,
-            user_answer=user_ans_display,
-            correct_answer=correct_display,
+            user_answer=','.join(user_ans) if user_ans else '',
+            correct_answer=q.answer,
             is_correct=is_correct,
         )
         db.session.add(qa)

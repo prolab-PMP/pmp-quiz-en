@@ -114,18 +114,6 @@ class Question(db.Model):
     methodology = db.Column(db.String(50))
     methodology_detail = db.Column(db.String(200))
 
-    # ── Drag & Drop item support (added 2026-07) ──────────────────
-    # question_type: 'mcq' (default) | 'dnd_match' | 'dnd_order'
-    #   dnd_match:   dnd_items ↔ dnd_targets pairing.
-    #                answer JSON: {"1":"A","2":"B",...}
-    #   dnd_order:   dnd_items into the correct sequence.
-    #                answer JSON: ["C","A","D","B"]
-    question_type = db.Column(db.String(20), default='mcq')
-    dnd_items = db.Column(db.Text)       # JSON array
-    dnd_targets = db.Column(db.Text)     # JSON array
-    dnd_items_kr = db.Column(db.Text)    # JSON array (Korean labels)
-    dnd_targets_kr = db.Column(db.Text)  # JSON array (Korean labels)
-
     # 2026 ECO Classification (PMBOK 8)
     eco2026_domain = db.Column(db.String(100))
     eco2026_task = db.Column(db.String(200))
@@ -140,27 +128,6 @@ class Question(db.Model):
     def get_answer_list(self):
         """Return list of correct answers"""
         return [a.strip() for a in self.answer.split(',')]
-
-    def is_dnd(self):
-        return self.question_type in ('dnd_match', 'dnd_order')
-
-    def check_dnd_answer(self, user_answer_raw):
-        """Compare a JSON-encoded user answer with self.answer (also JSON)."""
-        import json
-        try:
-            u = json.loads(user_answer_raw) if user_answer_raw else None
-            c = json.loads(self.answer)
-        except Exception:
-            return False
-        if self.question_type == 'dnd_match':
-            if not isinstance(u, dict) or not isinstance(c, dict):
-                return False
-            return {str(k): str(v) for k, v in u.items()} == {str(k): str(v) for k, v in c.items()}
-        elif self.question_type == 'dnd_order':
-            if not isinstance(u, list) or not isinstance(c, list):
-                return False
-            return [str(x) for x in u] == [str(x) for x in c]
-        return False
 
     def get_answer_count(self):
         """Return number of correct answers"""
@@ -245,8 +212,8 @@ class QuizAnswer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     session_id = db.Column(db.Integer, db.ForeignKey('quiz_sessions.id'), nullable=False, index=True)
     question_no = db.Column(db.Integer, db.ForeignKey('questions.no'), nullable=False)
-    user_answer = db.Column(db.Text)     # MCQ letters or D&D JSON
-    correct_answer = db.Column(db.Text)  # MCQ letters or D&D JSON
+    user_answer = db.Column(db.String(20))  # e.g., "A", "A, B"
+    correct_answer = db.Column(db.String(20))
     is_correct = db.Column(db.Boolean, default=False)
     answered_at = db.Column(db.DateTime, default=datetime.utcnow)
 
