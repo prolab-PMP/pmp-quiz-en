@@ -9,26 +9,6 @@
 
 {% block content %}
 
-<form id="qno-jump-form" method="GET" action="" style="display:flex;align-items:center;gap:8px;margin:0 0 18px;padding:12px 16px;background:linear-gradient(90deg,#fef3c7,#fde68a);border-radius:10px;border-left:4px solid #f59e0b;">
-  <span style="font-size:0.85rem;font-weight:700;color:#92400e;flex-shrink:0">Jump to question by number</span>
-  <input type="number" id="qno-input" placeholder="e.g., 990" min="1" required
-         style="padding:6px 10px;border:1px solid #d97706;border-radius:6px;width:120px;font-size:0.9rem;">
-  <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap;">View</button>
-  <span style="margin-left:auto;font-size:0.75rem;color:#92400e;opacity:0.85"></span>
-</form>
-<script>
-(function(){
-  var f = document.getElementById('qno-jump-form');
-  if (!f) return;
-  f.addEventListener('submit', function(e){
-    e.preventDefault();
-    var n = parseInt(document.getElementById('qno-input').value, 10);
-    if (n > 0) {
-      window.open('/q/' + n, '_blank');
-    }
-  });
-})();
-</script>
 <!-- Hero Banner -->
 <section class="hero">
     <h1>PMP Exam Practice</h1>
@@ -416,6 +396,30 @@ body.dark .random-quick-btn { background: linear-gradient(135deg, rgba(124,58,23
 {% endif %}
 {% endif %}
 
+<!-- Jump to specific question by number (utility, kept at bottom to not distract from primary content) -->
+<section style="margin:32px 0 8px;padding:16px 20px;border-radius:12px;background:#fafafa;border:1px solid #e5e7eb;">
+  <div style="font-size:0.78rem;font-weight:700;color:#6b7280;letter-spacing:0.4px;text-transform:uppercase;margin-bottom:8px;">Utility</div>
+  <form id="qno-jump-form" method="GET" action="" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <label for="qno-input" style="font-size:0.9rem;font-weight:600;color:#374151;">Jump to question by number</label>
+    <input type="number" id="qno-input" placeholder="e.g., 990" min="1" required
+           style="padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;width:120px;font-size:0.9rem;">
+    <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap;">Open</button>
+    <span style="font-size:0.75rem;color:#9ca3af;">Opens in a new tab</span>
+  </form>
+</section>
+<script>
+(function(){
+  var f = document.getElementById('qno-jump-form');
+  if (!f) return;
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var n = parseInt(document.getElementById('qno-input').value, 10);
+    if (n > 0) {
+      window.open('/q/' + n, '_blank');
+    }
+  });
+})();
+</script>
 
 {% endblock %}
 
