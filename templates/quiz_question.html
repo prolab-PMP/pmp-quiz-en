@@ -92,9 +92,9 @@
              data-saved='{{ saved_answer_raw or "" }}'>
           <div class="dnd-hint" style="padding:10px 14px;margin:0 0 14px;background:#eff6ff;border-left:4px solid #3b82f6;border-radius:6px;font-size:0.9rem;color:#1e3a8a;">
             {% if question.question_type == 'dnd_match' %}
-            <b>Match</b> — Drag the right-hand items onto the matching prompt on the left. (Mobile: long-press to drag.)
+            <b>Match</b> - Drag each item into the matching slot. On mobile, long-press briefly before dragging.
             {% else %}
-            <b>Order</b> — Drag the items into the correct sequence. (Mobile: long-press to drag.)
+            <b>Order</b> - Drag the items into the correct sequence. On mobile, long-press briefly before dragging.
             {% endif %}
           </div>
           <div id="dnd-ui"></div>

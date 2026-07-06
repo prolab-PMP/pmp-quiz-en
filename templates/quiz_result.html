@@ -110,6 +110,21 @@
     </div>
 
     <!-- Options -->
+    {% if r.is_dnd %}
+    <div class="dnd-result-box" style="padding:14px 16px;margin:12px 0 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface);">
+        <div style="font-weight:700;margin-bottom:6px;">Drag & Drop response</div>
+        <p style="margin:0;color:var(--text-muted);font-size:0.9rem;">
+            Your placement was graded automatically. Review the explanation below for the underlying concept.
+        </p>
+        <details style="margin-top:10px;font-size:0.82rem;color:var(--text-muted);">
+            <summary style="cursor:pointer;">Show saved placement data</summary>
+            <div style="margin-top:8px;word-break:break-word;">
+                <strong>Your answer:</strong> {{ r.user_answer_display or 'No answer submitted' }}<br>
+                <strong>Correct answer:</strong> {{ r.correct_answer_display }}
+            </div>
+        </details>
+    </div>
+    {% else %}
     <ul class="option-list">
         {% set options = [
             ('A', r.question.opt_a, r.question.opt_for('a', _lang_for_q)),
@@ -145,6 +160,7 @@
             {% endif %}
         {% endfor %}
     </ul>
+    {% endif %}
 
     <!-- Explanation (always visible in results) -->
     <div class="explanation-box show">
@@ -214,4 +230,4 @@ function toggleAllTranslations(btn) {
 }
 </script>
 {% endblock %}
-    
+

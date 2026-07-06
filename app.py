@@ -1187,6 +1187,8 @@ def quiz_grade():
             is_correct = q.check_dnd_answer(user_ans_raw)
             user_ans_display = user_ans_raw
             correct_display = q.answer
+            user_ans = []
+            correct_ans = []
         else:
             user_ans = sorted([a.strip() for a in user_ans_raw.split(',') if a.strip()])
             correct_ans = sorted(q.get_answer_list())
@@ -1257,6 +1259,9 @@ def quiz_grade():
             'question': q,
             'user_answer': user_ans,
             'correct_answer': correct_ans,
+            'user_answer_display': user_ans_display,
+            'correct_answer_display': correct_display,
+            'is_dnd': q.is_dnd(),
             'is_correct': is_correct,
             'answered': bool(user_ans_raw),
         })
