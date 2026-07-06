@@ -156,42 +156,6 @@
 {% endif %}
 
 {% if current_user.is_authenticated %}
-<div class="section-title"><span class="tag">My Status</span> Quick progress summary</div>
-
-<!-- Stats Grid -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="icon-badge ib-blue"></div>
-        <div class="stat-value">{{ total_questions }}</div>
-        <div class="stat-label">Total questions</div>
-    </div>
-    <div class="stat-card">
-        <div class="icon-badge ib-purple"></div>
-        <div class="stat-value">{{ total_sessions }}</div>
-        <div class="stat-label">Attempts</div>
-    </div>
-    <div class="stat-card">
-        <div class="icon-badge {% if avg_accuracy >= 70 %}ib-green{% elif avg_accuracy >= 50 %}ib-warn{% else %}ib-danger{% endif %}"></div>
-        <div class="stat-value" style="color:{% if avg_accuracy >= 70 %}var(--success){% elif avg_accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %}">
-            {{ "%.1f"|format(avg_accuracy) }}%
-        </div>
-        <div class="stat-label">Avg accuracy</div>
-    </div>
-    <div class="stat-card">
-        <div class="icon-badge ib-danger"></div>
-        <div class="stat-value" style="color:var(--danger)">{{ wrong_count }}</div>
-        <div class="stat-label">Wrong answers</div>
-    </div>
-</div>
-{% endif %}
-
-
-{% if current_user.is_authenticated %}
-<div class="section-title"><span class="tag purple">By domain</span> Click a domain for instant 20-question practice</div>
-{% endif %}
-
-
-{% if current_user.is_authenticated %}
 <div class="section-title"><span class="tag" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:0">Random practice</span> Start instantly with random questions</div>
 <p style="color:var(--text-muted);font-size:0.85rem;margin:-8px 0 14px">Free-tier users can use this mode too</p>
 <div class="random-quick-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px;">
@@ -258,6 +222,41 @@
 body.dark .random-quick-btn { background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(91,33,182,0.30)) !important; color: #ddd6fe !important; border-color: rgba(167,139,250,0.4) !important; }
 </style>
 {% endif %}{# /random-practice (member only) #}
+
+{% if current_user.is_authenticated %}
+<div class="section-title"><span class="tag">My Status</span> Quick progress summary</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="icon-badge ib-blue"></div>
+        <div class="stat-value">{{ total_questions }}</div>
+        <div class="stat-label">Total questions</div>
+    </div>
+    <div class="stat-card">
+        <div class="icon-badge ib-purple"></div>
+        <div class="stat-value">{{ total_sessions }}</div>
+        <div class="stat-label">Attempts</div>
+    </div>
+    <div class="stat-card">
+        <div class="icon-badge {% if avg_accuracy >= 70 %}ib-green{% elif avg_accuracy >= 50 %}ib-warn{% else %}ib-danger{% endif %}"></div>
+        <div class="stat-value" style="color:{% if avg_accuracy >= 70 %}var(--success){% elif avg_accuracy >= 50 %}var(--warning){% else %}var(--danger){% endif %}">
+            {{ "%.1f"|format(avg_accuracy) }}%
+        </div>
+        <div class="stat-label">Avg accuracy</div>
+    </div>
+    <div class="stat-card">
+        <div class="icon-badge ib-danger"></div>
+        <div class="stat-value" style="color:var(--danger)">{{ wrong_count }}</div>
+        <div class="stat-label">Wrong answers</div>
+    </div>
+</div>
+{% endif %}
+
+
+{% if current_user.is_authenticated %}
+<div class="section-title"><span class="tag purple">By domain</span> Click a domain for instant 20-question practice</div>
+{% endif %}
 
 {% if current_user.is_authenticated %}
 <div class="fw-toolbar">
