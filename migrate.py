@@ -11,7 +11,8 @@ What it does:
   Iterates every table declared in db.metadata; for each model column that
   is missing in the DB, runs:
       ALTER TABLE "<t>" ADD COLUMN IF NOT EXISTS "<c>" <type>
-  It is additive only — never drops columns, never changes types, never
+  It is additive only: never drops columns, never changes types (except
+  known safe VARCHAR->TEXT widenings listed in widen_targets below), never
   touches constraints. Existing rows are preserved.
 
 Usage:
@@ -21,14 +22,17 @@ from sqlalchemy import inspect, text
 
 
 def auto_migrate(db):
-    """Add columns declared on models that are missing from the DB."""
+    """Add missing columns and widen known VARCHAR->TEXT columns.
+
+    Postgres varchar -> text conversion is safe/no-op for existing data.
+    """
     engine = db.engine
     inspector = inspect(engine)
     added = []
     with engine.begin() as conn:
         for table_name, table in db.metadata.tables.items():
             if not inspector.has_table(table_name):
-                continue  # brand-new table — create_all will handle it
+                continue  # brand-new table -- create_all will handle it
             existing = {c['name'] for c in inspector.get_columns(table_name)}
             for col in table.columns:
                 if col.name in existing:
@@ -44,9 +48,28 @@ def auto_migrate(db):
                     print(f'[AUTO-MIGRATE] Added: {table_name}.{col.name} ({col_type})')
                 except Exception as e:
                     print(f'[AUTO-MIGRATE] FAILED {table_name}.{col.name}: {e}')
+
+        # Widen known VARCHAR -> TEXT columns for D&D questions (2026-07).
+        widen_targets = [
+            ('quiz_answers', 'user_answer'),
+            ('quiz_answers', 'correct_answer'),
+        ]
+        for tname, cname in widen_targets:
+            if not inspector.has_table(tname):
+                continue
+            try:
+                cols = {c['name']: c for c in inspector.get_columns(tname)}
+                if cname not in cols:
+                    continue
+                curr_type = str(cols[cname]['type']).upper()
+                if 'VARCHAR' in curr_type or 'CHARACTER VARYING' in curr_type:
+                    conn.execute(text(f'ALTER TABLE "{tname}" ALTER COLUMN "{cname}" TYPE TEXT'))
+                    print(f'[AUTO-MIGRATE] Widened: {tname}.{cname} {curr_type} -> TEXT')
+            except Exception as e:
+                print(f'[AUTO-MIGRATE] Widen FAILED {tname}.{cname}: {e}')
+
     if added:
         print(f'[AUTO-MIGRATE] {len(added)} column(s) added this boot.')
     else:
         print('[AUTO-MIGRATE] No schema changes needed.')
     return added
-

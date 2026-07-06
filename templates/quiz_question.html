@@ -79,7 +79,28 @@
         </div>
 
         <!-- Options -->
-        
+
+        {% if question.question_type in ('dnd_match', 'dnd_order') %}
+        {# ─────────── Drag & Drop renderer (mobile + PC) ─────────── #}
+        <div id="dnd-root"
+             data-qtype="{{ question.question_type }}"
+             data-qno="{{ question.no }}"
+             data-items='{{ (question.dnd_items or "[]")|safe }}'
+             data-items-kr='{{ (question.dnd_items_kr or "[]")|safe }}'
+             data-targets='{{ (question.dnd_targets or "[]")|safe }}'
+             data-targets-kr='{{ (question.dnd_targets_kr or "[]")|safe }}'
+             data-saved='{{ saved_answer_raw or "" }}'>
+          <div class="dnd-hint" style="padding:10px 14px;margin:0 0 14px;background:#eff6ff;border-left:4px solid #3b82f6;border-radius:6px;font-size:0.9rem;color:#1e3a8a;">
+            {% if question.question_type == 'dnd_match' %}
+            <b>Match</b> — Drag the right-hand items onto the matching prompt on the left. (Mobile: long-press to drag.)
+            {% else %}
+            <b>Order</b> — Drag the items into the correct sequence. (Mobile: long-press to drag.)
+            {% endif %}
+          </div>
+          <div id="dnd-ui"></div>
+        </div>
+        <input type="hidden" name="dnd_answer" id="dnd-answer" value="">
+        {% else %}
         {% if expected_count and expected_count > 1 %}
         <div id="multi-select-badge" data-expected="{{ expected_count }}"
              style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;margin:0 0 14px;
@@ -120,6 +141,7 @@
             <input type="hidden" name="selected" value="{{ letter }}" class="selected-input">
             {% endfor %}
         </div>
+        {% endif %}
     </div>
 
     {# Ad shown every 10 questions (10/20/30...), but not on the last one #}
@@ -171,6 +193,242 @@
 {% endblock %}
 
 {% block scripts %}
+{# SortableJS — mobile touch + PC mouse support. ~50KB. #}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<style>
+#dnd-root { margin: 8px 0 20px; }
+.dnd-order-list, .dnd-source-list, .dnd-slots-list {
+    list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;
+}
+.dnd-tile {
+    background: #fff; border: 1px solid #d1d5db; border-radius: 8px;
+    padding: 12px 14px; font-size: 0.95rem; cursor: grab;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    display: flex; align-items: center; gap: 10px;
+    user-select: none; -webkit-user-select: none; touch-action: none;
+}
+.dnd-tile:active { cursor: grabbing; }
+.dnd-tile .drag-handle { color: #9ca3af; font-size: 1rem; flex-shrink: 0; }
+.dnd-tile .tile-id {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 4px;
+    background: #eef2ff; color: #4338ca; font-weight: 700; font-size: 0.75rem; flex-shrink: 0;
+}
+.dnd-tile .tile-label { flex: 1; line-height: 1.4; }
+.sortable-ghost { opacity: 0.4; background: #dbeafe; }
+.sortable-chosen { background: #eef2ff; }
+.sortable-drag { box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+.dnd-order-list li { position: relative; padding-left: 42px; }
+.dnd-order-list li::before {
+    content: attr(data-position); position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%); background: #f3f4f6; color: #6b7280;
+    width: 22px; height: 22px; border-radius: 50%; display:flex;
+    align-items:center; justify-content:center; font-weight:700; font-size:0.8rem;
+}
+.dnd-match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.dnd-match-col { display: flex; flex-direction: column; gap: 8px; }
+.dnd-prompt {
+    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px;
+    padding: 10px 12px; font-size: 0.9rem; color: #374151;
+    display: flex; align-items: center; gap: 8px;
+}
+.dnd-prompt .prompt-id {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%; background: #dbeafe;
+    color: #1e40af; font-weight: 700; font-size: 0.75rem; flex-shrink: 0;
+}
+.dnd-drop-slot {
+    min-height: 46px; padding: 6px; background: #fefce8;
+    border: 1.5px dashed #eab308; border-radius: 8px;
+    display: flex; align-items: center;
+}
+.dnd-drop-slot.filled { background: #fff; border-style: solid; border-color: #d1d5db; }
+.dnd-drop-slot .dnd-tile { flex: 1; margin: 0; }
+.dnd-source-pool {
+    padding: 12px; margin-top: 14px; background: #f0fdf4;
+    border: 1.5px dashed #16a34a; border-radius: 8px; min-height: 46px;
+}
+.dnd-source-pool-title {
+    font-size: 0.78rem; font-weight: 700; color: #15803d;
+    letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px;
+}
+@media (max-width: 640px) {
+    .dnd-match-grid { grid-template-columns: 1fr; gap: 8px; }
+    .dnd-match-col + .dnd-match-col { border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 4px; }
+}
+</style>
+<script>
+(function(){
+    var root = document.getElementById('dnd-root');
+    if (!root) return;
+    var qtype = root.dataset.qtype;
+    var lang = 'en';
+
+    function pickItems() {
+        try {
+            var enJson = root.dataset.items;
+            var krJson = root.dataset.itemsKr;
+            var en = enJson ? JSON.parse(enJson) : [];
+            var kr = krJson ? JSON.parse(krJson) : [];
+            if (lang === 'kr' && kr && kr.length) return kr;
+            return en;
+        } catch (e) { return []; }
+    }
+    function pickTargets() {
+        try {
+            var enJson = root.dataset.targets;
+            var krJson = root.dataset.targetsKr;
+            var en = enJson ? JSON.parse(enJson) : [];
+            var kr = krJson ? JSON.parse(krJson) : [];
+            if (lang === 'kr' && kr && kr.length) return kr;
+            return en;
+        } catch (e) { return []; }
+    }
+    function shuffle(arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+    }
+
+    var container = document.getElementById('dnd-ui');
+    var hiddenInput = document.getElementById('dnd-answer');
+    var savedRaw = (root.dataset.saved || '').trim();
+    var saved = null;
+    if (savedRaw) { try { saved = JSON.parse(savedRaw); } catch(e){} }
+
+    function escapeHtml(s){
+        return String(s).replace(/[&<>"']/g, function(c){
+            return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+        });
+    }
+
+    if (qtype === 'dnd_order') {
+        var items = pickItems();
+        var initial;
+        if (saved && Array.isArray(saved) && saved.length === items.length) {
+            var byId = {}; items.forEach(function(it){ byId[it.id] = it; });
+            initial = saved.map(function(id){ return byId[id]; }).filter(Boolean);
+            if (initial.length !== items.length) initial = shuffle(items);
+        } else {
+            initial = shuffle(items);
+        }
+        var ul = document.createElement('ul');
+        ul.className = 'dnd-order-list';
+        initial.forEach(function(it, idx){
+            var li = document.createElement('li');
+            li.className = 'dnd-tile';
+            li.dataset.id = it.id;
+            li.dataset.position = idx + 1;
+            li.innerHTML = '<span class="drag-handle">☰</span><span class="tile-label">' + escapeHtml(it.label) + '</span>';
+            ul.appendChild(li);
+        });
+        container.appendChild(ul);
+        var sync = function(){
+            var order = Array.from(ul.children).map(function(li, idx){
+                li.dataset.position = idx + 1;
+                return li.dataset.id;
+            });
+            hiddenInput.value = JSON.stringify(order);
+        };
+        sync();
+        new Sortable(ul, {
+            animation: 150,
+            delay: 100, delayOnTouchOnly: true, touchStartThreshold: 5,
+            forceFallback: true,
+            onEnd: sync,
+        });
+
+    } else if (qtype === 'dnd_match') {
+        var items = pickItems();
+        var targets = pickTargets();
+        var savedMap = (saved && typeof saved === 'object' && !Array.isArray(saved)) ? saved : {};
+        var grid = document.createElement('div');
+        grid.className = 'dnd-match-grid';
+        var leftCol = document.createElement('div');
+        leftCol.className = 'dnd-match-col';
+        var rightCol = document.createElement('div');
+        rightCol.className = 'dnd-match-col';
+        grid.appendChild(leftCol); grid.appendChild(rightCol);
+        container.appendChild(grid);
+
+        var slotById = {}; var usedTargetIds = new Set();
+        items.forEach(function(it, idx){
+            var p = document.createElement('div');
+            p.className = 'dnd-prompt';
+            p.innerHTML = '<span class="prompt-id">' + (idx + 1) + '</span><span>' + escapeHtml(it.label) + '</span>';
+            leftCol.appendChild(p);
+            var slot = document.createElement('div');
+            slot.className = 'dnd-drop-slot';
+            slot.dataset.promptId = it.id;
+            rightCol.appendChild(slot);
+            slotById[it.id] = slot;
+        });
+        var pool = document.createElement('div');
+        pool.className = 'dnd-source-pool';
+        pool.innerHTML = '<div class="dnd-source-pool-title">Drag items below into the slots above</div>';
+        var poolList = document.createElement('div');
+        poolList.className = 'dnd-source-list';
+        pool.appendChild(poolList);
+        container.appendChild(pool);
+
+        function makeTile(t){
+            var el = document.createElement('div');
+            el.className = 'dnd-tile';
+            el.dataset.id = t.id;
+            el.innerHTML = '<span class="tile-id">' + escapeHtml(t.id) + '</span><span class="tile-label">' + escapeHtml(t.label) + '</span>';
+            return el;
+        }
+        var targetById = {};
+        targets.forEach(function(t){ targetById[t.id] = t; });
+        Object.keys(savedMap).forEach(function(promptId){
+            var tId = savedMap[promptId];
+            if (slotById[promptId] && targetById[tId] && !usedTargetIds.has(tId)) {
+                slotById[promptId].appendChild(makeTile(targetById[tId]));
+                slotById[promptId].classList.add('filled');
+                usedTargetIds.add(tId);
+            }
+        });
+        shuffle(targets).forEach(function(t){
+            if (!usedTargetIds.has(t.id)) poolList.appendChild(makeTile(t));
+        });
+        var sync = function(){
+            var result = {};
+            Object.keys(slotById).forEach(function(promptId){
+                var slot = slotById[promptId];
+                var tile = slot.querySelector('.dnd-tile');
+                slot.classList.toggle('filled', !!tile);
+                if (tile) result[promptId] = tile.dataset.id;
+            });
+            hiddenInput.value = JSON.stringify(result);
+        };
+        sync();
+        var groupOpts = { name:'dnd-match', pull:true, put:true };
+        var sortOpts = {
+            group: groupOpts, animation: 150,
+            delay: 100, delayOnTouchOnly: true, touchStartThreshold: 5,
+            forceFallback: true, onEnd: sync,
+        };
+        new Sortable(poolList, sortOpts);
+        Object.values(slotById).forEach(function(slot){
+            new Sortable(slot, Object.assign({}, sortOpts, {
+                onAdd: function(evt){
+                    var tiles = slot.querySelectorAll('.dnd-tile');
+                    if (tiles.length > 1) {
+                        for (var i = 0; i < tiles.length - 1; i++) {
+                            poolList.appendChild(tiles[i]);
+                        }
+                    }
+                    sync();
+                }
+            }));
+        });
+    }
+})();
+</script>
+
 <script>
 function toggleOption(el, letter) {
     el.classList.toggle('selected');
