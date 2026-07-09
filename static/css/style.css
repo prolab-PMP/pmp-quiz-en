@@ -1839,3 +1839,58 @@ button.btn-primary {
     margin-top: 22px !important;
     margin-bottom: 10px !important;
 }
+
+/* ── Navbar contrast fix (2026-07): dark-toggle + language picker visible on deep navy ── */
+.navbar {
+    background: linear-gradient(180deg, #1547B0 0%, #0B3D91 100%) !important;
+}
+
+.dark-toggle {
+    background: rgba(255,255,255,0.14) !important;
+    border: 1.5px solid var(--pmi-gold, #F79319) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    padding: 6px 14px !important;
+    border-radius: 999px !important;
+    transition: background .15s, transform .1s !important;
+}
+.dark-toggle i { color: var(--pmi-gold, #F79319) !important; }
+.dark-toggle:hover {
+    background: var(--pmi-gold, #F79319) !important;
+    color: #0B3D91 !important;
+    transform: translateY(-1px);
+}
+.dark-toggle:hover i { color: #0B3D91 !important; }
+
+.lang-picker select,
+.navbar-nav select {
+    background: #FFFFFF !important;
+    color: #0B3D91 !important;
+    border: 1.5px solid var(--pmi-gold, #F79319) !important;
+    padding: 5px 10px !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer;
+}
+.lang-picker select:hover,
+.navbar-nav select:hover {
+    background: var(--pmi-gold, #F79319) !important;
+    color: #0B3D91 !important;
+}
+.lang-picker select option,
+.navbar-nav select option {
+    background: #FFFFFF !important;
+    color: #0B3D91 !important;
+}
+
+body.dark .dark-toggle {
+    background: rgba(255,255,255,0.10) !important;
+    border-color: var(--pmi-gold, #F79319) !important;
+    color: #FFFFFF !important;
+}
+body.dark .lang-picker select,
+body.dark .navbar-nav select {
+    background: #FFFFFF !important;
+    color: #0B3D91 !important;
+}
