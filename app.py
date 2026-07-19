@@ -2323,12 +2323,143 @@ def server_error(e):
 # ══════════════════════════════════════════════════════
 # BLOG (PMP study guides — public content for AdSense)
 # ══════════════════════════════════════════════════════
+PUBLIC_SAMPLE_SIZE = 180
+_PUBLIC_SAMPLE_CACHE = None
+
+# Domain grouping order used on the public learning hub.
+_PUBLIC_TAG_ATTRS = ('eco2026_domain', 'pmbok8_domain', 'eco2021_domain',
+                     'pmbok7_domain', 'methodology')
+
+
+def get_public_sample_nos():
+    """Question numbers that are public (login-free, search-indexable).
+
+    Picks questions that have both an English stem and an English explanation,
+    spread evenly across the whole pool so every domain is represented.
+    Result is cached for the life of the process.
+    """
+    global _PUBLIC_SAMPLE_CACHE
+    if _PUBLIC_SAMPLE_CACHE is not None:
+        return _PUBLIC_SAMPLE_CACHE
+    try:
+        rows = (db.session.query(Question.no)
+                .filter(Question.no < 9000)          # exclude demo/seed items
+                .filter(Question.question.isnot(None), Question.question != '')
+                .filter(Question.explanation.isnot(None), Question.explanation != '')
+                .order_by(Question.no).all())
+        nos = [r[0] for r in rows]
+    except Exception:
+        nos = []
+    if len(nos) <= PUBLIC_SAMPLE_SIZE:
+        sample = nos
+    else:
+        step = len(nos) / float(PUBLIC_SAMPLE_SIZE)
+        sample = [nos[int(i * step)] for i in range(PUBLIC_SAMPLE_SIZE)]
+    _PUBLIC_SAMPLE_CACHE = sample
+    return sample
+
+
+def _q_short_title(q, limit=70):
+    """Short, readable title for list/related links."""
+    src = (q.question or '').strip().replace('\n', ' ')
+    src = re.sub(r'\s+', ' ', src)
+    if len(src) > limit:
+        src = src[:limit].rstrip() + '...'
+    return src or f'PMP practice question {q.no}'
+
+
+def _q_primary_tag(q):
+    """Single representative classification tag (used in titles/SEO)."""
+    for attr in _PUBLIC_TAG_ATTRS:
+        v = getattr(q, attr, None)
+        if v:
+            return v
+    return None
+
+
+def _q_tags(q):
+    """De-duplicated list of classification tags for display."""
+    seen, tags = set(), []
+    for attr in _PUBLIC_TAG_ATTRS:
+        v = getattr(q, attr, None)
+        if v and v not in seen:
+            seen.add(v)
+            tags.append(v)
+    return tags
+
+
 @app.route('/learn')
 def learn_index():
     """Public PMP learning hub for AdSense review and search visitors."""
     if not _BLOG_INDEX_CACHE:
         _load_blog()
-    return render_template('learn.html', posts=_BLOG_INDEX_CACHE[:8])
+    sample_nos = get_public_sample_nos()
+    groups = []
+    total = 0
+    if sample_nos:
+        questions = Question.query.filter(Question.no.in_(sample_nos)).all()
+        q_map = {q.no: q for q in questions}
+        ordered = [q_map[n] for n in sample_nos if n in q_map]
+        total = len(ordered)
+        groups_map = {}
+        for q in ordered:
+            key = _q_primary_tag(q) or 'Other topics'
+            groups_map.setdefault(key, []).append(
+                {'no': q.no, 'title': _q_short_title(q)})
+        groups = [{'title': f'{k} ({len(v)} questions)', 'rows': v}
+                  for k, v in sorted(groups_map.items(),
+                                     key=lambda kv: (-len(kv[1]), kv[0]))]
+    return render_template('learn.html', posts=_BLOG_INDEX_CACHE[:8],
+                           groups=groups, total=total)
+
+
+@app.route('/learn/<int:no>')
+def learn_question(no):
+    """Public sample question - stem, options, answer and explanation, no login."""
+    sample_nos = get_public_sample_nos()
+    if no not in sample_nos:
+        abort(404)          # keep the rest of the bank behind the paywall
+    q = Question.query.filter_by(no=no).first()
+    if not q:
+        abort(404)
+
+    ans_list = q.get_answer_list()
+    options = []
+    for letter in ['A', 'B', 'C', 'D', 'E']:
+        text = getattr(q, f'opt_{letter.lower()}', None)
+        if text:
+            options.append({'letter': letter, 'text': text,
+                            'correct': letter in ans_list})
+
+    idx = sample_nos.index(no)
+    prev_no = sample_nos[idx - 1] if idx > 0 else None
+    next_no = sample_nos[idx + 1] if idx < len(sample_nos) - 1 else None
+
+    pool = [n for n in sample_nos if n != no]
+    start = max(0, min(idx, len(pool) - 3))
+    pick = pool[start:start + 3] if pool else []
+    related = []
+    if pick:
+        rel_qs = Question.query.filter(Question.no.in_(pick)).all()
+        rel_map = {r.no: r for r in rel_qs}
+        related = [{'no': n, 'title': _q_short_title(rel_map[n])}
+                   for n in pick if n in rel_map]
+
+    tags = _q_tags(q)
+    primary_tag = tags[0] if tags else None
+    seo_title = f'PMP Practice Question {q.no}'
+    if primary_tag:
+        seo_title += f' - {primary_tag}'
+    stem = re.sub(r'\s+', ' ', (q.question or '').strip())
+    seo_desc = (stem[:150] + '...') if len(stem) > 150 else stem
+
+    return render_template('learn_question.html',
+                           question=q, options=options,
+                           answer_str=', '.join(ans_list),
+                           tags=tags, primary_tag=primary_tag,
+                           tag_keywords=', '.join(tags),
+                           seo_title=seo_title, seo_desc=seo_desc,
+                           prev_no=prev_no, next_no=next_no, related=related)
 
 
 _BLOG_CACHE = {}
@@ -2522,6 +2653,12 @@ def sitemap_xml():
         for p in _BLOG_INDEX_CACHE:
             urls.append((f"/blog/{p['slug']}", '0.7', 'monthly'))
     except NameError:
+        pass
+    # Public sample questions - every /learn/<no> detail page is indexable
+    try:
+        for _no in get_public_sample_nos():
+            urls.append((f"/learn/{_no}", '0.6', 'monthly'))
+    except Exception:
         pass
     body = '<?xml version="1.0" encoding="UTF-8"?>\n'
     body += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'

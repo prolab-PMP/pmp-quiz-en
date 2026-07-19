@@ -26,6 +26,11 @@
 .learn-post span{display:block;color:var(--text-muted,#6b7280);font-size:.9rem;line-height:1.55}
 .learn-cta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:20px;margin-top:20px}
 .learn-cta p{margin:0;color:#1e3a8a;line-height:1.55}
+.lq-group{margin:20px 0 0}
+.lq-group h3{font-size:1.02rem;margin:0 0 8px;color:var(--text,#111827)}
+.lq-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.lq-list a{color:var(--primary,#4f46e5);text-decoration:none;font-size:.93rem;line-height:1.55}
+.lq-list a:hover{text-decoration:underline}
 @media(max-width:640px){.learn-wrap{padding:18px 14px 48px}.learn-hero{padding:24px 18px}.learn-hero h1{font-size:1.55rem}.learn-section{padding:18px}}
 </style>
 {% endblock %}
@@ -97,6 +102,27 @@
       {% endfor %}
     </div>
   </section>
+
+  {% if groups %}
+  <section class="learn-section">
+    <h2>Free PMP Practice Questions with Explanations{% if total %} ({{ total }}){% endif %}</h2>
+    <p>
+      Every question below is free to read with no account required. Each page shows the full
+      scenario, the answer options, the correct answer, and an explanation of why it is the best
+      choice. Questions are grouped by domain so you can work through your weakest area first.
+    </p>
+    {% for g in groups %}
+    <div class="lq-group">
+      <h3>{{ g.title }}</h3>
+      <ul class="lq-list">
+        {% for r in g.rows %}
+        <li><a href="{{ url_for('learn_question', no=r.no) }}">Q{{ r.no }}. {{ r.title }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
 
   <section class="learn-cta">
     <p><strong>Ready to practice?</strong><br>Try a free 30-question PMP set, then review your weak areas with the guides above.</p>
