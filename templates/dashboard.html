@@ -19,20 +19,37 @@
         <span>{{ total_sessions }} attempts</span>
         <span>Avg {{ "%.1f"|format(avg_accuracy) }}%</span>
         <span>{{ current_user.email }}{% if current_user.is_admin %} - Admin{% endif %}{% if current_user.is_premium %} - Premium{% endif %}</span>
+        <a href="{{ url_for('download_free_pdf') }}"
+           style="display:inline-flex;align-items:center;gap:5px;background:var(--pmi-gold,#F79319);color:#0B3D91;font-weight:800;text-decoration:none;border-radius:999px;padding:3px 12px;font-size:inherit;">
+            <i class="fas fa-file-pdf"></i> Get free 150-question PDF
+        </a>
         {% else %}
         <span>Free 30-question trial</span>
         <span>No account required to start</span>
         {% endif %}
     </div>
+    {% if not current_user.is_authenticated %}
+    <div style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:6px 12px;
+                background:rgba(247,147,25,0.16);border:1px solid rgba(247,147,25,0.45);
+                border-radius:999px;font-size:0.8rem;color:#fff;">
+      <span style="font-weight:700;color:#FDBA74;">FREE</span>
+      <span>Sign up and download the 150-question PMP practice pack (PDF) instantly</span>
+    </div>
+    {% endif %}
 </section>
 
 {% if not current_user.is_authenticated %}
 <section class="guest-cta" style="margin:0 0 24px;padding:24px 28px;border-radius:14px;background:linear-gradient(135deg,#eef2ff 0%,#f5f3ff 100%);border:1px solid #c7d2fe;box-shadow:0 1px 3px rgba(0,0,0,0.04),0 8px 24px rgba(99,102,241,0.08);">
   <div style="display:flex;flex-wrap:wrap;align-items:center;gap:20px;justify-content:space-between;">
+    <a href="{{ url_for('signup') }}" style="flex-shrink:0;line-height:0;text-decoration:none;">
+      <img src="{{ url_for('static', filename='img/free_pdf_cover_en.jpg') }}"
+           alt="PMP Free Practice Pack - 150 questions"
+           style="width:104px;height:auto;border-radius:8px;box-shadow:0 4px 14px rgba(11,61,145,0.22);border:1px solid rgba(11,61,145,0.10);">
+    </a>
     <div style="flex:1;min-width:240px;">
-      <div style="font-size:0.85rem;color:#5b21b6;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">Free trial</div>
-      <h2 style="margin:0 0 6px;font-size:1.35rem;letter-spacing:-0.02em;color:#1e293b;">Try 30 PMP questions now</h2>
-      <p style="margin:0;color:#475569;font-size:0.95rem;line-height:1.6;">Start a free PMP practice set with explanations. Sign up to save progress, unlock all 2,250 questions, review wrong answers, and track analytics.</p>
+      <div style="font-size:0.85rem;color:#5b21b6;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">Free pack on signup</div>
+      <h2 style="margin:0 0 6px;font-size:1.35rem;letter-spacing:-0.02em;color:#1e293b;">150-question PMP practice pack (PDF) + 30 questions now</h2>
+      <p style="margin:0;color:#475569;font-size:0.95rem;line-height:1.6;">Sign up and download <strong>150 real-style PMP questions with full English explanations</strong> instantly.<br>You can also try 30 questions right now without an account. All 2,250 questions, wrong-answer notes, and analytics unlock after signup.</p>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;min-width:190px;">
       <form method="POST" action="{{ url_for('free_start') }}" style="margin:0;">

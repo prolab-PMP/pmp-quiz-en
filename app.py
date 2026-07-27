@@ -344,13 +344,14 @@ def signup():
             user.is_premium = True
             user.set_validity(months=120)
         user.last_login = datetime.utcnow()
+        user.free_pdf_sent_at = datetime.utcnow()
         if user not in db.session:
             db.session.add(user)
         db.session.commit()
         # Signup notification — background thread (SMTP delay must not block redirect)
         _async_mail(_notify_signup, email)
         login_user(user, remember=True)
-        flash('✅ 가입 Completed! 바로 Log in되었습니다.', 'success')
+        flash('Welcome! Your free 150-question PDF is ready to download on the dashboard.', 'success')
         return redirect(url_for('dashboard'))
 
     return render_template('signup.html', email=request.args.get('email', ''))
@@ -374,6 +375,31 @@ def _async_mail(fn, *args):
             except Exception:
                 print(f'[MAIL][async] {fn.__name__} failed: {e}')
     threading.Thread(target=_runner, daemon=True).start()
+
+
+# ── Free 150-question English pack (lead magnet, 2026-07) ─────────────
+FREE_PDF_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             'private_assets', 'pmp_free_150_en.pdf')
+FREE_PDF_FILENAME = 'PMP_Free_Practice_Pack_150_EN.pdf'
+
+
+@app.route('/download/free-150')
+@login_required
+def download_free_pdf():
+    """Free 150-question English pack. Members only; logs first download."""
+    from flask import send_file
+    if not os.path.isfile(FREE_PDF_PATH):
+        app.logger.error(f'[FREE-PDF] file missing: {FREE_PDF_PATH}')
+        abort(404)
+    try:
+        if not current_user.free_pdf_downloaded_at:
+            current_user.free_pdf_downloaded_at = datetime.utcnow()
+            db.session.commit()
+    except Exception as _e:
+        app.logger.warning(f'[FREE-PDF] download log failed: {_e}')
+    return send_file(FREE_PDF_PATH, as_attachment=True,
+                     download_name=FREE_PDF_FILENAME,
+                     mimetype='application/pdf')
 
 
 def _notify_signup(email):

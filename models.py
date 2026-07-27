@@ -22,6 +22,10 @@ class User(UserMixin, db.Model):
     referrer_email = db.Column(db.String(255), nullable=True, index=True)
     referrer_bonus_applied = db.Column(db.Boolean, default=False)
 
+    # Free 150-question English pack — issue / download tracking (2026-07)
+    free_pdf_sent_at = db.Column(db.DateTime, nullable=True)
+    free_pdf_downloaded_at = db.Column(db.DateTime, nullable=True)
+
     # Admin-only private memo per user (why premium was granted, promo code notes, VIP flag, etc.).
     # Never shown to end user. Only visible in /admin panel.
     admin_note = db.Column(db.Text, nullable=True, default='')
