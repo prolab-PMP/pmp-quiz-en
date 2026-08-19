@@ -1894,3 +1894,16 @@ body.dark .navbar-nav select {
     background: #FFFFFF !important;
     color: #0B3D91 !important;
 }
+
+/* ── Hero social icons (2026-07) ─────────────────────────────── */
+.hero-social a:hover {
+    background: var(--pmi-gold, #F79319) !important;
+    border-color: var(--pmi-gold, #F79319) !important;
+    color: #0B3D91 !important;
+}
+.hero h1 { padding-right: 118px; }
+@media (max-width: 640px) {
+    .hero-social { top: 12px !important; right: 12px !important; gap: 6px !important; }
+    .hero-social a { width: 26px !important; height: 26px !important; font-size: 12px !important; }
+    .hero h1 { padding-right: 96px; }
+}
