@@ -1903,15 +1903,6 @@ body.dark .navbar-nav select {
     transform: translateY(-2px);
     box-shadow: 0 5px 14px rgba(0,0,0,0.28) !important;
 }
-/* Instagram official gradient */
-.hero-social a.hero-social-ig i {
-    background: radial-gradient(circle at 30% 107%,
-                #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-}
 /* keep the title clear of the icons */
 .hero h1 { padding-right: 124px; }
 @media (max-width: 640px) {
