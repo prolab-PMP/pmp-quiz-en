@@ -18,7 +18,7 @@
                 <i class="fas fa-star"></i> Paid Version Benefits
             </h3>
             <ul style="list-style:none;padding:0;margin:0;line-height:2;">
-                <li><i class="fas fa-check-circle" style="color:var(--success);margin-right:8px;"></i> Unlimited access to all <strong>2,219</strong> questions</li>
+                <li><i class="fas fa-check-circle" style="color:var(--success);margin-right:8px;"></i> Unlimited access to all <strong>2,250</strong> questions</li>
                 <li><i class="fas fa-check-circle" style="color:var(--success);margin-right:8px;"></i> Per-category practice for PMBOK 8th & 7th Editions</li>
                 <li><i class="fas fa-check-circle" style="color:var(--success);margin-right:8px;"></i> Automatic wrong-answer note management</li>
                 <li><i class="fas fa-check-circle" style="color:var(--success);margin-right:8px;"></i> Daily and per-category accuracy statistics</li>
@@ -29,15 +29,11 @@
 
         <!-- Buttons -->
         <div style="display:flex;flex-direction:column;gap:12px;">
-            <!-- Naver Smart Store buy button (most prominent) -->
-            <a href="https://smartstore.naver.com/sub-note/products/13378117649"
-               target="_blank" rel="noopener"
-               class="btn btn-lg"
-               style="background:#03C75A;color:#fff;font-size:1.05rem;font-weight:700;border:none;display:flex;align-items:center;justify-content:center;gap:8px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="white" style="flex-shrink:0;">
-                    <path d="M16.273 12.845L7.376 0H0v24h7.727V11.155l8.897 12.845H24V0h-7.727z"/>
-                </svg>
-                Buy on Naver Smart Store
+            <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg" style="font-size:1.05rem;font-weight:700;">
+                <i class="fas fa-rocket"></i> Sign up free — 7-day Premium trial
+            </a>
+            <a href="{{ url_for('pricing') }}" class="btn btn-lg" style="background:#F79319;color:#fff;font-weight:700;">
+                <i class="fas fa-star"></i> See Premium plans (from $4.08/mo)
             </a>
             <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
                 <i class="fas fa-sign-in-alt"></i> Already purchased? Log in
@@ -49,11 +45,10 @@
 
         <!-- Purchase guide -->
         <div style="margin-top:24px;padding:16px;background:var(--surface);border-radius:8px;font-size:0.85rem;color:var(--text-muted);text-align:left;line-height:1.8;">
-            <strong style="color:var(--text);">How to use after purchase</strong><br>
-            ① Buy on Naver Smart Store<br>
-            ② Leave your email address in the contact form<br>
-            ③ Admin activates account (default 3 months)<br>
-            ④ Log in with your email and start using immediately
+            <strong style="color:var(--text);">How it works</strong><br>
+            ① Sign up with your email — your 7-day Premium trial starts instantly<br>
+            ② Practice all 2,250 questions with analytics and mock exams<br>
+            ③ Keep going for as little as $4.08/month — pay securely with PayPal
         </div>
 
         <p style="margin-top:16px;font-size:0.8rem;color:var(--text-muted);">
