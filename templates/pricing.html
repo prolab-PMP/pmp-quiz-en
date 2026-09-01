@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}PMP Practice Exam Pricing - 2,250 Questions from $4/month | WayExam{% endblock %}
+
+{% block content %}
+<section class="hero" style="text-align:center;">
+    <h1>Simple, honest pricing</h1>
+    <p>All 2,250 PMBOK 8 &amp; 7 questions, analytics, and mock exams.<br>
+    Start with a <strong>7-day free Premium trial</strong> — no payment info required.</p>
+</section>
+
+<div class="recommend-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-bottom:28px;">
+    {% for plan in plans %}
+    <div class="card" style="text-align:center; padding:28px 20px; border:2px solid {% if loop.index == 2 %}var(--primary){% else %}var(--border){% endif %}; position:relative;">
+        {% if loop.index == 2 %}
+        <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--primary); color:#fff; padding:4px 14px; border-radius:12px; font-size:0.78rem; font-weight:700;">
+            BEST VALUE
+        </div>
+        {% endif %}
+        <div style="font-size:1.05rem; font-weight:700; margin-bottom:8px;">{{ plan.label }}</div>
+        <div style="font-size:2.2rem; font-weight:800; color:var(--primary);">${{ plan.price }}</div>
+        <div style="color:var(--text-muted); font-size:0.9rem; margin-bottom:18px;">
+            ${{ '%.2f'|format(plan.price|float / plan.months) }} / month
+        </div>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('upgrade') }}" class="btn btn-primary" style="width:100%;">Upgrade now</a>
+        {% else %}
+        <a href="{{ url_for('signup') }}" class="btn btn-primary" style="width:100%;">Start 7-day free trial</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card" style="padding:24px; margin-bottom:24px; background:#eff6ff;">
+    <div class="card-header" style="border-bottom:none; padding-bottom:8px;">
+        <i class="fas fa-star" style="color:#f59e0b;"></i> Every plan includes
+    </div>
+    <ul style="list-style:none; padding:0; line-height:2; font-size:0.95rem;">
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Unlimited access to all <strong>2,250 questions</strong> (PMBOK 8 &amp; 7, Agile/Hybrid, current ECO)</li>
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Full-length PMP-style mock exams (180 / 185 questions)</li>
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Automated wrong-answer notes and daily accuracy analytics</li>
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Per-domain and per-difficulty practice modes</li>
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Question translation toggle: Korean / Chinese / Spanish / Japanese</li>
+        <li><i class="fas fa-check-circle" style="color:var(--success); margin-right:8px;"></i> Secure checkout via PayPal · no auto-renewal, no hidden fees</li>
+    </ul>
+</div>
+
+<div class="card" style="padding:24px; margin-bottom:24px;">
+    <div class="card-header" style="border-bottom:none; padding-bottom:8px;">
+        <i class="fas fa-scale-balanced"></i> How we compare
+    </div>
+    <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:0.92rem; min-width:480px;">
+            <tr style="border-bottom:2px solid var(--border); text-align:left;">
+                <th style="padding:10px 8px;">Platform</th>
+                <th style="padding:10px 8px;">Questions</th>
+                <th style="padding:10px 8px;">Typical price</th>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border); background:#f0fdf4;">
+                <td style="padding:10px 8px; font-weight:700;">WayExam</td>
+                <td style="padding:10px 8px; font-weight:700;">2,250</td>
+                <td style="padding:10px 8px; font-weight:700;">$19 / 3 months</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:10px 8px;">PM Exam Simulator (Deluxe)</td>
+                <td style="padding:10px 8px;">1,920</td>
+                <td style="padding:10px 8px;">$149 / 90 days</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:10px 8px;">Brain Sensei</td>
+                <td style="padding:10px 8px;">2,200+</td>
+                <td style="padding:10px 8px;">$99.99 / 6 months</td>
+            </tr>
+            <tr>
+                <td style="padding:10px 8px;">PM FastTrack (RMC)</td>
+                <td style="padding:10px 8px;">2,200+</td>
+                <td style="padding:10px 8px;">$89 / month</td>
+            </tr>
+        </table>
+    </div>
+    <p style="font-size:0.78rem; color:var(--text-muted); margin-top:10px;">
+        Competitor prices as listed on their public pricing pages, September 2026. Please verify current prices on each vendor's site.
+    </p>
+</div>
+
+<div class="card" style="padding:24px; margin-bottom:24px;">
+    <div class="card-header" style="border-bottom:none; padding-bottom:8px;">
+        <i class="fas fa-circle-question"></i> Frequently asked questions
+    </div>
+    <div style="line-height:1.8; font-size:0.95rem;">
+        <p style="margin-bottom:14px;"><strong>Can I try before I pay?</strong><br>
+        Yes. Signing up gives you a 7-day Premium trial with full access to all 2,250 questions — no payment information required. You can also try 50 questions right now without an account.</p>
+        <p style="margin-bottom:14px;"><strong>Are the questions up to date?</strong><br>
+        The bank covers PMBOK 8 &amp; 7, agile and hybrid scenarios, and the current PMI Exam Content Outline. Questions are reviewed and updated continuously.</p>
+        <p style="margin-bottom:14px;"><strong>Does my plan auto-renew?</strong><br>
+        No. You pay once for 3, 6, or 12 months of access. When it expires, nothing is charged unless you choose to renew.</p>
+        <p style="margin-bottom:0;"><strong>How do I pay?</strong><br>
+        Checkout is handled securely by PayPal. Questions? <a href="mailto:songodinfo1@gmail.com">songodinfo1@gmail.com</a></p>
+    </div>
+</div>
+
+<div style="text-align:center; margin:32px 0;">
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('upgrade') }}" class="btn btn-primary btn-lg"><i class="fas fa-star"></i> Upgrade to Premium</a>
+    {% else %}
+    <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg"><i class="fas fa-rocket"></i> Start your 7-day free trial</a>
+    <p style="margin-top:12px;"><a href="{{ url_for('free_mode') }}" style="color:var(--text-muted);">or try 50 questions free without an account</a></p>
+    {% endif %}
+</div>
+{% endblock %}
