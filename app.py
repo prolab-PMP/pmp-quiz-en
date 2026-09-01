@@ -2670,6 +2670,7 @@ def sitemap_xml():
         ('/free', '0.9', 'weekly'),
         ('/learn', '0.9', 'weekly'),
         ('/blog', '0.9', 'weekly'),
+        ('/pricing', '0.8', 'monthly'),
         ('/signup', '0.5', 'monthly'),
         ('/about', '0.6', 'monthly'),
         ('/privacy', '0.3', 'yearly'),
@@ -2972,3 +2973,11 @@ def admin_cleanup_old_seed():
         return ('<h2 style="color:#b91c1c">cleanup_old_seed error</h2>'
                 f'<p>{_html.escape(type(e).__name__)}: see server logs for details.</p>'
                 '<p><a href="/admin">Admin</a></p>'), 500
+
+@app.route('/pricing')
+def pricing():
+    """Public pricing page (no login required)."""
+    plans = []
+    for key, label, price, months in PAYPAL_PLANS:
+        plans.append({'key': key, 'label': label, 'price': price, 'months': months})
+    return render_template('pricing.html', plans=plans)
