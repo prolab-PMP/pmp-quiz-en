@@ -261,7 +261,7 @@ def login():
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         if not email or '@' not in email:
-            flash('올바른 Email address를 입력해wk세요.', 'error')
+            flash('Please enter a valid email address.', 'error')
             return render_template('login.html')
         if len(password) < 4:
             flash('Please enter your password (4+ chars).', 'error')
@@ -269,7 +269,7 @@ def login():
 
         user = User.query.filter_by(email=email).first()
         if not user:
-            flash('가입되지 않은 Email입니다. Sign up 후 이용해wk세요.', 'error')
+            flash('No account found for that email address. Please sign up first.', 'error')
             return redirect(url_for('signup', email=email))
 
         # Admin Email은 ADMIN_PASSWORD 로도 Log in 가능 (레거시 호환)
@@ -306,17 +306,17 @@ def signup():
         password2 = request.form.get('password2', '')
         referrer_email_raw = request.form.get('referrer_email', '').strip().lower()
         if not email or '@' not in email:
-            flash('올바른 Email address를 입력해wk세요.', 'error')
+            flash('Please enter a valid email address.', 'error')
             return render_template('signup.html', email=email)
         if len(password) < 4:
-            flash('Password는 최소 4+ chars이어야 합니다.', 'error')
+            flash('Password must be at least 4 characters long.', 'error')
             return render_template('signup.html', email=email)
         if password != password2:
-            flash('Passwords do not match. 다시 OK해wk세요.', 'error')
+            flash('Passwords do not match. Please try again.', 'error')
             return render_template('signup.html', email=email)
         existing = User.query.filter_by(email=email).first()
         if existing and existing.password_hash:
-            flash('already 가입된 Email입니다. Log in해wk세요.', 'error')
+            flash('That email address is already registered. Please log in.', 'error')
             return redirect(url_for('login', email=email))
 
         # Validate referrer (optional). Silently ignore if missing/invalid/self.
@@ -1034,7 +1034,7 @@ def quiz_begin():
     if mode == 'wrong_answers':
         wrong_nos = [w.question_no for w in WrongAnswer.query.filter_by(user_id=current_user.id).all()]
         if not wrong_nos:
-            flash('Incorrect 목록이 비어있습니다.', 'info')
+            flash('Your incorrect-answer list is empty.', 'info')
             return redirect(url_for('quiz_start'))
         query = query.filter(Question.no.in_(wrong_nos))
 
@@ -1093,7 +1093,7 @@ def quiz_begin():
     # Get questions
     all_questions = query.all()
     if not all_questions:
-        flash('조건에 맞는 Question가 없습니다.', 'warning')
+        flash('No questions match the filters you selected.', 'warning')
         return redirect(url_for('quiz_start'))
 
     random.shuffle(all_questions)
@@ -1820,7 +1820,7 @@ def admin_add_user():
     is_premium = request.form.get('is_premium') == '1'
 
     if not email or '@' not in email:
-        flash('올바른 Email address를 입력해wk세요.', 'error')
+        flash('Please enter a valid email address.', 'error')
         return redirect(url_for('admin_panel'))
 
     if User.query.filter_by(email=email).first():
@@ -2117,7 +2117,7 @@ def api_report():
     existing = QuestionReport.query.filter_by(
         user_id=current_user.id, question_no=q_no, status='pending').first()
     if existing:
-        return jsonify({'ok': False, 'msg': 'already Report한 Question입니다.'})
+        return jsonify({'ok': False, 'msg': 'You have already reported this question.'})
 
     rpt = QuestionReport(user_id=current_user.id, question_no=q_no,
                          reason=reason, detail=detail)
@@ -2335,15 +2335,15 @@ def admin_comment_restore(comment_id):
 
 @app.errorhandler(403)
 def forbidden(e):
-    return render_template('error.html', code=403, message='접근 권한이 없습니다.'), 403
+    return render_template('error.html', code=403, message='You do not have permission to access this page.'), 403
 
 @app.errorhandler(404)
 def not_found(e):
-    return render_template('error.html', code=404, message='페이지를 찾을 수 없습니다.'), 404
+    return render_template('error.html', code=404, message='Sorry, we could not find that page.'), 404
 
 @app.errorhandler(500)
 def server_error(e):
-    return render_template('error.html', code=500, message='서버 An error occurred.'), 500
+    return render_template('error.html', code=500, message='Something went wrong on our end. Please try again.'), 500
 
 
 # ══════════════════════════════════════════════════════
@@ -2796,7 +2796,7 @@ def jump_to_question(q_no):
     """Q번호로 즉시 조회 — admin은 edit 페이지로, 일반 사용자는 1문제 quiz session 시작."""
     q = Question.query.filter_by(no=q_no).first()
     if not q:
-        flash(f'Q{q_no}: 해당 문제 번호가 존재하지 않습니다.', 'warning')
+        flash(f'Q{q_no}: no question with that number exists.', 'warning')
         return redirect(url_for('dashboard'))
     if current_user.is_admin:
         return redirect(url_for('admin_question_edit', q_no=q_no))

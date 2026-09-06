@@ -55,7 +55,7 @@
                 <li><a href="{{ url_for('upgrade') }}" class="{% if request.endpoint == 'upgrade' %}active{% endif %}" style="color:#f59e0b;font-weight:700;"><i class="fas fa-star"></i> Upgrade</a></li>
                 {% endif %}
                 {% if current_user.is_admin %}
-                <li><a href="{{ url_for('admin_panel') }}" class="{% if 'admin' in request.endpoint %}active{% endif %}"><i class="fas fa-gear"></i> Admin</a></li>
+                <li><a href="{{ url_for('admin_panel') }}" class="{% if request.endpoint and 'admin' in request.endpoint %}active{% endif %}"><i class="fas fa-gear"></i> Admin</a></li>
                 {% endif %}
                 <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Log out</a></li>
             {% else %}
