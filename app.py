@@ -2981,3 +2981,92 @@ def pricing():
     for key, label, price, months in PAYPAL_PLANS:
         plans.append({'key': key, 'label': label, 'price': price, 'months': months})
     return render_template('pricing.html', plans=plans)
+
+
+# ══════════════════════════════════════════════════════
+# GROWTH STATS — funnel measurement (2026-09-06)
+# ──────────────────────────────────────────────────────
+# Why: until now there was no way to answer "how many people signed up,
+# how many started a trial, how many actually paid". /admin showed only
+# raw user rows. Two consumers:
+#   1. /admin/stats  — a page WS can read.
+#   2. an hourly "WAYEXAM_STATS {json}" line on stdout, so a Claude session
+#      can read the numbers straight from the Railway deploy logs without
+#      needing DB credentials or an authenticated HTTP request.
+# ══════════════════════════════════════════════════════
+
+def _growth_stats():
+    """Funnel counters. Admins are excluded from every user metric."""
+    now = datetime.utcnow()
+
+    def since(days):
+        return now - timedelta(days=days)
+
+    users = [u for u in User.query.all() if not u.is_admin]
+
+    def born_since(days):
+        cutoff = since(days)
+        return sum(1 for u in users if u.created_at and u.created_at >= cutoff)
+
+    trial_active = sum(1 for u in users if u.is_trial())
+    paid_active = sum(1 for u in users if u.is_paid_premium())
+    expired = sum(1 for u in users
+                  if u.is_premium and u.validity_end and u.validity_end < now)
+
+    return {
+        'ts': now.strftime('%Y-%m-%dT%H:%M:%SZ'),
+        # acquisition
+        'users_total': len(users),
+        'users_with_password': sum(1 for u in users if u.password_hash),
+        'new_1d': born_since(1),
+        'new_7d': born_since(7),
+        'new_30d': born_since(30),
+        # activation / conversion
+        'trial_active': trial_active,
+        'paid_active': paid_active,
+        'premium_expired': expired,
+        # engagement
+        'active_7d': sum(1 for u in users if u.last_login and u.last_login >= since(7)),
+        'quiz_sessions_7d': QuizSession.query.filter(QuizSession.started_at >= since(7)).count(),
+        'quiz_sessions_total': QuizSession.query.count(),
+        # lead magnet
+        'pdf_sent': sum(1 for u in users if u.free_pdf_sent_at),
+        'pdf_downloaded': sum(1 for u in users if u.free_pdf_downloaded_at),
+        # catalogue
+        'questions': Question.query.count(),
+    }
+
+
+@app.route('/admin/stats')
+@admin_required
+def admin_stats():
+    """Funnel dashboard: signups -> trials -> paying customers."""
+    return render_template('admin_stats.html', s=_growth_stats())
+
+
+def _start_stats_logger(interval_seconds=3600, first_delay=90):
+    """Emit one WAYEXAM_STATS line per interval so Railway logs carry the funnel.
+
+    Runs in a daemon thread. Under gunicorn each worker starts one, so the
+    line appears once per worker — harmless duplication, the values match.
+    """
+    import threading
+    import time
+
+    def loop():
+        time.sleep(first_delay)          # let the DB finish coming up
+        while True:
+            try:
+                with app.app_context():
+                    payload = json.dumps(_growth_stats(), ensure_ascii=False)
+                    print('WAYEXAM_STATS ' + payload, flush=True)
+                    db.session.remove()
+            except Exception as exc:
+                print('WAYEXAM_STATS_ERROR {}: {}'.format(type(exc).__name__, exc),
+                      flush=True)
+            time.sleep(interval_seconds)
+
+    threading.Thread(target=loop, daemon=True, name='stats-logger').start()
+
+
+_start_stats_logger()

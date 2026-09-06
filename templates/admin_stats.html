@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}PMP Quiz - Growth Stats{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom:6px;"><i class="fas fa-chart-line"></i> Growth Stats</h2>
+<p style="color:#6b7280;margin-bottom:22px;font-size:14px;">
+  Snapshot at {{ s.ts }} (UTC). Admin accounts are excluded from every user count.
+  <a href="{{ url_for('admin_panel') }}" style="margin-left:10px;">&larr; Admin panel</a>
+</p>
+
+<h3 style="margin:26px 0 10px;font-size:16px;color:#374151;">The funnel</h3>
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value">{{ s.users_total }}</div>
+    <div class="stat-label">Signed up (total)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ s.trial_active }}</div>
+    <div class="stat-label">On free trial now</div>
+  </div>
+  <div class="stat-card" style="border:2px solid #f59e0b;">
+    <div class="stat-value" style="color:#f59e0b;">{{ s.paid_active }}</div>
+    <div class="stat-label"><strong>Paying customers</strong></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ s.premium_expired }}</div>
+    <div class="stat-label">Premium expired</div>
+  </div>
+</div>
+
+<h3 style="margin:26px 0 10px;font-size:16px;color:#374151;">New signups</h3>
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value">{{ s.new_1d }}</div>
+    <div class="stat-label">Last 24 hours</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ s.new_7d }}</div>
+    <div class="stat-label">Last 7 days</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ s.new_30d }}</div>
+    <div class="stat-label">Last 30 days</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ s.users_with_password }}</div>
+    <div class="stat-label">Have set a password</div>
+  </div>
+</div>
+
+<h3 style="margin:26px 0 10px;font-size:16px;color:#374151;">Engagement</h3>
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value">{{ s.active_7d }}</div>
+    <div class="stat-label">Logged in (7 days)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ s.quiz_sessions_7d }}</div>
+    <div class="stat-label">Quiz sessions (7 days)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ s.quiz_sessions_total }}</div>
+    <div class="stat-label">Quiz sessions (all time)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ s.questions }}</div>
+    <div class="stat-label">Questions in bank</div>
+  </div>
+</div>
+
+<h3 style="margin:26px 0 10px;font-size:16px;color:#374151;">Lead magnet (150-question PDF)</h3>
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value">{{ s.pdf_sent }}</div>
+    <div class="stat-label">PDF issued</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ s.pdf_downloaded }}</div>
+    <div class="stat-label">PDF downloaded</div>
+  </div>
+</div>
+
+<p style="margin-top:30px;color:#9ca3af;font-size:12px;line-height:1.7;">
+  These same numbers are printed to the server log once an hour as a
+  <code>WAYEXAM_STATS</code> line, so they can be read from Railway without
+  opening this page.
+</p>
+{% endblock %}

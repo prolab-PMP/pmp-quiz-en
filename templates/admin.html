@@ -2,7 +2,9 @@
 {% block title %}PMP Quiz - Admin{% endblock %}
 
 {% block content %}
-<h2 style="margin-bottom:20px;"><i class="fas fa-gear"></i> Admin Panel</h2>
+<h2 style="margin-bottom:20px;"><i class="fas fa-gear"></i> Admin Panel
+    <a href="{{ url_for('admin_stats') }}" style="font-size:14px;font-weight:600;margin-left:14px;"><i class="fas fa-chart-line"></i> Growth Stats</a>
+</h2>
 
 <!-- Admin Stats -->
 <div class="stats-grid">
