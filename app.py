@@ -335,7 +335,11 @@ def signup():
         else:
             user = User(email=email)
             user.password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-            user.is_premium = False
+            # The signup CTA promises a "7-day Premium trial" and dashboard.html
+            # has a Trial branch that says "auto-granted on signup" — but nothing
+            # ever called set_trial(), so every new account landed on Free and the
+            # advertised trial silently did not exist. Grant it here.
+            user.set_trial(days=7)
         if valid_referrer_email and not user.referrer_email:
             user.referrer_email = valid_referrer_email
         is_admin_email = email in Config.ADMIN_EMAILS
