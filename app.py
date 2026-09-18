@@ -2,6 +2,7 @@
 import os
 import re
 import json
+import hmac
 import random
 import bcrypt
 from datetime import datetime, timedelta
@@ -15,7 +16,8 @@ from sqlalchemy import func, desc, and_, text
 from config import Config
 from models import (db, User, Question, QuizSession, QuizAnswer, WrongAnswer,
                     UserAnswerStat, QuestionGlobalStat, Bookmark, QuestionReport,
-                    QuestionComment, QuestionCommentVote, QuestionCommentReport)
+                    QuestionComment, QuestionCommentVote, QuestionCommentReport,
+                    BlogPost)
 from migrate import auto_migrate  # DB schema auto-sync (additive)
 
 app = Flask(__name__)
@@ -2494,6 +2496,7 @@ def learn_question(no):
 
 _BLOG_CACHE = {}
 _BLOG_INDEX_CACHE = []
+_BLOG_DB_LOADED = False
 
 
 def _parse_frontmatter(text):
@@ -2611,6 +2614,29 @@ def _load_blog():
         except Exception as e:
             try: app.logger.warning(f'[BLOG] failed to load {fname}: {e}')
             except Exception: print(f'[BLOG] failed to load {fname}: {e}')
+    # DB-published posts (added at runtime via /blog/publish). Additive:
+    # a row with the same slug overrides the file-based post.
+    global _BLOG_DB_LOADED
+    try:
+        for row in BlogPost.query.filter_by(published=True).all():
+            meta, body = _parse_frontmatter(row.body_md)
+            _BLOG_CACHE[row.slug] = {
+                'slug': row.slug, 'meta': meta, 'html': _md_to_html(body),
+            }
+            posts = [p for p in posts if p['slug'] != row.slug]
+            posts.append({
+                'slug': row.slug,
+                'title': meta.get('title', row.slug),
+                'summary': meta.get('summary', ''),
+                'date': meta.get('date', ''),
+            })
+        _BLOG_DB_LOADED = True
+    except Exception as e:
+        # DB not ready yet (module import happens before create_all). The first
+        # /blog request retries via _BLOG_DB_LOADED below.
+        try: app.logger.info(f'[BLOG] db posts not loaded yet: {e}')
+        except Exception: pass
+
     posts.sort(key=lambda p: p['date'], reverse=True)
     _BLOG_INDEX_CACHE = posts
 
@@ -2620,14 +2646,14 @@ _load_blog()
 
 @app.route('/blog')
 def blog_index():
-    if app.config.get('DEBUG'):
+    if app.config.get('DEBUG') or not _BLOG_DB_LOADED:
         _load_blog()
     return render_template('blog_index.html', posts=_BLOG_INDEX_CACHE)
 
 
 @app.route('/blog/<slug>')
 def blog_post(slug):
-    if app.config.get('DEBUG'):
+    if app.config.get('DEBUG') or not _BLOG_DB_LOADED:
         _load_blog()
     entry = _BLOG_CACHE.get(slug)
     if not entry:
@@ -2635,6 +2661,49 @@ def blog_post(slug):
     related = [p for p in _BLOG_INDEX_CACHE if p['slug'] != slug][:3]
     return render_template('blog_post.html',
         post=entry, meta=entry['meta'], body_html=entry['html'], related=related)
+
+
+@app.route('/blog/publish', methods=['POST'])
+def blog_publish():
+    """Publish or update one blog post at runtime.
+
+    Disabled unless BLOG_PUBLISH_TOKEN is set in the environment. Authenticates
+    with the X-Publish-Token header. Body: JSON {"slug": "...", "markdown": "..."}
+    where markdown is the full file content including frontmatter.
+    """
+    expected = os.environ.get('BLOG_PUBLISH_TOKEN', '')
+    if not expected:
+        abort(404)  # feature off -> endpoint does not exist
+    supplied = request.headers.get('X-Publish-Token', '')
+    if not hmac.compare_digest(supplied, expected):
+        abort(403)
+
+    payload = request.get_json(silent=True) or {}
+    slug = (payload.get('slug') or '').strip()
+    markdown = payload.get('markdown') or ''
+
+    if not re.fullmatch(r'[a-z0-9][a-z0-9-]{2,79}', slug):
+        return jsonify(ok=False, error='invalid slug'), 400
+    if not (50 <= len(markdown) <= 200000):
+        return jsonify(ok=False, error='markdown length out of range'), 400
+
+    meta, _body = _parse_frontmatter(markdown)
+    for field in ('title', 'summary', 'date', 'read_time', 'keywords'):
+        if not meta.get(field):
+            return jsonify(ok=False, error=f'missing frontmatter field: {field}'), 400
+
+    row = BlogPost.query.filter_by(slug=slug).first()
+    created = row is None
+    if created:
+        row = BlogPost(slug=slug)
+        db.session.add(row)
+    row.body_md = markdown
+    row.published = True
+    db.session.commit()
+
+    _load_blog()
+    return jsonify(ok=True, slug=slug, created=created,
+                   url=url_for('blog_post', slug=slug, _external=True)), (201 if created else 200)
 
 
 @app.route('/about')

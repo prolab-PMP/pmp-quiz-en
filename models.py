@@ -369,3 +369,19 @@ class QuestionCommentReport(db.Model):
     __table_args__ = (
         db.UniqueConstraint('comment_id', 'reporter_id', name='uix_comment_reporter'),
     )
+
+
+class BlogPost(db.Model):
+    """Blog posts published at runtime via the publish API.
+
+    File-based posts in templates/blog/*.md remain the source of truth for
+    existing content. Rows here are additive: a row with the same slug as a
+    file overrides that file.
+    """
+    __tablename__ = 'blog_posts'
+    id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    body_md = db.Column(db.Text, nullable=False)   # full markdown incl. frontmatter
+    published = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
