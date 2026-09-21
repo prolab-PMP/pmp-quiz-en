@@ -2863,6 +2863,111 @@ def admin_apply_question_fixes():
     return body
 
 
+@app.route('/admin/cleanup_question_text')
+@admin_required
+def admin_cleanup_question_text():
+    """일회성 정리: PMP KR과 동일한 일괄 텍스트 오류 수정.
+
+    1) 보기 끝에 붙은 잔여 숫자 제거   (PDF 추출 흔적, 예: '... syndication. 1216')
+    2) 한글 보기 앞 중복 라벨 제거      (예: 'A. A. 팀 위키에...' -> 'A. ' 제거)
+    3) 개별 정정 (Q51 깨진 글자 / Q1610 오역 / Q2115 해설 라벨 오타)
+
+    문제 테이블만 UPDATE한다. 회원·풀이기록 테이블은 일절 건드리지 않는다.
+    ?dry=1 을 붙이면 미리보기만 하고 커밋하지 않는다.
+    """
+    import re as _re
+
+    dry = request.args.get('dry') == '1'
+    OPT_EN = ['opt_a', 'opt_b', 'opt_c', 'opt_d', 'opt_e']
+    OPT_KR = [c + '_kr' for c in OPT_EN]
+
+    TRAIL_NUM = _re.compile(r'\s+\d{3,4}\s*$')
+    DUP_LABEL = _re.compile(r'^\s*([A-E])\.\s+')
+
+    changes = []
+
+    for q in Question.query.order_by(Question.no).all():
+        for field in OPT_EN + OPT_KR:
+            val = getattr(q, field, None)
+            if not val:
+                continue
+            new = TRAIL_NUM.sub('', val)
+            if field in OPT_KR:
+                letter = field[4].upper()
+                m = DUP_LABEL.match(new)
+                if m and m.group(1) == letter:
+                    new = DUP_LABEL.sub('', new, count=1)
+            new = new.strip()
+            if new and new != val:
+                changes.append((q.no, field, val, new))
+                if not dry:
+                    setattr(q, field, new)
+
+    Q1610_KR = (
+        '한 조직이 비즈니스 프로젝트에 하이브리드 전달 방식을 사용하고 있다. '
+        '프로젝트를 관리하기도 했던 제품 책임자가 더 상위 직책으로 승진했고, '
+        '새로운 프로젝트 리더가 프로젝트에 합류했다. 프로젝트 리더가 '
+        '프로젝트 편익이 식별되었는지 확인하려면 어떤 산출물을 사용해야 하는가?'
+    )
+    Q2115_EXP = (
+        '대규모 퇴사로 자원 제약이 생기면 납품 역량이 감소한다. 문제는 "다가오는 목표일을 '
+        '맞추면서 지연을 복구"하는 방법을 묻고 있다. 크래싱(A)은 자원을 추가 투입하는 기법인데 '
+        '투입할 인력 자체가 없어 불가능하다. 패스트트래킹(B)은 활동을 병행해 리스크와 재작업을 '
+        '키우며 이 역시 추가 역량을 전제로 한다. 목표일 수정(D)은 일정 자체를 바꾸는 것이므로 '
+        '"복구"가 아니라 재기준선 설정이다. 따라서 가용 역량에 맞게 작업을 재우선순위화하는 '
+        '범위 축소(C)가 남는 유일한 실행 가능한 복구 수단이다. 다만 범위 축소는 PM이 단독으로 '
+        '결정할 수 없으며, 변경요청을 제출해 스폰서·주요 이해관계자의 승인을 받아 통합 변경통제 '
+        '절차를 거쳐야 한다.'
+    )
+
+    singles = [
+        {'no': 51,   'question_kr': lambda v: v.replace('괰5범위한', '광범위한')},
+        {'no': 1610, 'question_kr': lambda v: Q1610_KR},
+        {'no': 2115, 'explanation_kr': lambda v: Q2115_EXP},
+    ]
+    for s in singles:
+        q = Question.query.filter_by(no=s['no']).first()
+        if not q:
+            changes.append((s['no'], '(not found)', '', ''))
+            continue
+        for field, fn in s.items():
+            if field == 'no':
+                continue
+            before = getattr(q, field, None) or ''
+            if not before:
+                continue
+            after = fn(before)
+            if after and after != before:
+                changes.append((q.no, field, before, after))
+                if not dry:
+                    setattr(q, field, after)
+
+    if not dry:
+        db.session.commit()
+
+    by_field = {}
+    for no, field, _b, _a in changes:
+        by_field[field] = by_field.get(field, 0) + 1
+
+    head = ('<h2>Question text cleanup %s</h2>' % ('preview (dry run, nothing saved)' if dry else 'applied'))
+    head += '<p>total <b>%d</b> / by field: %s</p>' % (
+        len(changes), ', '.join('%s=%d' % kv for kv in sorted(by_field.items())))
+    rows = ''.join(
+        '<tr><td>Q%s</td><td>%s</td><td style="color:#b91c1c">%s</td>'
+        '<td style="color:#047857">%s</td></tr>' % (
+            no, field,
+            (b[-70:] if b else '').replace('<', '&lt;'),
+            (a[-70:] if a else '').replace('<', '&lt;'))
+        for no, field, b, a in changes)
+    body = (head +
+            '<table border=1 cellpadding=4 style="border-collapse:collapse;font-size:12px">'
+            '<tr><th>Q</th><th>field</th><th>before (last 70)</th><th>after</th></tr>'
+            + rows + '</table>'
+            '<p><a href="/admin/reports">&larr; Reports</a> &middot; '
+            '<a href="/admin">Admin</a></p>')
+    return body
+
+
 @app.route('/q/<int:q_no>')
 @login_required
 def jump_to_question(q_no):
