@@ -251,21 +251,88 @@ def healthz():
 
 @app.route('/')
 def index():
-    """Home: top banner + cover visual + shortcuts (practice / status / blog)."""
+    """Home: top banner + cover visual + practice hub (50%) + status preview + blog."""
     if app.config.get('DEBUG') or not _BLOG_DB_LOADED:
         _load_blog()
     total_questions = Question.query.count()
-    total_sessions, avg_accuracy, wrong_count = 0, 0, 0
+    total_sessions, avg_accuracy, wrong_count, bookmark_count = 0, 0, 0, 0
     if current_user.is_authenticated:
         total_sessions = QuizSession.query.filter_by(user_id=current_user.id, is_completed=True).count()
         avg_accuracy = db.session.query(func.avg(QuizSession.accuracy))\
             .filter_by(user_id=current_user.id, is_completed=True).scalar() or 0
         wrong_count = WrongAnswer.query.filter_by(user_id=current_user.id).count()
+        bookmark_count = Bookmark.query.filter_by(user_id=current_user.id).count()
+
+    # 2026 ECO domains for one-click domain practice
+    eco_domains = [
+        {'name': r[0], 'count': int(r[1])}
+        for r in db.session.query(Question.eco2026_domain, func.count(Question.id))
+            .filter(Question.eco2026_domain.isnot(None))
+            .group_by(Question.eco2026_domain).order_by(func.count(Question.id).desc()).all()
+    ]
+
+    methodologies = [
+        {'name': r[0], 'count': int(r[1])}
+        for r in db.session.query(Question.methodology, func.count(Question.id))
+            .filter(Question.methodology.isnot(None))
+            .group_by(Question.methodology).order_by(func.count(Question.id).desc()).all()
+    ]
+
+    # Status preview: real data for premium/admin users who have practised,
+    # otherwise the same sample data /status shows to free users.
+    status = None
+    if current_user.is_authenticated:
+        is_free_preview = (not current_user.is_admin) and (not current_user.is_premium or not current_user.is_valid())
+        if not is_free_preview:
+            uid = current_user.id
+            attempted = db.session.query(func.sum(UserAnswerStat.total_attempts)).filter_by(user_id=uid).scalar() or 0
+            if attempted:
+                correct = db.session.query(func.sum(UserAnswerStat.correct_attempts)).filter_by(user_id=uid).scalar() or 0
+                daily = db.session.query(
+                    func.date(QuizSession.completed_at).label('date'),
+                    func.avg(QuizSession.accuracy).label('acc'),
+                ).filter_by(user_id=uid, is_completed=True)\
+                 .group_by(func.date(QuizSession.completed_at))\
+                 .order_by(func.date(QuizSession.completed_at)).all()
+                status = {
+                    'sample': False,
+                    'overall_accuracy': round(correct / attempted * 100, 1),
+                    'total_attempted': int(attempted),
+                    'wrong_count': wrong_count,
+                    'streak_days': _calc_streak(uid),
+                    'daily': [round(float(d.acc or 0), 1) for d in daily][-14:],
+                    'domains': _cat_stats(Question.eco2026_domain, uid, 'eco2026_domain'),
+                }
+    if status is None:
+        sm = _sample_my_status_data()
+        status = {
+            'sample': True,
+            'overall_accuracy': sm['overall_accuracy'],
+            'total_attempted': sm['total_attempted'],
+            'wrong_count': sm['wrong_count'],
+            'streak_days': sm['streak_days'],
+            'daily': [d['avg_accuracy'] for d in sm['daily_stats']],
+            'domains': sm['cat_stats']['pmbok8']['eco2026_domain'],
+        }
+    # Sparkline points (viewBox 0 0 300 70, accuracy 40..100 %)
+    vals = status['daily'] or [0]
+    n = len(vals)
+    pts = []
+    for i, v in enumerate(vals):
+        x = 0 if n == 1 else round(i * 300 / (n - 1), 1)
+        y = round(70 - (max(40, min(100, v)) - 40) / 60 * 64 - 3, 1)
+        pts.append(f"{x},{y}")
+    status['spark'] = ' '.join(pts)
+
     return render_template('home.html',
                            total_questions=total_questions,
                            total_sessions=total_sessions,
                            avg_accuracy=avg_accuracy,
                            wrong_count=wrong_count,
+                           bookmark_count=bookmark_count,
+                           eco_domains=eco_domains,
+                           methodologies=methodologies,
+                           status=status,
                            recent_posts=_BLOG_INDEX_CACHE[:3])
 
 @app.route('/login', methods=['GET', 'POST'])

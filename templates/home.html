@@ -60,31 +60,70 @@
   .wx-scene{display:none}
 }
 /* ── Home: section cards ──────────────────────────────────────── */
-.wx-sections{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:0 0 32px}
-@media (max-width: 900px){ .wx-sections{grid-template-columns:1fr} }
-.wx-card{position:relative;display:flex;flex-direction:column;padding:24px;border-radius:16px;background:var(--surface,#fff);
+.wx-sections{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:0 0 32px;align-items:stretch}
+.wx-card.practice{grid-row:span 2}
+@media (max-width: 900px){ .wx-sections{grid-template-columns:1fr} .wx-card.practice{grid-row:auto} }
+.wx-card{position:relative;display:flex;flex-direction:column;padding:28px;border-radius:18px;background:var(--surface,#fff);
   border:1px solid var(--border,#E4E7EC);box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.06));color:var(--text,#101828);
-  text-decoration:none;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;cursor:pointer}
-.wx-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg,0 12px 24px rgba(16,24,40,.12));border-color:var(--primary-line,#BFDBFE)}
-.wx-card .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:20px;color:#fff;margin-bottom:14px}
+  text-decoration:none;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
+.wx-card.link{cursor:pointer}
+.wx-card.link:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg,0 12px 24px rgba(16,24,40,.12));border-color:var(--primary-line,#BFDBFE)}
+.wx-card .hd{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.wx-card .ic{flex:0 0 52px;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:23px;color:#fff}
 .wx-card.practice .ic{background:linear-gradient(135deg,#2563eb,#1e3a8a)}
 .wx-card.status .ic{background:linear-gradient(135deg,#14b8a6,#0f766e)}
 .wx-card.blog .ic{background:linear-gradient(135deg,#f59e0b,#d97706)}
-.wx-card h3{margin:0 0 10px;font-size:1.2rem;font-weight:800;letter-spacing:-.02em;color:var(--text,#101828)}
-.wx-card .desc{margin:-4px 0 16px;color:var(--text-muted,#475467);font-size:.93rem;line-height:1.55}
-.wx-card .kpis{display:flex;gap:10px;margin-bottom:16px}
-.wx-card .kpi{flex:1;padding:10px 12px;border-radius:10px;background:var(--surface-alt,#F4F6FA)}
-.wx-card .kpi b{display:block;font-size:1.25rem;font-weight:800;color:var(--text,#101828)}
-.wx-card .kpi span{font-size:.75rem;color:var(--text-subtle,#667085)}
-.wx-card ul{list-style:none;margin:0 0 16px;padding:0}
-.wx-card li{padding:9px 0;border-top:1px solid var(--border,#E4E7EC);font-size:.92rem;line-height:1.4}
-.wx-card li:first-child{border-top:0;padding-top:0}
-.wx-card li a{position:relative;z-index:2;color:var(--text,#101828);text-decoration:none;font-weight:600}
-.wx-card li a:hover{color:var(--primary,#2563EB)}
-.wx-card li small{display:block;color:var(--text-faint,#98A2B3);font-size:.78rem;margin-top:2px}
-.wx-card .go{margin-top:auto;display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.95rem;color:var(--primary,#2563EB)}
-.wx-card .stretch{position:absolute;inset:0;z-index:1;border-radius:16px}
+.wx-card h3{margin:0;font-size:1.5rem;font-weight:800;letter-spacing:-.02em;color:var(--text,#101828)}
+.wx-card .tagline{margin:2px 0 0;color:var(--text-muted,#475467);font-size:1.02rem;line-height:1.5}
+.wx-card .sample{display:inline-block;margin-left:8px;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:800;letter-spacing:.8px;
+  background:#fef3c7;color:#92400e;vertical-align:middle}
+.wx-card .go{margin-top:auto;padding-top:18px;display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:1.08rem;color:var(--primary,#2563EB);text-decoration:none}
+.wx-card .stretch{position:absolute;inset:0;z-index:1;border-radius:18px}
 .wx-card .stretch:focus-visible{outline:3px solid var(--primary,#2563EB);outline-offset:2px}
+/* practice hub */
+.wx-grp{margin-top:20px}
+.wx-grp .lb{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:.82rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text-subtle,#667085)}
+.wx-grp .lb i{font-size:.95rem}
+.wx-btns{display:grid;gap:10px}
+.wx-btns.c4{grid-template-columns:repeat(4,1fr)}
+.wx-btns.c3{grid-template-columns:repeat(3,1fr)}
+.wx-btns.c2{grid-template-columns:repeat(2,1fr)}
+@media (max-width: 560px){ .wx-btns.c4{grid-template-columns:repeat(2,1fr)} .wx-btns.c3{grid-template-columns:1fr} }
+.wx-btns form{margin:0}
+.wx-b{display:block;width:100%;height:100%;padding:14px 12px;border-radius:12px;border:1.5px solid;cursor:pointer;text-align:center;text-decoration:none;
+  font-family:inherit;transition:transform .15s ease,box-shadow .15s ease}
+.wx-b:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(16,24,40,.14)}
+.wx-b b{display:block;font-size:1.35rem;font-weight:900;line-height:1.1}
+.wx-b small{display:block;margin-top:4px;font-size:.82rem;font-weight:600;opacity:.85}
+.wx-b.rand{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-color:#c4b5fd;color:#5b21b6}
+.wx-b.mock{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#6ee7b7;color:#065f46}
+.wx-b.dom{background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-color:#93c5fd;color:#1e3a8a}
+.wx-b.dom b,.wx-b.meth b{font-size:1.02rem}
+.wx-b.meth{background:linear-gradient(135deg,#cffafe,#a5f3fc);border-color:#67e8f9;color:#155e75}
+.wx-b.rev{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#fca5a5;color:#991b1b}
+.wx-b.bm{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d;color:#92400e}
+.wx-b.lock{opacity:.6}
+.wx-b[disabled]{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+/* status preview */
+.wx-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+@media (max-width: 560px){ .wx-kpis{grid-template-columns:repeat(2,1fr)} }
+.wx-kpi{padding:12px;border-radius:12px;background:var(--surface-alt,#F4F6FA)}
+.wx-kpi b{display:block;font-size:1.5rem;font-weight:900;color:var(--text,#101828);line-height:1.1}
+.wx-kpi span{font-size:.8rem;color:var(--text-subtle,#667085)}
+.wx-spark{margin-top:16px;padding:12px 14px 8px;border-radius:12px;background:var(--surface-alt,#F4F6FA)}
+.wx-spark .t{font-size:.82rem;font-weight:700;color:var(--text-subtle,#667085);margin-bottom:4px}
+.wx-spark svg{display:block;width:100%;height:70px}
+.wx-bars{margin-top:14px;display:grid;gap:9px}
+.wx-bar .row{display:flex;justify-content:space-between;font-size:.92rem;font-weight:600;margin-bottom:4px;color:var(--text,#101828)}
+.wx-bar .track{height:9px;border-radius:999px;background:var(--surface-alt,#EEF2F6);overflow:hidden}
+.wx-bar .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#14b8a6,#3b82f6)}
+/* blog list */
+.wx-card ul{list-style:none;margin:12px 0 0;padding:0}
+.wx-card li{padding:11px 0;border-top:1px solid var(--border,#E4E7EC);font-size:1.02rem;line-height:1.4}
+.wx-card li:first-child{border-top:0;padding-top:4px}
+.wx-card li a{position:relative;z-index:2;color:var(--text,#101828);text-decoration:none;font-weight:700}
+.wx-card li a:hover{color:var(--primary,#2563EB)}
+.wx-card li small{display:block;color:var(--text-faint,#98A2B3);font-size:.82rem;margin-top:3px}
 .wx-pdf{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:-12px 0 28px;padding:14px 20px;border-radius:14px;
   background:var(--surface,#fff);border:1px dashed var(--border-strong,#D0D5DD);color:var(--text-muted,#475467);font-size:.93rem}
 .wx-pdf a{font-weight:700;color:var(--primary,#2563EB);text-decoration:none}
@@ -154,55 +193,166 @@
 
 <!-- Section shortcuts -->
 <section class="wx-sections" aria-label="Go to">
-  <!-- Practice -->
+
+  <!-- Practice hub (50%) -->
   <div class="wx-card practice">
-    <a class="stretch" href="{{ url_for('dashboard') }}" aria-label="Go to practice questions"></a>
-    <div class="ic"><i class="fas fa-pen-to-square"></i></div>
-    <h3>Practice Questions</h3>
-    <p class="desc">Random sets, domain drills, full mock exams, and wrong-answer review.</p>
-    <div class="kpis">
-      <div class="kpi"><b>{{ "{:,}".format(total_questions) }}</b><span>questions</span></div>
-      <div class="kpi"><b>185</b><span>Q mock exam</span></div>
+    <div class="hd">
+      <div class="ic"><i class="fas fa-pen-to-square"></i></div>
+      <div>
+        <h3>Practice Questions</h3>
+        <p class="tagline">{{ "{:,}".format(total_questions) }} questions &middot; pick a mode and start right away</p>
+      </div>
     </div>
-    <span class="go">Start practising <i class="fas fa-arrow-right"></i></span>
+
+    <div class="wx-grp">
+      <div class="lb"><i class="fas fa-shuffle" style="color:#7c3aed"></i> Random practice</div>
+      <div class="wx-btns c4">
+        {% for n, mins in [(30,15),(50,25),(100,50),(200,100)] %}
+          {% if current_user.is_authenticated %}
+          <form method="POST" action="{{ url_for('quiz_begin') }}">
+            <input type="hidden" name="mode" value="random"><input type="hidden" name="count" value="{{ n }}">
+            <button type="submit" class="wx-b rand"><b>{{ n }}</b><small>~{{ mins }} min</small></button>
+          </form>
+          {% elif n == 30 %}
+          <form method="POST" action="{{ url_for('free_start') }}">
+            <input type="hidden" name="count" value="30">
+            <button type="submit" class="wx-b rand"><b>30</b><small>Free - no account</small></button>
+          </form>
+          {% else %}
+          <a class="wx-b rand lock" href="{{ url_for('signup') }}"><b>{{ n }}</b><small><i class="fas fa-lock"></i> Sign up</small></a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="wx-grp">
+      <div class="lb"><i class="fas fa-clipboard-check" style="color:#10b981"></i> Full mock exam</div>
+      <div class="wx-btns c2">
+        {% for mode, label, q in [('pmbok8_exam','2026 exam (PMBOK 8)',185),('pmbok7_exam','PMBOK 7 exam',180)] %}
+          {% if current_user.is_authenticated %}
+          <form method="POST" action="{{ url_for('quiz_begin') }}">
+            <input type="hidden" name="mode" value="{{ mode }}">
+            <button type="submit" class="wx-b mock"><b>{{ q }} Q</b><small>{{ label }}</small></button>
+          </form>
+          {% else %}
+          <a class="wx-b mock lock" href="{{ url_for('login') }}"><b>{{ q }} Q</b><small><i class="fas fa-lock"></i> {{ label }}</small></a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if eco_domains %}
+    <div class="wx-grp">
+      <div class="lb"><i class="fas fa-layer-group" style="color:#2563eb"></i> By 2026 exam domain &middot; 20 questions</div>
+      <div class="wx-btns c3">
+        {% for d in eco_domains[:3] %}
+          {% if current_user.is_authenticated %}
+          <form method="POST" action="{{ url_for('quiz_begin') }}">
+            <input type="hidden" name="mode" value="category">
+            <input type="hidden" name="filter_type" value="eco2026_domain">
+            <input type="hidden" name="filter_value" value="{{ d.name }}">
+            <input type="hidden" name="count" value="20">
+            <button type="submit" class="wx-b dom"><b>{{ d.name }}</b><small>{{ "{:,}".format(d.count) }} questions</small></button>
+          </form>
+          {% else %}
+          <a class="wx-b dom lock" href="{{ url_for('login') }}"><b>{{ d.name }}</b><small><i class="fas fa-lock"></i> {{ "{:,}".format(d.count) }} questions</small></a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if methodologies %}
+    <div class="wx-grp">
+      <div class="lb"><i class="fas fa-sitemap" style="color:#0891b2"></i> By approach &middot; 20 questions</div>
+      <div class="wx-btns c3">
+        {% for d in methodologies[:3] %}
+          {% if current_user.is_authenticated %}
+          <form method="POST" action="{{ url_for('quiz_begin') }}">
+            <input type="hidden" name="mode" value="category">
+            <input type="hidden" name="filter_type" value="methodology">
+            <input type="hidden" name="filter_value" value="{{ d.name }}">
+            <input type="hidden" name="count" value="20">
+            <button type="submit" class="wx-b meth"><b>{{ d.name }}</b><small>{{ "{:,}".format(d.count) }} questions</small></button>
+          </form>
+          {% else %}
+          <a class="wx-b meth lock" href="{{ url_for('login') }}"><b>{{ d.name }}</b><small><i class="fas fa-lock"></i> {{ "{:,}".format(d.count) }} questions</small></a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if current_user.is_authenticated %}
+    <div class="wx-grp">
+      <div class="lb"><i class="fas fa-rotate-right" style="color:#dc2626"></i> Review</div>
+      <div class="wx-btns c2">
+        <form method="POST" action="{{ url_for('quiz_begin') }}">
+          <input type="hidden" name="mode" value="wrong_answers"><input type="hidden" name="count" value="20">
+          <button type="submit" class="wx-b rev" {% if not wrong_count %}disabled{% endif %}><b>{{ wrong_count }}</b><small>Wrong answers</small></button>
+        </form>
+        <form method="POST" action="{{ url_for('quiz_begin') }}">
+          <input type="hidden" name="mode" value="bookmark"><input type="hidden" name="count" value="20">
+          <button type="submit" class="wx-b bm" {% if not bookmark_count %}disabled{% endif %}><b>{{ bookmark_count }}</b><small>Bookmarked</small></button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <a class="go" href="{{ url_for('dashboard') }}">All practice options - filters, PMBOK 7/8, methodology <i class="fas fa-arrow-right"></i></a>
   </div>
 
-  <!-- My status -->
-  <div class="wx-card status">
-    <a class="stretch" href="{{ url_for('my_status') if current_user.is_authenticated else url_for('login') }}" aria-label="Go to my study status"></a>
-    <div class="ic"><i class="fas fa-chart-line"></i></div>
-    <h3>My Study Status</h3>
-    {% if current_user.is_authenticated %}
-    <p class="desc">Your accuracy by domain, weak areas, and daily trend.</p>
-    <div class="kpis">
-      <div class="kpi"><b>{{ total_sessions }}</b><span>attempts</span></div>
-      <div class="kpi"><b>{{ "%.1f"|format(avg_accuracy) }}%</b><span>avg accuracy</span></div>
-      <div class="kpi"><b>{{ wrong_count }}</b><span>to review</span></div>
+  <!-- My status preview -->
+  <div class="wx-card status link">
+    <a class="stretch" href="{{ url_for('my_status') if current_user.is_authenticated else url_for('signup') }}" aria-label="Go to my study status"></a>
+    <div class="hd">
+      <div class="ic"><i class="fas fa-chart-line"></i></div>
+      <div>
+        <h3>My Study Status{% if status.sample %}<span class="sample">SAMPLE</span>{% endif %}</h3>
+        <p class="tagline">{% if status.sample %}What your dashboard looks like after a few sessions{% else %}Your accuracy, trend, and weak areas{% endif %}</p>
+      </div>
     </div>
-    <span class="go">View my status <i class="fas fa-arrow-right"></i></span>
-    {% else %}
-    <p class="desc">Log in to track accuracy by domain, find weak areas, and keep your wrong-answer notes.</p>
-    <div class="kpis">
-      <div class="kpi"><b>Auto</b><span>progress save</span></div>
-      <div class="kpi"><b>Daily</b><span>trend chart</span></div>
+    <div class="wx-kpis">
+      <div class="wx-kpi"><b>{{ status.overall_accuracy }}%</b><span>accuracy</span></div>
+      <div class="wx-kpi"><b>{{ "{:,}".format(status.total_attempted) }}</b><span>answered</span></div>
+      <div class="wx-kpi"><b>{{ status.streak_days }}</b><span>day streak</span></div>
+      <div class="wx-kpi"><b>{{ status.wrong_count }}</b><span>to review</span></div>
     </div>
-    <span class="go">Log in to see my status <i class="fas fa-arrow-right"></i></span>
+    <div class="wx-spark">
+      <div class="t">Accuracy by day</div>
+      <svg viewBox="0 0 300 70" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="{{ status.spark }}" fill="none" stroke="#14b8a6" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      </svg>
+    </div>
+    {% if status.domains %}
+    <div class="wx-bars">
+      {% for d in status.domains[:3] %}
+      <div class="wx-bar">
+        <div class="row"><span>{{ d.name }}</span><span>{{ d.accuracy }}%</span></div>
+        <div class="track"><div class="fill" style="width:{{ d.accuracy }}%"></div></div>
+      </div>
+      {% endfor %}
+    </div>
     {% endif %}
+    <span class="go">{% if current_user.is_authenticated %}View my status{% else %}Sign up to track your own{% endif %} <i class="fas fa-arrow-right"></i></span>
   </div>
 
   <!-- Blog -->
-  <div class="wx-card blog">
+  <div class="wx-card blog link">
     <a class="stretch" href="{{ url_for('blog_index') }}" aria-label="Go to the blog"></a>
-    <div class="ic"><i class="fas fa-book-open"></i></div>
-    <h3>Blog &amp; Study Guides</h3>
+    <div class="hd">
+      <div class="ic"><i class="fas fa-book-open"></i></div>
+      <div>
+        <h3>Blog &amp; Study Guides</h3>
+        <p class="tagline">Exam updates, study plans, concept guides</p>
+      </div>
+    </div>
     {% if recent_posts %}
     <ul>
       {% for p in recent_posts %}
       <li><a href="{{ url_for('blog_post', slug=p.slug) }}">{{ p.title }}</a>{% if p.date %}<small>{{ p.date }}</small>{% endif %}</li>
       {% endfor %}
     </ul>
-    {% else %}
-    <p class="desc">Exam updates, study plans, and concept guides.</p>
     {% endif %}
     <span class="go">Read the blog <i class="fas fa-arrow-right"></i></span>
   </div>
