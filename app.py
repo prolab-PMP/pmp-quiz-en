@@ -251,9 +251,22 @@ def healthz():
 
 @app.route('/')
 def index():
+    """Home: top banner + cover visual + shortcuts (practice / status / blog)."""
+    if app.config.get('DEBUG') or not _BLOG_DB_LOADED:
+        _load_blog()
+    total_questions = Question.query.count()
+    total_sessions, avg_accuracy, wrong_count = 0, 0, 0
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('dashboard'))
+        total_sessions = QuizSession.query.filter_by(user_id=current_user.id, is_completed=True).count()
+        avg_accuracy = db.session.query(func.avg(QuizSession.accuracy))\
+            .filter_by(user_id=current_user.id, is_completed=True).scalar() or 0
+        wrong_count = WrongAnswer.query.filter_by(user_id=current_user.id).count()
+    return render_template('home.html',
+                           total_questions=total_questions,
+                           total_sessions=total_sessions,
+                           avg_accuracy=avg_accuracy,
+                           wrong_count=wrong_count,
+                           recent_posts=_BLOG_INDEX_CACHE[:3])
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

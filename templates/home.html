@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}WayExam - PMP Exam Practice Questions with Full Explanations{% endblock %}
+{% block og_title %}WayExam - PMP Exam Practice Questions{% endblock %}
+{% block og_description %}{{ "{:,}".format(total_questions) }} scenario-based practice questions for the Project Management Professional exam, every one with a full written explanation.{% endblock %}
+{% block head %}
+<meta name="description" content="{{ '{:,}'.format(total_questions) }} original, scenario-based PMP practice questions with full written explanations. Practice online, track your progress, and read study guides for the 2026 exam.">
+<meta name="robots" content="index, follow">
+<style>
+/* ── Home: cover visual ───────────────────────────────────────── */
+.wx-cover{position:relative;overflow:hidden;border-radius:20px;margin:0 0 28px;color:#fff;
+  background:radial-gradient(900px 560px at 12% 0%,#22408f 0%,#13235a 48%,#0a1236 100%);
+  box-shadow:0 18px 40px rgba(10,18,54,.28);min-height:420px}
+.wx-cover .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:36px 36px;
+  -webkit-mask-image:radial-gradient(700px 500px at 72% 50%,#000 30%,transparent 80%);mask-image:radial-gradient(700px 500px at 72% 50%,#000 30%,transparent 80%)}
+.wx-cover .orb{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none}
+.wx-cover .o1{width:420px;height:420px;background:#14b8a6;right:-80px;top:-140px;opacity:.40}
+.wx-cover .o2{width:380px;height:380px;background:#6366f1;right:180px;bottom:-200px;opacity:.45}
+.wx-cover .o3{width:280px;height:280px;background:#f59e0b;left:-140px;bottom:-150px;opacity:.22}
+.wx-cover .inner{position:relative;display:flex;gap:32px;align-items:center;justify-content:space-between;padding:44px 48px}
+.wx-cover .left{flex:1;min-width:0}
+.wx-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(251,191,36,.14);
+  border:1px solid rgba(251,191,36,.55);color:#fcd34d;font-weight:700;font-size:12.5px;letter-spacing:1.1px}
+.wx-pill i{width:7px;height:7px;border-radius:50%;background:#fbbf24;box-shadow:0 0 10px #fbbf24}
+.wx-cover h2{margin:18px 0 0;font-weight:900;line-height:.98;letter-spacing:-2px;font-size:clamp(34px,5.4vw,68px);color:#fff}
+.wx-cover h2 .b{display:block;background:linear-gradient(90deg,#5eead4,#38bdf8 55%,#a5b4fc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.wx-cover .sub{margin-top:12px;font-size:clamp(16px,2vw,22px);font-weight:600;color:#dbe4ff}
+.wx-stats{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.wx-stat{padding:13px 18px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);min-width:128px}
+.wx-stat b{display:block;font-size:30px;font-weight:900;letter-spacing:-1px;line-height:1}
+.wx-stat span{display:block;margin-top:6px;font-size:11.5px;font-weight:700;color:#a9bbec;text-transform:uppercase;letter-spacing:1px}
+.wx-stat.hl{background:linear-gradient(135deg,rgba(45,212,191,.28),rgba(59,130,246,.22));border-color:rgba(94,234,212,.6)}
+.wx-foot{margin-top:22px;font-size:13.5px;color:#9fb3e8}
+.wx-foot b{color:#5eead4}
+.wx-scene{position:relative;flex:0 0 280px;height:370px;perspective:1300px}
+.wx-book{position:absolute;inset:0;transform:rotateY(-22deg) rotateX(5deg);transform-style:preserve-3d}
+.wx-front{position:absolute;inset:0;border-radius:6px 14px 14px 6px;overflow:hidden;background:linear-gradient(160deg,#fff 0%,#eef3ff 100%);color:#0f1d4a;
+  box-shadow:26px 34px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.4)}
+.wx-front .top{height:92px;background:linear-gradient(135deg,#1d2f6f,#0f1a47);padding:20px 22px;color:#fff}
+.wx-front .top b{font-size:21px;font-weight:900}
+.wx-front .top small{display:block;margin-top:4px;font-size:11px;color:#9fb3e8;letter-spacing:1px}
+.wx-front .bar{height:7px;background:linear-gradient(90deg,#2dd4bf,#3b82f6,#818cf8)}
+.wx-front .body{padding:22px}
+.wx-front .big{font-size:70px;font-weight:900;letter-spacing:-3px;line-height:.9;color:#14235c}
+.wx-front .pq{font-size:20px;font-weight:800;color:#2563eb;margin-top:6px}
+.wx-front .t{margin-top:14px;font-size:14px;font-weight:700;line-height:1.3;color:#1e2b55}
+.wx-front .e{margin-top:8px;font-size:12px;color:#64748b}
+.wx-qa{position:absolute;left:-96px;bottom:-22px;width:210px;padding:12px 14px;border-radius:12px;background:#fff;color:#0f1d4a;
+  box-shadow:0 18px 44px rgba(0,0,0,.45);font-size:12px;transform:rotate(-4deg)}
+.wx-qa .h{font-weight:800;font-size:10.5px;color:#64748b;letter-spacing:1px}
+.wx-qa .opt{margin-top:6px;padding:6px 9px;border-radius:7px;background:#f1f5f9;font-weight:600}
+.wx-qa .ok{background:#dcfce7;color:#166534;border:1px solid #86efac}
+.wx-qa .no{color:#94a3b8;text-decoration:line-through}
+.wx-seal{position:absolute;right:-26px;top:-26px;width:104px;height:104px;border-radius:50%;
+  background:conic-gradient(#fde68a,#f59e0b,#fde68a,#f59e0b,#fde68a);display:grid;place-items:center;box-shadow:0 10px 28px rgba(245,158,11,.45);transform:rotate(12deg)}
+.wx-seal div{width:88px;height:88px;border-radius:50%;background:#0f1a47;border:2px dashed #fcd34d;display:grid;place-items:center;text-align:center;color:#fcd34d;font-weight:900;font-size:11px;line-height:1.15}
+.wx-seal b{display:block;font-size:22px;color:#fff}
+.wx-stripe{position:absolute;left:0;right:0;bottom:0;height:8px;background:linear-gradient(90deg,#2dd4bf,#3b82f6,#818cf8,#f59e0b)}
+@media (max-width: 860px){
+  .wx-cover .inner{padding:32px 24px 40px}
+  .wx-scene{display:none}
+}
+/* ── Home: section cards ──────────────────────────────────────── */
+.wx-sections{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:0 0 32px}
+@media (max-width: 900px){ .wx-sections{grid-template-columns:1fr} }
+.wx-card{position:relative;display:flex;flex-direction:column;padding:24px;border-radius:16px;background:var(--surface,#fff);
+  border:1px solid var(--border,#E4E7EC);box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.06));color:var(--text,#101828);
+  text-decoration:none;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;cursor:pointer}
+.wx-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg,0 12px 24px rgba(16,24,40,.12));border-color:var(--primary-line,#BFDBFE)}
+.wx-card .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:20px;color:#fff;margin-bottom:14px}
+.wx-card.practice .ic{background:linear-gradient(135deg,#2563eb,#1e3a8a)}
+.wx-card.status .ic{background:linear-gradient(135deg,#14b8a6,#0f766e)}
+.wx-card.blog .ic{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.wx-card h3{margin:0 0 10px;font-size:1.2rem;font-weight:800;letter-spacing:-.02em;color:var(--text,#101828)}
+.wx-card .desc{margin:-4px 0 16px;color:var(--text-muted,#475467);font-size:.93rem;line-height:1.55}
+.wx-card .kpis{display:flex;gap:10px;margin-bottom:16px}
+.wx-card .kpi{flex:1;padding:10px 12px;border-radius:10px;background:var(--surface-alt,#F4F6FA)}
+.wx-card .kpi b{display:block;font-size:1.25rem;font-weight:800;color:var(--text,#101828)}
+.wx-card .kpi span{font-size:.75rem;color:var(--text-subtle,#667085)}
+.wx-card ul{list-style:none;margin:0 0 16px;padding:0}
+.wx-card li{padding:9px 0;border-top:1px solid var(--border,#E4E7EC);font-size:.92rem;line-height:1.4}
+.wx-card li:first-child{border-top:0;padding-top:0}
+.wx-card li a{position:relative;z-index:2;color:var(--text,#101828);text-decoration:none;font-weight:600}
+.wx-card li a:hover{color:var(--primary,#2563EB)}
+.wx-card li small{display:block;color:var(--text-faint,#98A2B3);font-size:.78rem;margin-top:2px}
+.wx-card .go{margin-top:auto;display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.95rem;color:var(--primary,#2563EB)}
+.wx-card .stretch{position:absolute;inset:0;z-index:1;border-radius:16px}
+.wx-card .stretch:focus-visible{outline:3px solid var(--primary,#2563EB);outline-offset:2px}
+.wx-pdf{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:-12px 0 28px;padding:14px 20px;border-radius:14px;
+  background:var(--surface,#fff);border:1px dashed var(--border-strong,#D0D5DD);color:var(--text-muted,#475467);font-size:.93rem}
+.wx-pdf a{font-weight:700;color:var(--primary,#2563EB);text-decoration:none}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Top banner -->
+<section class="hero" style="position:relative;">
+    <div class="hero-social" style="position:absolute;top:16px;right:20px;display:flex;gap:8px;z-index:2;">
+        <a href="https://www.youtube.com/@pmpquiz" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube"
+           style="background:#FF0000;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;color:#fff;text-decoration:none;font-size:17px;border:1px solid rgba(255,255,255,0.4);box-shadow:0 2px 6px rgba(0,0,0,0.18);">
+            <i class="fab fa-youtube"></i>
+        </a>
+    </div>
+    <h1>PMP Exam Practice</h1>
+    <p>Full coverage of PMBOK 8 &amp; 7 + Agile/Hybrid. Practise {{ "{:,}".format(total_questions) }} scenario-based questions by domain, difficulty, and mode - every one with a full written explanation.</p>
+    <div class="badges">
+        <span>Total {{ "{:,}".format(total_questions) }} questions</span>
+        <span>Updated for the 2026 exam</span>
+        {% if current_user.is_authenticated %}
+        <span>{{ current_user.email }}</span>
+        {% else %}
+        <span>Free 30-question trial</span>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Cover visual -->
+<section class="wx-cover" aria-label="WayExam practice question bank">
+  <div class="grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+  <div class="inner">
+    <div class="left">
+      <div class="wx-pill"><i></i>2026 EDITION &middot; UPDATED FOR THE NEW EXAM</div>
+      <h2>PROJECT MANAGEMENT<span class="b">PROFESSIONAL</span></h2>
+      <div class="sub">Certification Exam &middot; Practice Question Bank</div>
+      <div class="wx-stats">
+        <div class="wx-stat hl"><b>{{ "{:,}".format(total_questions) }}</b><span>Questions</span></div>
+        <div class="wx-stat"><b>100%</b><span>Explained</span></div>
+        <div class="wx-stat"><b>7 &amp; 8</b><span>PMBOK editions</span></div>
+      </div>
+      <div class="wx-foot"><b>&#9679;</b> Original scenario-based questions &nbsp;&middot;&nbsp; Progress auto-saves &nbsp;&middot;&nbsp; Mock exams</div>
+    </div>
+    <div class="wx-scene" aria-hidden="true">
+      <div class="wx-book"><div class="wx-front">
+        <div class="top"><b>WayExam</b><small>2026 EDITION</small></div>
+        <div class="bar"></div>
+        <div class="body">
+          <div class="big">{{ "{:,}".format(total_questions) }}</div>
+          <div class="pq">practice questions</div>
+          <div class="t">Project Management Professional Certification</div>
+          <div class="e">Every question with a full written explanation</div>
+        </div>
+      </div></div>
+      <div class="wx-qa">
+        <div class="h">QUESTION 1,284 &middot; EXPLAINED</div>
+        <div class="opt no">A. Escalate to the sponsor</div>
+        <div class="opt ok">&#10003; C. Review the risk register</div>
+        <div class="opt no">D. Update the schedule</div>
+      </div>
+      <div class="wx-seal"><div><span><b>480</b>chars per<br>explanation</span></div></div>
+    </div>
+  </div>
+  <div class="wx-stripe"></div>
+</section>
+
+<!-- Section shortcuts -->
+<section class="wx-sections" aria-label="Go to">
+  <!-- Practice -->
+  <div class="wx-card practice">
+    <a class="stretch" href="{{ url_for('dashboard') }}" aria-label="Go to practice questions"></a>
+    <div class="ic"><i class="fas fa-pen-to-square"></i></div>
+    <h3>Practice Questions</h3>
+    <p class="desc">Random sets, domain drills, full mock exams, and wrong-answer review.</p>
+    <div class="kpis">
+      <div class="kpi"><b>{{ "{:,}".format(total_questions) }}</b><span>questions</span></div>
+      <div class="kpi"><b>185</b><span>Q mock exam</span></div>
+    </div>
+    <span class="go">Start practising <i class="fas fa-arrow-right"></i></span>
+  </div>
+
+  <!-- My status -->
+  <div class="wx-card status">
+    <a class="stretch" href="{{ url_for('my_status') if current_user.is_authenticated else url_for('login') }}" aria-label="Go to my study status"></a>
+    <div class="ic"><i class="fas fa-chart-line"></i></div>
+    <h3>My Study Status</h3>
+    {% if current_user.is_authenticated %}
+    <p class="desc">Your accuracy by domain, weak areas, and daily trend.</p>
+    <div class="kpis">
+      <div class="kpi"><b>{{ total_sessions }}</b><span>attempts</span></div>
+      <div class="kpi"><b>{{ "%.1f"|format(avg_accuracy) }}%</b><span>avg accuracy</span></div>
+      <div class="kpi"><b>{{ wrong_count }}</b><span>to review</span></div>
+    </div>
+    <span class="go">View my status <i class="fas fa-arrow-right"></i></span>
+    {% else %}
+    <p class="desc">Log in to track accuracy by domain, find weak areas, and keep your wrong-answer notes.</p>
+    <div class="kpis">
+      <div class="kpi"><b>Auto</b><span>progress save</span></div>
+      <div class="kpi"><b>Daily</b><span>trend chart</span></div>
+    </div>
+    <span class="go">Log in to see my status <i class="fas fa-arrow-right"></i></span>
+    {% endif %}
+  </div>
+
+  <!-- Blog -->
+  <div class="wx-card blog">
+    <a class="stretch" href="{{ url_for('blog_index') }}" aria-label="Go to the blog"></a>
+    <div class="ic"><i class="fas fa-book-open"></i></div>
+    <h3>Blog &amp; Study Guides</h3>
+    {% if recent_posts %}
+    <ul>
+      {% for p in recent_posts %}
+      <li><a href="{{ url_for('blog_post', slug=p.slug) }}">{{ p.title }}</a>{% if p.date %}<small>{{ p.date }}</small>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="desc">Exam updates, study plans, and concept guides.</p>
+    {% endif %}
+    <span class="go">Read the blog <i class="fas fa-arrow-right"></i></span>
+  </div>
+</section>
+
+<div class="wx-pdf">
+  <span><i class="fas fa-file-pdf" style="color:#dc2626;"></i>&nbsp; Prefer studying offline? The full question bank is also available as a PDF edition.</span>
+  <a href="https://payhip.com/b/3mkGz" target="_blank" rel="noopener">Get the PDF edition <i class="fas fa-arrow-up-right-from-square"></i></a>
+</div>
+
+{% endblock %}
