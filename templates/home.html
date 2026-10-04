@@ -104,6 +104,16 @@
 .wx-b.bm{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d;color:#92400e}
 .wx-b.lock{opacity:.6}
 .wx-b[disabled]{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.wx-groups{flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
+.wx-jump{display:flex;gap:10px}
+.wx-jump input{flex:1;min-width:0;padding:13px 14px;border-radius:12px;border:1.5px solid var(--border-strong,#D0D5DD);background:var(--surface,#fff);color:var(--text,#101828);font-size:1rem;font-family:inherit}
+.wx-jump button{padding:0 20px;border-radius:12px;border:0;background:var(--primary,#2563EB);color:#fff;font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit}
+.wx-cta{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:14px;text-decoration:none;color:#fff;
+  background:linear-gradient(135deg,#4f46e5,#7c3aed);box-shadow:0 6px 18px rgba(79,70,229,.28)}
+.wx-cta > i:first-child{font-size:1.5rem;color:#fde68a}
+.wx-cta span{flex:1}
+.wx-cta b{display:block;font-size:1.08rem}
+.wx-cta small{display:block;margin-top:2px;font-size:.88rem;opacity:.9}
 /* status preview */
 .wx-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
 @media (max-width: 560px){ .wx-kpis{grid-template-columns:repeat(2,1fr)} }
@@ -204,6 +214,7 @@
       </div>
     </div>
 
+    <div class="wx-groups">
     <div class="wx-grp">
       <div class="lb"><i class="fas fa-shuffle" style="color:#7c3aed"></i> Random practice</div>
       <div class="wx-btns c4">
@@ -298,6 +309,25 @@
       </div>
     </div>
     {% endif %}
+
+    {% if current_user.is_authenticated %}
+    <div class="wx-grp">
+      <div class="lb"><i class="fas fa-hashtag" style="color:#64748b"></i> Go to a question number</div>
+      <form class="wx-jump" onsubmit="var n=parseInt(this.q.value,10);if(n>0){window.location='/q/'+n;}return false;">
+        <input name="q" type="number" min="1" inputmode="numeric" placeholder="e.g. 1284" aria-label="Question number">
+        <button type="submit"><i class="fas fa-arrow-right"></i> Open</button>
+      </form>
+    </div>
+    {% else %}
+    <div class="wx-grp">
+      <a class="wx-cta" href="{{ url_for('signup') }}">
+        <i class="fas fa-gift"></i>
+        <span><b>Sign up free - 7-day Premium trial</b><small>Unlock every mode above + get the 150-question PDF instantly</small></span>
+        <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+    {% endif %}
+    </div>
 
     <a class="go" href="{{ url_for('dashboard') }}">All practice options - filters, PMBOK 7/8, methodology <i class="fas fa-arrow-right"></i></a>
   </div>
