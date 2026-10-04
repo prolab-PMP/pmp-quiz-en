@@ -252,8 +252,7 @@ def healthz():
 @app.route('/')
 def index():
     """Home: top banner + cover visual + practice hub (50%) + status preview + blog."""
-    if app.config.get('DEBUG') or not _BLOG_DB_LOADED:
-        _load_blog()
+    _blog_refresh_if_stale()
     total_questions = Question.query.count()
     total_sessions, avg_accuracy, wrong_count, bookmark_count = 0, 0, 0, 0
     if current_user.is_authenticated:
