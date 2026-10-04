@@ -849,8 +849,9 @@ def free_answer():
     q_no = request.form.get('question_no')
     selected = request.form.getlist('selected')
     answers = session.get('free_answers', {})
-    answers[q_no] = ','.join(selected)
-    session['free_answers'] = answers
+    if q_no:
+        answers[str(q_no)] = ','.join(selected)
+        session['free_answers'] = answers
 
     action = request.form.get('action', 'next')
     if action == 'prev':
