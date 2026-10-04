@@ -1,12 +1,15 @@
 {% extends "base.html" %}
 {% block title %}{{ meta.title }} — wayexam.com{% endblock %}
+{#- og:title / og:description are emitted once, by base.html. Overriding its
+    blocks (instead of adding a second tag in head) keeps the post's own title
+    as the ONLY og:title; a second tag left base.html's "PMP Quiz" first. -#}
+{% block og_title %}{{ meta.title }}{% endblock %}
+{% block og_description %}{{ meta.summary or meta.title }}{% endblock %}
 {% block head %}
 <meta name="description" content="{{ meta.summary or meta.title }}">
 {% if meta.keywords %}<meta name="keywords" content="{{ meta.keywords }}">{% endif %}
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="article">
-<meta property="og:title" content="{{ meta.title }}">
-<meta property="og:description" content="{{ meta.summary or meta.title }}">
 <style>
 .post-wrap{max-width:760px;margin:0 auto;padding:24px 20px 60px}
 .post-back{display:inline-block;color:var(--text-muted,#6b7280);font-size:0.9rem;margin-bottom:20px}
@@ -33,6 +36,8 @@
 .post-cta h3{margin:0 0 6px;font-size:1.1rem;color:var(--primary,#4f46e5)}
 .post-cta p{margin:0 0 12px;color:var(--text,#111827);font-size:0.95rem}
 .post-cta a{display:inline-block;padding:9px 18px;background:var(--primary,#4f46e5);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.92rem}
+.post-cta .post-cta-alt{margin:14px 0 0;font-size:0.88rem;color:var(--muted,#6b7280)}
+.post-cta .post-cta-alt a{display:inline;padding:0;background:none;color:var(--primary,#4f46e5);font-weight:600;text-decoration:underline;font-size:inherit}
 </style>
 {% endblock %}
 {% block content %}
@@ -46,7 +51,12 @@
   <div class="post-cta">
     <h3>Practice PMP questions now</h3>
     <p>wayexam.com offers 2,250+ PMP questions aligned to PMBOK 7 and 8, in EN / KO / ZH / ES / JA.</p>
-    <a href="{{ url_for('login') if not current_user.is_authenticated else url_for('dashboard') }}">{{ 'Start free →' if not current_user.is_authenticated else 'Open dashboard' }}</a>
+    {%- if current_user.is_authenticated %}
+    <a href="{{ url_for('dashboard') }}">Open dashboard</a>
+    {%- else %}
+    <a href="{{ url_for('free_mode') }}">Try 50 questions free →</a>
+    <p class="post-cta-alt">No account needed. You can also <a href="{{ url_for('signup') }}">start a 7-day trial</a> of the full bank, browse <a href="{{ url_for('learn_index') }}">free sample questions with explanations</a>, or check <a href="{{ url_for('pricing') }}">pricing</a>.</p>
+    {%- endif %}
   </div>
   {% if related %}
   <div class="post-related">

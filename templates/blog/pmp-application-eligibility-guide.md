@@ -6,8 +6,6 @@ read_time: "8 min read"
 keywords: "PMP eligibility, PMP application, 35 contact hours, PMP audit, PMP requirements"
 ---
 
-# PMP Application and Eligibility
-
 Before you can sit the PMP exam, you have to be found eligible by the Project Management Institute (PMI) and submit an application that describes your experience and training. Many candidates underestimate this step and lose weeks fixing it. This guide explains the requirements, how to write the application, and what the audit is. Always confirm the exact current numbers on PMI's official site, because eligibility rules are set by PMI and can change.
 
 ## The two eligibility paths

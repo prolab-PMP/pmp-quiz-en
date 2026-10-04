@@ -6,8 +6,6 @@ read_time: "7 min read"
 keywords: "PMP procurement, fixed price contract, cost reimbursable, time and materials"
 ---
 
-# PMP Procurement Questions
-
 Procurement questions test whether you understand how contracts allocate risk. The exam may describe uncertainty, scope clarity, seller performance, or a requested change. Your job is to choose the contract or action that fits the situation.
 
 The three contract families you must recognize are fixed price, cost-reimbursable, and time and materials.

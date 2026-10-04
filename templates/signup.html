@@ -23,6 +23,14 @@
         </div>
 
         <form method="POST" action="{{ url_for('signup') }}" id="signupForm">
+      <input type="hidden" name="form_token" value="{{ signup_form_token }}">
+      {#- Decoy field. Hidden from people and from screen readers; a script
+          that fills every input in the form fills this one too. -#}
+      <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden"
+           aria-hidden="true">
+        <label for="website">Website</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+      </div>
             <div class="form-group">
                 <input type="email" name="email" class="form-control"
                        placeholder="Email address" required autofocus

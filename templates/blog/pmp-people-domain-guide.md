@@ -6,8 +6,6 @@ read_time: "7 min read"
 keywords: "PMP People domain, stakeholder engagement, servant leadership, PMP team questions"
 ---
 
-# PMP People Domain Guide
-
 The People domain is not just about being nice to the team. It tests whether a project manager can create trust, remove obstacles, communicate clearly, and help people make good decisions. Many candidates lose points because they choose answers that sound decisive but skip collaboration.
 
 In PMP questions, the best People-domain response is often the one that starts with understanding the situation before acting.

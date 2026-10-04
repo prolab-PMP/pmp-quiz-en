@@ -6,8 +6,6 @@ read_time: "8 min read"
 keywords: "PMP exam day, online proctored PMP, test center, PMP timing strategy, PMP breaks"
 ---
 
-# PMP Exam Day
-
 You can take the PMP exam two ways: at a physical test center or online with a remote proctor. Both cover the same content and the same 180 questions in 230 minutes. The difference is the environment, and choosing the one that suits you removes a lot of avoidable stress. This guide compares the two and gives a practical plan for the day itself.
 
 ## Online proctored vs test center

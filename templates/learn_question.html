@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ seo_title }} - PMP Practice Question with Explanation{% endblock %}
+{% block title %}{{ seo_title }}{% endblock %}
 {% block og_title %}{{ seo_title }}{% endblock %}
 {% block og_description %}{{ seo_desc }}{% endblock %}
 {% block head %}
@@ -52,7 +52,7 @@
   </nav>
 
   <header class="lq-head">
-    <h1>PMP Practice Question {{ question.no }}{% if primary_tag %} - {{ primary_tag }}{% endif %}</h1>
+    <h1>{{ heading }}</h1>
     {% if tags %}
     <div class="lq-tags">
       {% for t in tags %}<span class="lq-tag">{{ t }}</span>{% endfor %}

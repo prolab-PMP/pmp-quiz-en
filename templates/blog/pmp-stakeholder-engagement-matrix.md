@@ -6,8 +6,6 @@ read_time: "7 min read"
 keywords: "PMP stakeholder engagement, power interest grid, stakeholder communication"
 ---
 
-# Stakeholder Engagement on the PMP Exam
-
 Stakeholder questions are everywhere on the PMP exam. They may look like communication questions, conflict questions, change questions, or risk questions. Underneath, they test whether the project manager can identify who matters, understand their expectations, and keep them appropriately engaged.
 
 The best answer usually starts with engagement, not assumption.

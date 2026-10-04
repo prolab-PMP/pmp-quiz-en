@@ -6,8 +6,6 @@ read_time: "5 min read"
 keywords: "Agile PMP, predictive project management, hybrid PMP, PMP scenario questions"
 ---
 
-# Agile vs Predictive PMP Questions
-
 Many PMP questions are not asking you to name a method. They are asking you to notice the environment and choose a response that fits the work.
 
 ## Agile clues

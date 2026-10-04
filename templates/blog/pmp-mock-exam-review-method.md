@@ -6,8 +6,6 @@ read_time: "7 min read"
 keywords: "PMP mock exam review, PMP wrong answers, PMP practice test"
 ---
 
-# How to Review PMP Mock Exams
-
 Taking mock exams is useful, but reviewing them is where the score improvement happens. Many candidates take too many practice tests and review too quickly. They see the correct answer, nod, and move on. That feels productive, but it does not change decision habits.
 
 A better review method turns every missed question into a specific lesson.

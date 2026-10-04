@@ -108,17 +108,19 @@
         <h3 style="margin-bottom:8px;">Want to solve more questions?</h3>
         <p style="color:var(--text-muted);margin-bottom:20px;font-size:0.95rem;">
             The free trial ends here.<br>
-            Purchase the paid version to unlock unlimited access to all <strong>2,219</strong> questions.
+            Sign up free to keep going &mdash; your 7-day Premium trial unlocks all <strong>2,250+</strong> questions.
         </p>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
-                <i class="fas fa-sign-in-alt"></i> Log in / Sign up
+            <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg" style="font-size:1.05rem;font-weight:700;">
+                <i class="fas fa-rocket"></i> Sign up free &mdash; 7-day Premium trial
             </a>
-            <a href="mailto:songodinfo1@gmail.com?subject=PMP Quiz Premium inquiry"
-               class="btn btn-success btn-lg">
-                <i class="fas fa-envelope"></i> Purchase inquiry
+            <a href="{{ url_for('pricing') }}" class="btn btn-lg" style="background:#F79319;color:#fff;font-weight:700;">
+                <i class="fas fa-star"></i> See Premium plans (from $4.08/mo)
             </a>
         </div>
+        <p style="margin-top:14px;font-size:0.85rem;color:var(--text-muted);">
+            Already have an account? <a href="{{ url_for('login') }}" style="color:var(--primary);font-weight:700;">Log in</a>
+        </p>
         <p style="margin-top:16px;font-size:0.8rem;color:var(--text-muted);">
             Contact: <a href="mailto:songodinfo1@gmail.com">songodinfo1@gmail.com</a>
         </p>

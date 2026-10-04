@@ -6,8 +6,6 @@ read_time: "8 min read"
 keywords: "PMP change control, change request, integrated change control, PMP process questions"
 ---
 
-# PMP Change Control Guide
-
 Change control is one of the most tested PMP topics because it reveals whether a project manager respects governance. The exam does not expect you to reject every change. It expects you to handle change in a way that protects value, scope, schedule, cost, quality, and stakeholder expectations.
 
 The key question is simple: has the project baseline been approved?

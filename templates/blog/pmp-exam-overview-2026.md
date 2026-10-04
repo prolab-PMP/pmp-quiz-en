@@ -6,8 +6,6 @@ read_time: "6 min read"
 keywords: "PMP exam 2026, PMP certification, PMBOK, PMP study guide"
 ---
 
-# PMP Exam Overview 2026
-
 The PMP exam tests how well you can apply project management judgment, not just whether you can memorize terminology. A good study plan should combine concept review, scenario practice, and repeated analysis of wrong answers.
 
 ## What to focus on

@@ -6,8 +6,6 @@ read_time: "5 min read"
 keywords: "PMBOK 7, PMBOK 8, PMP exam, PMP preparation"
 ---
 
-# PMBOK 7 vs PMBOK 8 for PMP Candidates
-
 PMBOK 7 shifted the focus from process memorization toward principles and performance domains. PMBOK 8 builds on that direction while making it easier to connect principles, lifecycle choices, and practical project delivery work.
 
 ## What this means for study

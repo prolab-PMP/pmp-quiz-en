@@ -6,8 +6,6 @@ read_time: "7 min read"
 keywords: "PMP risk vs issue, risk register, issue log, PMP exam traps"
 ---
 
-# Risk vs Issue on the PMP Exam
-
 Risk and issue questions look similar, but the correct PMP response changes depending on whether the event has already happened. A risk is uncertain. An issue is current. That difference controls which artifact, meeting, or action is appropriate.
 
 Many candidates miss these questions because they react to the problem emotionally instead of reading the timing.

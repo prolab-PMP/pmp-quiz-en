@@ -6,8 +6,6 @@ read_time: "8 min read"
 keywords: "PMP earned value, CPI SPI, cost variance, schedule variance, PMP formulas"
 ---
 
-# PMP Earned Value Basics
-
 Earned value questions can look intimidating, but most PMP items test interpretation rather than complex math. If you understand what each number means, the formulas become easier to use.
 
 The core idea is simple: compare planned work, completed work, and actual cost.

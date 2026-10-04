@@ -6,8 +6,6 @@ read_time: "8 min read"
 keywords: "PMP study plan, 90 day PMP plan, PMP exam preparation"
 ---
 
-# A Practical 90-Day PMP Study Plan
-
 Most PMP candidates do not fail because they lack effort. They fail because their study time is scattered. A strong plan gives each week a purpose: learn the language of project management, practice scenario judgment, and build enough exam stamina to stay accurate under time pressure.
 
 This 90-day plan is designed for working professionals who can study 6 to 10 hours per week. If you have more time, compress the schedule. If you have less time, stretch it to 120 days, but keep the same sequence.

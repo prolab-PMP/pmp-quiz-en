@@ -11,15 +11,17 @@
         <h2 style="margin-bottom:12px;">Your free trial has ended</h2>
         <p style="color:var(--text-muted);margin-bottom:28px;line-height:1.7;">
             Free trial is offered once only.<br>
-            Purchase the paid version to access all 2,219 questions.
+            Your 7-day Premium trial is still available &mdash; sign up free to unlock all 2,250+ questions.
         </p>
         <div style="display:flex;flex-direction:column;gap:12px;">
-            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
-                <i class="fas fa-sign-in-alt"></i> Log in / Sign up
+            <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg" style="font-size:1.05rem;font-weight:700;">
+                <i class="fas fa-rocket"></i> Sign up free &mdash; 7-day Premium trial
             </a>
-            <a href="mailto:songodinfo1@gmail.com?subject=PMP Quiz Premium inquiry"
-               class="btn btn-success btn-lg">
-                <i class="fas fa-envelope"></i> Purchase inquiry
+            <a href="{{ url_for('pricing') }}" class="btn btn-lg" style="background:#F79319;color:#fff;font-weight:700;">
+                <i class="fas fa-star"></i> See Premium plans (from $4.08/mo)
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline" style="font-size:0.9rem;">
+                <i class="fas fa-sign-in-alt"></i> Already have an account? Log in
             </a>
         </div>
         <p style="margin-top:20px;font-size:0.8rem;color:var(--text-muted);">
@@ -57,11 +59,14 @@
 
         <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
             <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">
-                Log in to access all 2,219 questions, wrong-answer tracking, and detailed analytics.
+                Sign up free to unlock all 2,250+ questions, wrong-answer tracking and detailed analytics &mdash; your 7-day Premium trial starts instantly.
             </p>
-            <a href="{{ url_for('login') }}" class="btn btn-primary">
-                <i class="fas fa-sign-in-alt"></i> Log in / Sign up
+            <a href="{{ url_for('signup') }}" class="btn btn-primary" style="font-weight:700;">
+                <i class="fas fa-rocket"></i> Sign up free &mdash; 7-day trial
             </a>
+            <p style="margin-top:10px;font-size:0.8rem;color:var(--text-muted);">
+                Already have an account? <a href="{{ url_for('login') }}" style="color:var(--primary);font-weight:700;">Log in</a>
+            </p>
         </div>
     </div>
 {% endif %}

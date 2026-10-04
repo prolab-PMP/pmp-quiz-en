@@ -6,8 +6,6 @@ read_time: "7 min read"
 keywords: "PMP formulas, earned value, EVM, communication channels, three point estimate, PMP math"
 ---
 
-# PMP Formulas Cheat Sheet
-
 You do not need to be a mathematician to pass the PMP exam, but a small set of formulas shows up often enough that memorizing them is worth the effort. More importantly, the exam usually tests whether you understand what a number *means*, not just whether you can plug values into a formula. This guide covers the formulas that earn the most points and how to read them.
 
 ## Earned value management (EVM)

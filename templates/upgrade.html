@@ -47,7 +47,7 @@
 <div class="card" style="text-align:center; padding:32px;">
     <h2 style="margin-bottom:12px;"><i class="fas fa-clock"></i> Checkout Coming Soon</h2>
     <p style="color:var(--text-muted); margin-bottom:24px;">
-        PayPal checkout is being configured. For now, contact
+        Online checkout is being configured. For now, contact
         <a href="mailto:songodinfo1@gmail.com">songodinfo1@gmail.com</a>
         to upgrade your account manually.
     </p>
@@ -86,26 +86,36 @@
         <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:18px;">
             ${{ "%.2f"|format((plan.price|float) / plan.months) }} / month
         </div>
+        {% if plan.checkout_url %}
+        <a href="{{ plan.checkout_url }}" rel="noopener"
+           style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:12px 16px; border-radius:8px; text-decoration:none; font-weight:700; font-size:0.95rem; color:#fff; background:#0B3D91; margin-bottom:10px;">
+            <i class="fas fa-credit-card"></i> Pay by Card
+        </a>
+        {% endif %}
+        {% if paypal_configured %}
         <div id="paypal-button-{{ plan.key }}" class="paypal-button-wrap" data-plan="{{ plan.key }}"></div>
         <div id="paypal-status-{{ plan.key }}" style="min-height:20px;margin-top:8px;font-size:0.82rem;color:var(--text-muted);"></div>
+        {% endif %}
     </div>
     {% endfor %}
 </div>
 
 <div class="card" style="margin-top:24px; padding:20px; font-size:0.88rem; color:var(--text-muted); line-height:1.7;">
     <strong style="color:var(--text);">How it works:</strong><br>
-    1. Choose a plan and click the PayPal button.<br>
-    2. Complete payment securely with PayPal.<br>
-    3. Your account is upgraded immediately after PayPal confirms the payment.<br>
-    4. Return to the dashboard to see your new validity period.
+    1. Choose a plan and pick a payment method.<br>
+    2. Complete payment on the secure checkout page.{% if card_configured %} Card payment does not require a PayPal account.{% endif %}<br>
+    3. Your account is upgraded as soon as the payment is confirmed.<br>
+    4. Return to the dashboard to see your new validity period.{% if card_configured %}<br>
+    Pay with the same email address you used here ({{ current_user.email }}) so the upgrade lands on this account. The card checkout has it prefilled.{% endif %}
 </div>
 
 <div style="text-align:center; margin-top:20px; font-size:0.85rem; color:var(--text-muted);">
     Questions? <a href="mailto:songodinfo1@gmail.com">songodinfo1@gmail.com</a>
     &nbsp;&middot;&nbsp;
-    Secure checkout by <a href="https://www.paypal.com" target="_blank" rel="noopener">PayPal</a>
+    Secure checkout by {% if card_configured %}Lemon Squeezy{% if paypal_configured %} and {% endif %}{% endif %}{% if paypal_configured %}<a href="https://www.paypal.com" target="_blank" rel="noopener">PayPal</a>{% endif %}
 </div>
 
+{% if paypal_configured %}
 <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id|urlencode }}&currency=USD&intent=capture&components=buttons&locale=en_US"></script>
 <script>
 document.querySelectorAll('.paypal-button-wrap').forEach(function(container) {
@@ -159,5 +169,6 @@ document.querySelectorAll('.paypal-button-wrap').forEach(function(container) {
     }).render('#paypal-button-' + plan);
 });
 </script>
+{% endif %}
 {% endif %}
 {% endblock %}

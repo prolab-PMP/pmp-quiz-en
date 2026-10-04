@@ -303,19 +303,34 @@ def signup():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     if request.method == 'POST':
+        abuse_reason = _signup_abuse_reason()
+        if abuse_reason:
+            # One line per rejection so the block rate is measurable in the
+            # Railway logs the same way WAYEXAM_STATS is.
+            print('[signup][blocked] reason={} ip={} ua={}'.format(
+                abuse_reason,
+                request.headers.get('X-Forwarded-For') or request.remote_addr,
+                (request.headers.get('User-Agent') or '')[:80]), flush=True)
+            flash('We could not verify that submission. Please try again.', 'error')
+            return render_template('signup.html',
+                                   email=request.form.get('email', '').strip(),
+                                   signup_form_token=_signup_form_token())
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         password2 = request.form.get('password2', '')
         referrer_email_raw = request.form.get('referrer_email', '').strip().lower()
         if not email or '@' not in email:
             flash('Please enter a valid email address.', 'error')
-            return render_template('signup.html', email=email)
+            return render_template('signup.html', email=email,
+                                   signup_form_token=_signup_form_token())
         if len(password) < 4:
             flash('Password must be at least 4 characters long.', 'error')
-            return render_template('signup.html', email=email)
+            return render_template('signup.html', email=email,
+                                   signup_form_token=_signup_form_token())
         if password != password2:
             flash('Passwords do not match. Please try again.', 'error')
-            return render_template('signup.html', email=email)
+            return render_template('signup.html', email=email,
+                                   signup_form_token=_signup_form_token())
         existing = User.query.filter_by(email=email).first()
         if existing and existing.password_hash:
             flash('That email address is already registered. Please log in.', 'error')
@@ -360,7 +375,9 @@ def signup():
         flash('Welcome! Your free 150-question PDF is ready to download on the dashboard.', 'success')
         return redirect(url_for('dashboard'))
 
-    return render_template('signup.html', email=request.args.get('email', ''))
+    return render_template('signup.html',
+                           email=request.args.get('email', ''),
+                           signup_form_token=_signup_form_token())
 
 @app.route('/logout')
 @login_required
@@ -381,6 +398,89 @@ def _async_mail(fn, *args):
             except Exception:
                 print(f'[MAIL][async] {fn.__name__} failed: {e}')
     threading.Thread(target=_runner, daemon=True).start()
+
+
+# ══════════════════════════════════════════════════════
+# SIGNUP ABUSE GUARD (2026-09-26)
+# ──────────────────────────────────────────────────────
+# Measured, not guessed. 10 of the 16 accounts on this site were created by a
+# script. Its signature, straight from the Railway HTTP logs:
+#   * GET /signup -> POST /signup in 0.49-0.96 s (six samples). Nobody types an
+#     address, a password and a confirmation that fast.
+#   * Source addresses rotate inside 212.30.36.0/24 (7 hits) and
+#     31.171.130.0/24 (2), with a different forged User-Agent each run.
+#   * Not one question answered afterwards: quiz_sessions_total sat at 23
+#     through every single one of them.
+#
+# The cost is not only a dirty user count. Each fake signup burns a 7-day
+# trial and sets free_pdf_sent_at, so switching SMTP on would start mailing
+# the lead magnet to these addresses.
+#
+# Two stateless checks. No new dependency, no new DB column, no new table:
+#   1. Minimum fill time. The GET embeds an HMAC-signed issue timestamp. The
+#      POST is refused if the form returned faster than a person could fill it.
+#      Signing it matters: an unsigned timestamp could simply be back-dated,
+#      and a bare nonce would need server-side storage that two gunicorn
+#      workers do not share. SECRET_KEY is a required env var in production,
+#      so either worker can verify a token the other one issued.
+#   2. Honeypot. A field people never see and never fill. Anything that fills
+#      every input in the form announces itself.
+#
+# Neither is a wall. A patient scraper can sleep three seconds and skip the
+# decoy field. Both are free, and they stop the script that is running today.
+# If it adapts, the next step is per-/24 rate limiting, which does need state.
+SIGNUP_MIN_FILL_SECONDS = 2.0
+SIGNUP_FORM_MAX_AGE_SECONDS = 6 * 3600
+SIGNUP_HONEYPOT_FIELD = 'website'
+
+
+def _signup_form_token(issued_at=None):
+    """'<issued_at>.<hmac>' — an issue time the client cannot rewrite."""
+    import hashlib as _hashlib
+    ts = '%.3f' % (issued_at if issued_at is not None
+                   else datetime.utcnow().timestamp())
+    sig = hmac.new(app.config['SECRET_KEY'].encode('utf-8'),
+                   ts.encode('ascii'), _hashlib.sha256).hexdigest()[:32]
+    return ts + '.' + sig
+
+
+def _signup_form_age(token):
+    """Seconds since we served the form, or None if the token is not ours."""
+    import hashlib as _hashlib
+    # rpartition, not partition: the timestamp is formatted '%.3f' and so
+    # contains a dot of its own. Splitting at the FIRST dot would hand back
+    # ts_part='1790406118' and sig='454.<hmac>', and the recomputed signature
+    # over the truncated timestamp would never match the real one — every
+    # token this app issued would be rejected, blocking real signups, not
+    # just scripts. The signature boundary is the LAST dot.
+    ts_part, _, sig = (token or '').rpartition('.')
+    if not ts_part or not sig:
+        return None
+    expected = hmac.new(app.config['SECRET_KEY'].encode('utf-8'),
+                        ts_part.encode('ascii'),
+                        _hashlib.sha256).hexdigest()[:32]
+    if not hmac.compare_digest(expected, sig):
+        return None
+    try:
+        issued = float(ts_part)
+    except ValueError:
+        return None
+    return datetime.utcnow().timestamp() - issued
+
+
+def _signup_abuse_reason():
+    """Why this POST looks automated, or None if it looks like a person."""
+    if (request.form.get(SIGNUP_HONEYPOT_FIELD) or '').strip():
+        return 'honeypot'
+    age = _signup_form_age(request.form.get('form_token'))
+    if age is None:
+        return 'token_missing_or_invalid'
+    if age < SIGNUP_MIN_FILL_SECONDS:
+        return 'too_fast_%.2fs' % age
+    if age > SIGNUP_FORM_MAX_AGE_SECONDS:
+        return 'token_expired'
+    return None
+
 
 
 # ── Free 150-question English pack (lead magnet, 2026-07) ─────────────
@@ -566,22 +666,214 @@ def _build_checkout_url(variant_id, email):
     return f'{base}?checkout[email]={quote(email)}'
 
 
+# ══════════════════════════════════════════════════════
+# Payment self-check (admin only)
+#
+# Why this exists: PayPal fails silently. The JS SDK loads from the same host
+# for sandbox and live -- the environment is decided by PAYPAL_CLIENT_ID -- while
+# the server creates orders against whichever base PAYPAL_MODE selects. If those
+# two disagree, the OAuth token call fails, /api/paypal/create-order returns 500,
+# and the buyer just sees a button that does not work. Nothing in the logs says
+# "wrong environment".
+#
+# This route settles it without guessing: it asks BOTH PayPal hosts to
+# authenticate the configured credentials. Exactly one will succeed, and that
+# tells us which environment the credentials actually belong to. Comparing that
+# against PAYPAL_MODE gives a definite verdict.
+#
+# Visit /admin/payment-check while logged in as an admin.
+# ══════════════════════════════════════════════════════
+
+def _paypal_probe(api_base):
+    """Try a client_credentials grant against one PayPal host.
+
+    Returns (ok, detail). Never raises -- this is a diagnostic.
+    """
+    client_id = os.environ.get('PAYPAL_CLIENT_ID', '')
+    client_secret = os.environ.get('PAYPAL_CLIENT_SECRET', '')
+    if not (client_id and client_secret):
+        return False, 'PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET not set'
+    auth = base64.b64encode(f'{client_id}:{client_secret}'.encode('utf-8')).decode('ascii')
+    req = urllib.request.Request(
+        f'{api_base}/v1/oauth2/token',
+        data=b'grant_type=client_credentials',
+        method='POST',
+        headers={
+            'Authorization': f'Basic {auth}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            payload = json.loads(resp.read().decode('utf-8'))
+        if payload.get('access_token'):
+            return True, 'authenticated'
+        return False, 'no access_token in response'
+    except urllib.error.HTTPError as e:
+        return False, f'HTTP {e.code}'
+    except Exception as e:
+        return False, f'{type(e).__name__}: {e}'
+
+
+def _lemonsqueezy_variants_present():
+    """Which plan keys currently have a Lemon Squeezy variant id configured."""
+    present = []
+    for key, _label, _price, _months in PAYPAL_PLANS:
+        if os.environ.get('LEMONSQUEEZY_VARIANT_' + key.upper(), '').strip():
+            present.append(key)
+    return present
+
+
+def _payment_diagnosis():
+    """Build a plain-language verdict about whether checkout can actually work."""
+    mode = _paypal_mode()
+    configured = _paypal_configured()
+
+    sandbox_ok, sandbox_detail = (False, 'skipped')
+    live_ok, live_detail = (False, 'skipped')
+    if configured:
+        sandbox_ok, sandbox_detail = _paypal_probe('https://api-m.sandbox.paypal.com')
+        live_ok, live_detail = _paypal_probe('https://api-m.paypal.com')
+
+    if live_ok and not sandbox_ok:
+        credential_env = 'live'
+    elif sandbox_ok and not live_ok:
+        credential_env = 'sandbox'
+    elif live_ok and sandbox_ok:
+        credential_env = 'ambiguous'
+    else:
+        credential_env = 'unknown'
+
+    server_env = 'live' if mode == 'live' else 'sandbox'
+
+    if not configured:
+        paypal_verdict = 'BROKEN'
+        explanation = (
+            'PayPal credentials are not set, so no PayPal button is rendered.'
+        )
+    elif credential_env == 'unknown':
+        paypal_verdict = 'BROKEN'
+        explanation = (
+            'Neither PayPal host accepted these credentials. The client ID or '
+            'secret is wrong, or the PayPal app was deleted or disabled. '
+            f'Sandbox said: {sandbox_detail}. Live said: {live_detail}.'
+        )
+    elif credential_env != server_env:
+        paypal_verdict = 'BROKEN'
+        explanation = (
+            f'Environment mismatch. The credentials belong to the {credential_env} '
+            f'environment, but PAYPAL_MODE selects the {server_env} API. Order '
+            'creation will fail and the PayPal button will not complete. '
+            f'Fix: set PAYPAL_MODE to "{credential_env}" -- or, if you meant to '
+            f'take real money, replace the credentials with {server_env} ones.'
+        )
+    elif credential_env == 'sandbox':
+        paypal_verdict = 'TEST ONLY'
+        explanation = (
+            'Client and server agree, but both are on sandbox. PayPal checkout '
+            'works only for PayPal sandbox test accounts -- a real customer '
+            'cannot pay through it. Switch PAYPAL_CLIENT_ID / '
+            'PAYPAL_CLIENT_SECRET to the live app credentials and set '
+            'PAYPAL_MODE=live.'
+        )
+    else:
+        paypal_verdict = 'OK'
+        explanation = (
+            'Live credentials authenticate against the live API and PAYPAL_MODE '
+            'agrees. PayPal checkout should work. If a buyer still reports a '
+            'failure, check the deploy log for "[paypal] HTTP" lines.'
+        )
+
+    # Lemon Squeezy: hosted checkout, no sandbox/live split on our side. The
+    # /upgrade page renders a "Pay by Card" link for every plan that has a
+    # variant id, so a configured store is a working payment route on its own.
+    ls_configured = _lemonsqueezy_configured()
+    ls_variants = _lemonsqueezy_variants_present()
+    ls_live = bool(ls_configured and ls_variants)
+    if ls_live:
+        card_verdict = 'OK'
+        card_note = (
+            'Card checkout is wired for plan(s): ' + ', '.join(ls_variants) + '. '
+            'This path does not depend on PAYPAL_MODE. Open /upgrade and click '
+            '"Pay by Card" once: a Lemon Squeezy checkout page with the email '
+            'prefilled means it works; a 404 means the store or the product is '
+            'not published yet, or a variant id is wrong.'
+        )
+    elif ls_configured:
+        card_verdict = 'BROKEN'
+        card_note = (
+            'Lemon Squeezy is configured but no LEMONSQUEEZY_VARIANT_<PLAN> is '
+            'set, so no card button can be rendered.'
+        )
+    else:
+        card_verdict = 'NOT CONFIGURED'
+        card_note = (
+            'Lemon Squeezy is not configured. Set LEMONSQUEEZY_STORE_SLUG, '
+            'LEMONSQUEEZY_WEBHOOK_SECRET and LEMONSQUEEZY_VARIANT_3MO at minimum.'
+        )
+
+    # The only question that matters: can a real customer pay right now?
+    if paypal_verdict == 'OK' or card_verdict == 'OK':
+        verdict = 'OK'
+    elif paypal_verdict == 'TEST ONLY':
+        verdict = 'TEST ONLY'
+    else:
+        verdict = 'BROKEN'
+
+    return {
+        'verdict': verdict,
+        'paypal_verdict': paypal_verdict,
+        'card_verdict': card_verdict,
+        'explanation': explanation,
+        'card_note': card_note,
+        'paypal_mode': mode,
+        'paypal_configured': configured,
+        'credential_environment': credential_env,
+        'server_environment': server_env,
+        'sandbox_probe': sandbox_detail,
+        'live_probe': live_detail,
+        'client_id_tail': (os.environ.get('PAYPAL_CLIENT_ID', '') or '')[-6:],
+        'lemonsqueezy_configured': ls_configured,
+        'lemonsqueezy_store': os.environ.get('LEMONSQUEEZY_STORE_SLUG', ''),
+        'lemonsqueezy_variants_set': len(ls_variants),
+        'lemonsqueezy_reachable_from_upgrade_page': ls_live,
+    }
+
+
+@app.route('/admin/payment-check')
+@admin_required
+def admin_payment_check():
+    """One page that answers: can a real customer actually pay right now?"""
+    return jsonify(_payment_diagnosis())
+
+
 @app.route('/upgrade')
 @login_required
 def upgrade():
     """Render premium plans + checkout buttons."""
+    paypal_ready = _paypal_configured()
+    lemon_ready = _lemonsqueezy_configured()
     plans = []
     for key, label, price, months in PAYPAL_PLANS:
+        checkout_url = ''
+        if lemon_ready:
+            variant_id = os.environ.get('LEMONSQUEEZY_VARIANT_' + key.upper(), '').strip()
+            if variant_id:
+                checkout_url = _build_checkout_url(variant_id, current_user.email)
         plans.append({
             'key': key,
             'label': label,
             'price': price,
             'months': months,
+            'checkout_url': checkout_url,
         })
+    card_ready = lemon_ready and any(p['checkout_url'] for p in plans)
     return render_template(
         'upgrade.html',
         plans=plans,
-        configured=_paypal_configured(),
+        configured=paypal_ready or card_ready,
+        paypal_configured=paypal_ready,
+        card_configured=card_ready,
         paypal_client_id=os.environ.get('PAYPAL_CLIENT_ID', ''),
         paypal_mode=_paypal_mode(),
     )
@@ -1457,8 +1749,9 @@ def my_status():
 
     validity_remaining = None
     if current_user.validity_end:
-        delta = current_user.validity_end - datetime.utcnow()
-        validity_remaining = max(0, delta.days)
+        # Same count the dashboard shows, from the same helper, so the two
+        # pages cannot disagree by a day. None still means "no expiry set".
+        validity_remaining = _days_remaining(current_user.validity_end)
 
     # Free user(미인증/Expired/Free등급) → 샘플 데이터로 미리View
     is_free_preview = (not current_user.is_admin) and (not current_user.is_premium or not current_user.is_valid())
@@ -2072,6 +2365,41 @@ def inject_config():
         'contact_email': 'songodinfo1@gmail.com',
     }
 
+
+def _days_remaining(end):
+    """Whole days of access left, rounded UP. 0 once the period has passed.
+
+    Rounding up, not down, is the point. `(end - now).days` truncates, so a
+    7-day trial granted one second ago measures 6 days 23:59:59 and renders
+    "6 days left" -- the member is told they already lost a day they still
+    have. Worse, anyone in their final hours reads "0 days left" while the
+    account still works. Ceiling makes the count match what the member was
+    sold: a fresh 7-day trial says 7, and the last partial day says 1 until
+    it is actually over.
+    """
+    if not end:
+        return 0
+    seconds = int((end - datetime.utcnow()).total_seconds())
+    if seconds <= 0:
+        return 0
+    return -(-seconds // 86400)          # ceil without importing math
+
+
+@app.context_processor
+def inject_now():
+    """`now` and `days_remaining`, which the templates already assumed existed.
+
+    dashboard.html and base.html were both written as
+    `... if now is defined else <fallback>`. Nothing ever registered `now`,
+    so `now is defined` was always False and both branches silently took the
+    fallback: every member saw "0 days left" on the dashboard regardless of
+    their real expiry date, and the footer printed a hardcoded year.
+    """
+    return {
+        'now': datetime.utcnow,
+        'days_remaining': _days_remaining,
+    }
+
 # ══════════════════════════════════════════════════════
 # BOOKMARK ROUTES
 # ══════════════════════════════════════════════════════
@@ -2480,10 +2808,25 @@ def learn_question(no):
 
     tags = _q_tags(q)
     primary_tag = tags[0] if tags else None
-    seo_title = f'PMP Practice Question {q.no}'
-    if primary_tag:
-        seo_title += f' - {primary_tag}'
     stem = re.sub(r'\s+', ' ', (q.question or '').strip())
+    # SEO title. Every public /learn page used to be titled
+    # "PMP Practice Question <no> - <2026 ECO domain>". That domain has only
+    # three values (People / Process / Business Environment), so all 180
+    # indexed pages shared four title patterns differing by a number and
+    # nothing else: no text anyone searches for, and near-duplicate to a
+    # crawler. GSC showed the result - 203 pages indexed, average position
+    # 19.4, 7 clicks in three months.
+    # Now: the PMBOK8 performance domain (Stakeholders / Governance / Finance
+    # / Risk / ... - twelve values, more specific than the ECO domain) leads,
+    # so "PMP" and the knowledge area survive Google's ~60-character display
+    # truncation, followed by the scenario text so the visible portion is also
+    # unique page to page and matches long-tail queries.
+    topic = getattr(q, 'pmbok8_domain', None) or primary_tag
+    lead = f'PMP {topic} Question' if topic else 'PMP Practice Question'
+    seo_title = f'{lead}: {_q_short_title(q, limit=60)}'
+    # Visible heading can run longer than the <title> budget. The question
+    # number stays in the breadcrumb, so it is not lost.
+    heading = _q_short_title(q, limit=110)
     seo_desc = (stem[:150] + '...') if len(stem) > 150 else stem
 
     return render_template('learn_question.html',
@@ -2492,12 +2835,14 @@ def learn_question(no):
                            tags=tags, primary_tag=primary_tag,
                            tag_keywords=', '.join(tags),
                            seo_title=seo_title, seo_desc=seo_desc,
+                           heading=heading,
                            prev_no=prev_no, next_no=next_no, related=related)
 
 
 _BLOG_CACHE = {}
 _BLOG_INDEX_CACHE = []
 _BLOG_DB_LOADED = False
+_BLOG_DB_SIG = None
 
 
 def _parse_frontmatter(text):
@@ -2589,6 +2934,39 @@ def _md_to_html(md):
     return '\n'.join(out)
 
 
+def _blog_db_signature():
+    """Cheap fingerprint of the published-post table: (row count, newest update).
+
+    Each gunicorn worker holds its own _BLOG_CACHE. A post published through
+    /blog/publish therefore refreshes only the worker that happened to serve
+    that POST; every other worker kept answering 404 for the new slug, and
+    kept it out of /blog and /sitemap.xml, until the service was restarted.
+    Observed live on 2026-09-19: the same URL alternated 200 and 404 by worker.
+
+    Comparing this two-value fingerprint on each blog request lets any worker
+    notice another worker's publish and reload on its next request. Returns
+    None when the query fails, which leaves the existing cache in place.
+    """
+    try:
+        return db.session.query(
+            func.count(BlogPost.id), func.max(BlogPost.updated_at)
+        ).select_from(BlogPost).filter(BlogPost.published.is_(True)).one()
+    except Exception:
+        try: db.session.rollback()
+        except Exception: pass
+        return None
+
+
+def _blog_refresh_if_stale():
+    """Reload the per-worker blog cache if another worker changed the table."""
+    if app.config.get('DEBUG') or not _BLOG_DB_LOADED:
+        _load_blog()
+        return
+    sig = _blog_db_signature()
+    if sig is not None and sig != _BLOG_DB_SIG:
+        _load_blog()
+
+
 def _load_blog():
     global _BLOG_CACHE, _BLOG_INDEX_CACHE
     _BLOG_CACHE = {}
@@ -2632,6 +3010,8 @@ def _load_blog():
                 'date': meta.get('date', ''),
             })
         _BLOG_DB_LOADED = True
+        global _BLOG_DB_SIG
+        _BLOG_DB_SIG = _blog_db_signature()
     except Exception as e:
         # DB not ready yet (module import happens before create_all). The first
         # /blog request retries via _BLOG_DB_LOADED below.
@@ -2647,15 +3027,13 @@ _load_blog()
 
 @app.route('/blog')
 def blog_index():
-    if app.config.get('DEBUG') or not _BLOG_DB_LOADED:
-        _load_blog()
+    _blog_refresh_if_stale()
     return render_template('blog_index.html', posts=_BLOG_INDEX_CACHE)
 
 
 @app.route('/blog/<slug>')
 def blog_post(slug):
-    if app.config.get('DEBUG') or not _BLOG_DB_LOADED:
-        _load_blog()
+    _blog_refresh_if_stale()
     entry = _BLOG_CACHE.get(slug)
     if not entry:
         abort(404)
@@ -2737,6 +3115,7 @@ def robots_txt():
 @app.route('/sitemap.xml')
 def sitemap_xml():
     """Dynamic sitemap including blog URLs."""
+    _blog_refresh_if_stale()
     today = datetime.utcnow().strftime('%Y-%m-%d')
     base = 'https://' + app.config.get('PRIMARY_HOST', PRIMARY_HOST or 'wayexam.com')
     urls = [
